@@ -113,6 +113,12 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
             // selectedDeck tự động cập nhật qua combine với allDecks
         }
     }
+
+    fun updateCardMastery(cardId: Long, isLearned: Boolean) {
+        viewModelScope.launch {
+            repository.updateCardMastery(cardId, isLearned)
+        }
+    }
 }
 
 class FlashcardViewModelFactory(private val repository: FlashcardRepository) : ViewModelProvider.Factory {

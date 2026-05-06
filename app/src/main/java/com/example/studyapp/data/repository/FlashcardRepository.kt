@@ -45,6 +45,10 @@ class FlashcardRepository(
         deckDao.saveStudyProgress(deckId, lastIndex, studiedCount, System.currentTimeMillis())
     }
 
+    suspend fun updateCardMastery(cardId: Long, isLearned: Boolean) {
+        cardDao.updateCardMastery(cardId, isLearned)
+    }
+
     /**
      * Parse bulk input text separated by '~'
      * Format: "Front1~Back1\nFront2~Back2" or "Front1~Back1, Front2~Back2"

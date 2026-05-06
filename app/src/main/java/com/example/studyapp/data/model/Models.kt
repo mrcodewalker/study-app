@@ -32,6 +32,7 @@ data class Flashcard(
     val deckId: Long,
     val front: String,
     val back: String,
+    val isLearned: Boolean = false,
     val createdAt: Long = System.currentTimeMillis()
 )
 

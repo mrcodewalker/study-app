@@ -63,4 +63,7 @@ interface FlashcardDao {
 
     @Query("DELETE FROM flashcards WHERE deckId = :deckId")
     suspend fun deleteAllCardsInDeck(deckId: Long)
+
+    @Query("UPDATE flashcards SET isLearned = :isLearned WHERE id = :cardId")
+    suspend fun updateCardMastery(cardId: Long, isLearned: Boolean)
 }

@@ -96,6 +96,9 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
                     studySubset = notLearned
                     overrideInitialStudied = 0
                     studySessionKey++
+                },
+                onUpdateMastery = { cardId, isLearned ->
+                    viewModel.updateCardMastery(cardId, isLearned)
                 }
             )
         }
@@ -229,12 +232,15 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
                     }
                 }
             } else {
+                val sortedCards = remember(cards) {
+                    cards.sortedWith(compareBy({ it.isLearned }, { -it.createdAt }))
+                }
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(cards, key = { it.id }) { card ->
+                    items(sortedCards, key = { it.id }) { card ->
                         var visible by remember { mutableStateOf(false) }
                         LaunchedEffect(card.id) { visible = true }
                         AnimatedVisibility(
@@ -282,7 +288,8 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
             },
             onRestartNotLearned = {
                 showStudyOptions = false
-                studySubset = if (studiedSoFar < cards.size) cards.drop(studiedSoFar) else cards
+                val unlearned = cards.filter { !it.isLearned }
+                studySubset = if (unlearned.isNotEmpty()) unlearned else cards
                 overrideInitialStudied = 0
                 studySessionKey++
                 studyMode = true
@@ -324,33 +331,44 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
 @Composable
 fun FlashcardItem(card: Flashcard, onEdit: () -> Unit, onDelete: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
+    val statusColor = when {
+        card.isLearned -> Color(0xFF4CAF50) // Green
+        else -> ScError.copy(alpha = 0.8f) // Red
+    }
     val borderColor by animateColorAsState(
-        targetValue = if (expanded) ScPrimary.copy(alpha = 0.5f) else ScOutlineVariant,
+        targetValue = if (expanded) statusColor else statusColor.copy(alpha = 0.3f),
         animationSpec = tween(250), label = "border"
     )
     Card(
         modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = ScSurfaceContainerLowest),
-        border = BorderStroke(1.dp, borderColor),
+        border = BorderStroke(1.5.dp, borderColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = Modifier.size(8.dp).clip(CircleShape)
-                        .background(if (expanded) ScPrimary else ScPrimaryContainer)
+                    modifier = Modifier.size(10.dp).clip(CircleShape)
+                        .background(statusColor)
                 )
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(12.dp))
                 Text(
                     card.front,
                     style = MaterialTheme.typography.bodyLarge,
                     color = ScOnSurface,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
                     maxLines = if (expanded) Int.MAX_VALUE else 2,
                     overflow = TextOverflow.Ellipsis
                 )
+                if (card.isLearned) {
+                    Icon(
+                        Icons.Default.CheckCircle, null,
+                        tint = Color(0xFF4CAF50).copy(alpha = 0.7f),
+                        modifier = Modifier.size(16.dp).padding(end = 4.dp)
+                    )
+                }
                 Row {
                     IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
                         Icon(Icons.Default.Edit, null, tint = ScOnSurfaceVariant, modifier = Modifier.size(16.dp))
@@ -403,7 +421,8 @@ fun StudyModeScreen(
     initialStudiedCount: Int,
     onExit: (Int, Int) -> Unit,
     onRestart: () -> Unit,
-    onRestartNotLearned: (List<Flashcard>) -> Unit = {}
+    onRestartNotLearned: (List<Flashcard>) -> Unit = {},
+    onUpdateMastery: (Long, Boolean) -> Unit = { _, _ -> }
 ) {
     var currentIndex by remember { mutableStateOf(initialIndex.coerceIn(0, cards.size - 1)) }
     var studiedCount by remember { mutableStateOf(initialStudiedCount) }
@@ -437,9 +456,11 @@ fun StudyModeScreen(
                 if (swipeDirection == 1) {
                     // Đã thuộc
                     studiedCount = (studiedCount + 1).coerceAtMost(cards.size)
+                    onUpdateMastery(cards[currentIndex].id, true)
                 } else {
                     // Chưa thuộc — lưu index lại
                     notLearnedIndices.add(currentIndex)
+                    onUpdateMastery(cards[currentIndex].id, false)
                 }
                 if (currentIndex < cards.size - 1) {
                     currentIndex++
