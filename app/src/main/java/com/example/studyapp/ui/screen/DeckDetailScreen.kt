@@ -1,4 +1,4 @@
-﻿package com.example.studyapp.ui.screen
+package com.example.studyapp.ui.screen
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -72,13 +72,14 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
                 initialStudiedCount = initStudied,
                 onExit = { lastIdx, studiedCnt ->
                     if (isSubset) {
-                        // Ôn lại chưa thuộc xong: cộng thêm số câu vừa thuộc vào tổng
-                        val prevStudied = deck?.studiedCount ?: 0
-                        val newTotal = (prevStudied + studiedCnt).coerceAtMost(cards.size)
-                        // Nếu đã thuộc hết thì đánh dấu hoàn thành (lastIndex = cards.size)
-                        val newLastIdx = if (newTotal >= cards.size) cards.size else lastIdx
-                        viewModel.saveStudyProgress(deckId, newLastIdx, newTotal)
+                        // Ôn lại chưa thuộc: chỉ cộng thêm số câu mới thuộc vào tổng, giữ nguyên vị trí cũ của bộ chính
+                        val prevTotal = deck?.studiedCount ?: 0
+                        val mainTotalSize = cards.size
+                        val newTotal = (prevTotal + studiedCnt).coerceAtMost(mainTotalSize)
+                        val currentMainIdx = deck?.lastStudiedIndex ?: 0
+                        viewModel.saveStudyProgress(deckId, currentMainIdx, newTotal)
                     } else {
+                        // Học bình thường: lưu vị trí thực tế và tổng số câu thuộc
                         viewModel.saveStudyProgress(deckId, lastIdx, studiedCnt)
                     }
                     studySubset = null
@@ -122,13 +123,14 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
                         maxLines = 1, overflow = TextOverflow.Ellipsis
                     )
                     val studiedCount = deck?.studiedCount ?: 0
+                    val lastIdx = deck?.lastStudiedIndex ?: 0
                     val totalCount = cards.size
-                    val progressPct = if (totalCount > 0) (studiedCount * 100 / totalCount) else 0
+                    val progressPct = if (totalCount > 0) (lastIdx * 100 / totalCount) else 0
                     Text(
-                        if (studiedCount > 0) "$studiedCount/$totalCount thẻ · $progressPct%"
+                        if (lastIdx > 0) "$lastIdx/$totalCount thẻ đã xem ($studiedCount thuộc) · $progressPct%"
                         else "${cards.size} thẻ",
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (studiedCount > 0) ScPrimary else ScOnSurfaceVariant
+                        color = if (lastIdx > 0) ScPrimary else ScOnSurfaceVariant
                     )
                 }
                 if (cards.isNotEmpty()) {
@@ -150,7 +152,7 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
             val totalCount = cards.size
             if (studiedCount > 0 && totalCount > 0) {
                 val progress by animateFloatAsState(
-                    targetValue = studiedCount.toFloat() / totalCount,
+                    targetValue = (deck?.lastStudiedIndex?.toFloat() ?: 0f) / totalCount,
                     animationSpec = tween(800, easing = EaseOutCubic),
                     label = "progress"
                 )
@@ -260,7 +262,7 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
         val notLearnedCount = (cards.size - studiedSoFar).coerceAtLeast(0)
         StudyOptionsDialog(
             totalCards = cards.size,
-            notLearnedCount = notLearnedCount,
+            notLearnedCount = cards.size - studiedSoFar,
             hasProgress = canContinue,
             onDismiss = { showStudyOptions = false },
             onContinue = {
@@ -298,17 +300,14 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
         )
     }
     if (showAddBulk) {
-        BulkAddDialog(
-            onDismiss = { showAddBulk = false },
-            onParse = { input -> viewModel.parseBulkInput(input) }
-        )
-    }
-    if (bulkPreview.isVisible) {
-        BulkPreviewDialog(
-            validCards = bulkPreview.validCards,
-            errorLines = bulkPreview.errorLines,
-            onConfirm = { viewModel.confirmBulkInsert(deckId); showAddBulk = false },
-            onCancel = { viewModel.cancelBulkInsert() }
+        BulkInsertScreen(
+            deckName = deck?.name ?: "",
+            onBack = { showAddBulk = false },
+            onParse = { input ->
+                viewModel.parseBulkInput(input)
+                viewModel.confirmBulkInsert(deckId)
+                showAddBulk = false
+            }
         )
     }
     editingCard?.let { card ->
@@ -413,8 +412,8 @@ fun StudyModeScreen(
 
     // Track các index chưa thuộc (swipe trái)
     val notLearnedIndices = remember { mutableStateListOf<Int>() }
-    // Track số câu đã trả lời (cả 2 chiều) cho progress bar
-    var answeredCount by remember { mutableStateOf(0) }
+    // Track số câu đã trả lời (cả 2 chiều) cho progress bar - Khởi tạo từ initialIndex để đúng tiến trình khi học tiếp
+    var answeredCount by remember { mutableStateOf(initialIndex) }
 
     // Drag & swipe state
     var dragOffsetX by remember { mutableStateOf(0f) }
@@ -507,7 +506,7 @@ fun StudyModeScreen(
                     onRestartNotLearned(notLearnedCards)
                 }
             },
-            onContinue = { onExit(studiedCount, studiedCount) } // studiedCount = số thuộc trong lần này
+            onContinue = { onExit(cards.size, studiedCount) } // Khi hoàn thành, vị trí cuối cùng là cards.size
         )
         return
     }
@@ -536,7 +535,7 @@ fun StudyModeScreen(
                     .padding(horizontal = 8.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { onExit(currentIndex, studiedCount) }) {
+                IconButton(onClick = { onExit(answeredCount, studiedCount) }) {
                     Icon(Icons.Default.Close, null, tint = ScOnSurface)
                 }
                 Box(
@@ -1091,13 +1090,27 @@ fun StudyCompleteScreen(
                 if (notLearnedCount > 0) {
                     Button(
                         onClick = onRestartNotLearned,
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .graphicsLayer {
+                                shadowElevation = 8f
+                                shape = RoundedCornerShape(99.dp)
+                                clip = true
+                            },
                         shape = RoundedCornerShape(99.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = ScError)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ScError,
+                            contentColor = ScOnError
+                        )
                     ) {
-                        Icon(Icons.Default.Replay, null, tint = ScOnError, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Làm lại $notLearnedCount câu chưa thuộc", color = ScOnError, fontWeight = FontWeight.SemiBold)
+                        Icon(Icons.Default.Refresh, null, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            "Làm lại $notLearnedCount câu chưa thuộc",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
                 Button(
@@ -1403,302 +1416,9 @@ fun AddSingleCardDialog(onDismiss: () -> Unit, onAdd: (String, String) -> Unit) 
     }
 }
 
-// ── BulkAddDialog ─────────────────────────────────────────────────────────────
+// BulkAddDialog has been replaced by BulkInsertScreen.kt for a better UI experience.
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun BulkAddDialog(onDismiss: () -> Unit, onParse: (String) -> Unit) {
-    var input by remember { mutableStateOf("") }
 
-    // Live parse preview
-    val previewCards = remember(input) {
-        input.lines().filter { it.contains("~") }.mapNotNull { line ->
-            val parts = line.split("~")
-            if (parts.size >= 2) {
-                val f = parts[0].trim(); val b = parts.drop(1).joinToString("~").trim()
-                if (f.isNotBlank() && b.isNotBlank()) Pair(f, b) else null
-            } else null
-        }.take(4) // show max 4 in preview
-    }
-    val lineCount = previewCards.size
-
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = ScSurfaceContainerLowest,
-            shadowElevation = 8.dp
-        ) {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                // Header
-                Box(modifier = Modifier.fillMaxWidth()
-                    .background(Brush.verticalGradient(
-                        listOf(ScSecondaryContainer.copy(0.4f), ScSurfaceContainerLowest)),
-                        RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                    .padding(24.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp))
-                            .background(ScSecondaryContainer), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.AutoAwesome, null, tint = ScSecondary,
-                                modifier = Modifier.size(24.dp))
-                        }
-                        Spacer(Modifier.width(14.dp))
-                        Column {
-                            Text("Nhập hàng loạt",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = ScOnSurface, fontWeight = FontWeight.Bold)
-                            AnimatedContent(targetState = lineCount,
-                                transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                label = "count") { count ->
-                                Text(if (count > 0) "$count thẻ được phát hiện"
-                                     else "Chuyển ghi chú thành bộ thẻ",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = if (count > 0) ScSecondary else ScOnSurfaceVariant)
-                            }
-                        }
-                    }
-                }
-
-                Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-                    // Instruction card
-                    Surface(shape = RoundedCornerShape(14.dp),
-                        color = ScSecondaryContainer.copy(0.25f),
-                        border = BorderStroke(1.dp, ScSecondaryContainer)) {
-                        Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.Top) {
-                            Icon(Icons.Default.Info, null, tint = ScSecondary,
-                                modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(10.dp))
-                            Column {
-                                Text("CÁCH NHẬP", style = MaterialTheme.typography.labelSmall,
-                                    color = ScSecondary, fontWeight = FontWeight.Bold,
-                                    letterSpacing = 1.sp)
-                                Spacer(Modifier.height(4.dp))
-                                Text("Mỗi dòng một thẻ, dùng dấu ~ để phân cách",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = ScOnSurfaceVariant)
-                                Spacer(Modifier.height(6.dp))
-                                Surface(shape = RoundedCornerShape(8.dp),
-                                    color = ScSurfaceContainerLowest) {
-                                    Text("Xin chào ~ Hello\nCảm ơn ~ Thank you",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = ScOnSurfaceVariant,
-                                        fontFamily = FontFamily.Monospace,
-                                        modifier = Modifier.padding(10.dp))
-                                }
-                            }
-                        }
-                    }
-                    Spacer(Modifier.height(14.dp))
-
-                    // Text input
-                    Box {
-                        OutlinedTextField(
-                            value = input, onValueChange = { input = it },
-                            placeholder = { Text("Thuật ngữ ~ Định nghĩa\nMitochondria ~ Nhà máy điện của tế bào",
-                                color = ScOutline, style = MaterialTheme.typography.bodySmall) },
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 140.dp, max = 200.dp),
-                            maxLines = 20,
-                            shape = RoundedCornerShape(14.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = ScSecondary, unfocusedBorderColor = ScOutlineVariant,
-                                focusedTextColor = ScOnSurface, unfocusedTextColor = ScOnSurface,
-                                cursorColor = ScSecondary,
-                                focusedContainerColor = ScSurfaceContainerLow,
-                                unfocusedContainerColor = ScSurfaceContainerLow
-                            )
-                        )
-                        // Line count badge
-                        if (lineCount > 0) {
-                            Surface(modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp),
-                                shape = RoundedCornerShape(99.dp),
-                                color = ScSecondaryContainer) {
-                                Text("$lineCount dòng", color = ScSecondary,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                    fontWeight = FontWeight.SemiBold)
-                            }
-                        }
-                    }
-
-                    // Live preview
-                    AnimatedVisibility(visible = previewCards.isNotEmpty()) {
-                        Column {
-                            Spacer(Modifier.height(16.dp))
-                            Row(modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically) {
-                                Text("XEM TRƯỚC", style = MaterialTheme.typography.labelSmall,
-                                    color = ScOnSurfaceVariant, fontWeight = FontWeight.Bold,
-                                    letterSpacing = 1.sp)
-                                Spacer(Modifier.weight(1f))
-                                if (lineCount > 4) {
-                                    Text("+ ${lineCount - 4} thẻ nữa",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = ScSecondary)
-                                }
-                            }
-                            Spacer(Modifier.height(8.dp))
-                            previewCards.forEachIndexed { idx, (front, back) ->
-                                val accent = listOf(ScPrimary, ScSecondary, ScTertiary, ScPrimary)[idx % 3]
-                                val accentBg = listOf(ScPrimaryContainer, ScSecondaryContainer,
-                                    ScTertiaryContainer, ScPrimaryContainer)[idx % 3]
-                                Surface(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = ScSurfaceContainerLowest,
-                                    border = BorderStroke(1.dp, accentBg)) {
-                                    Row(modifier = Modifier.fillMaxWidth()) {
-                                        // Accent left bar
-                                        Box(modifier = Modifier.width(4.dp).fillMaxHeight()
-                                            .background(accent, RoundedCornerShape(
-                                                topStart = 12.dp, bottomStart = 12.dp)))
-                                        Column(modifier = Modifier.padding(12.dp)) {
-                                            Text("TRƯỚC", style = MaterialTheme.typography.labelSmall,
-                                                color = accent, fontWeight = FontWeight.Bold,
-                                                letterSpacing = 0.8.sp)
-                                            Text(front, style = MaterialTheme.typography.bodyMedium,
-                                                color = ScOnSurface, fontWeight = FontWeight.SemiBold,
-                                                maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                            Spacer(Modifier.height(6.dp))
-                                            Divider(color = ScOutlineVariant)
-                                            Spacer(Modifier.height(6.dp))
-                                            Text("SAU", style = MaterialTheme.typography.labelSmall,
-                                                color = ScOnSurfaceVariant, fontWeight = FontWeight.Bold,
-                                                letterSpacing = 0.8.sp)
-                                            Text(back, style = MaterialTheme.typography.bodySmall,
-                                                color = ScOnSurfaceVariant, maxLines = 2,
-                                                overflow = TextOverflow.Ellipsis)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(Modifier.height(16.dp))
-                    // Action button
-                    Button(
-                        onClick = { onParse(input) },
-                        enabled = lineCount > 0,
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        shape = RoundedCornerShape(99.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = ScSecondary)
-                    ) {
-                        Icon(Icons.Default.AutoAwesome, null, tint = ScOnSecondary,
-                            modifier = Modifier.size(20.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Nhập $lineCount thẻ", color = ScOnSecondary,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold)
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
-                        Text("Hủy", color = ScOnSurfaceVariant)
-                    }
-                    Spacer(Modifier.height(8.dp))
-                }
-            }
-        }
-    }
-}
-
-// ── BulkPreviewDialog ─────────────────────────────────────────────────────────
-
-@Composable
-fun BulkPreviewDialog(
-    validCards: List<Pair<String, String>>,
-    errorLines: List<String>,
-    onConfirm: () -> Unit,
-    onCancel: () -> Unit
-) {
-    Dialog(onDismissRequest = onCancel) {
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = ScSurfaceContainerLowest,
-            shadowElevation = 8.dp
-        ) {
-            Column(modifier = Modifier.padding(24.dp).heightIn(max = 520.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
-                            .background(ScPrimaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.Preview, null, tint = ScPrimary, modifier = Modifier.size(22.dp))
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Text("Xác nhận thêm thẻ",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = ScOnSurface, fontWeight = FontWeight.Bold)
-                }
-                Spacer(Modifier.height(16.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Surface(shape = RoundedCornerShape(10.dp), color = ScPrimaryContainer.copy(0.5f)) {
-                        Text("✓ ${validCards.size} thẻ hợp lệ", color = ScPrimary,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
-                    }
-                    if (errorLines.isNotEmpty()) {
-                        Surface(shape = RoundedCornerShape(10.dp), color = ScErrorContainer.copy(0.5f)) {
-                            Text("✗ ${errorLines.size} lỗi", color = ScError,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
-                        }
-                    }
-                }
-                Spacer(Modifier.height(12.dp))
-                LazyColumn(
-                    modifier = Modifier.weight(1f, fill = false).heightIn(max = 280.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    items(validCards) { (front, back) ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(ScSurfaceContainerLow)
-                                .padding(12.dp)
-                        ) {
-                            Text(front, modifier = Modifier.weight(1f), color = ScOnSurface,
-                                style = MaterialTheme.typography.bodySmall, maxLines = 2,
-                                overflow = TextOverflow.Ellipsis)
-                            Text(" → ", color = ScOutline, style = MaterialTheme.typography.bodySmall)
-                            Text(back, modifier = Modifier.weight(1f), color = ScTertiary,
-                                style = MaterialTheme.typography.bodySmall, maxLines = 2,
-                                overflow = TextOverflow.Ellipsis)
-                        }
-                    }
-                    if (errorLines.isNotEmpty()) {
-                        item {
-                            Text("Dòng lỗi (không có dấu ~):", color = ScError,
-                                style = MaterialTheme.typography.labelSmall,
-                                modifier = Modifier.padding(top = 4.dp))
-                        }
-                        items(errorLines) { line ->
-                            Text("• $line", color = ScError.copy(0.7f),
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(ScErrorContainer.copy(0.3f))
-                                    .padding(8.dp))
-                        }
-                    }
-                }
-                Spacer(Modifier.height(16.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedButton(
-                        onClick = onCancel, modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(99.dp),
-                        border = BorderStroke(1.dp, ScOutlineVariant)
-                    ) { Text("Hủy bỏ", color = ScOnSurfaceVariant) }
-                    Button(
-                        onClick = onConfirm,
-                        enabled = validCards.isNotEmpty(),
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(99.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = ScPrimary)
-                    ) { Text("Thêm ${validCards.size} thẻ", color = ScOnPrimary) }
-                }
-            }
-        }
-    }
-}
 
 // ── EditCardDialog ────────────────────────────────────────────────────────────
 

@@ -301,19 +301,22 @@ fun HomeScreen(
                                 modifier = Modifier.padding(14.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
+                                val isMastered = decks.isNotEmpty() && decks.first().let { it.cardCount > 0 && it.studiedCount >= it.cardCount }
                                 Icon(
-                                    Icons.Outlined.Style, null,
-                                    tint = ScPrimary,
-                                    modifier = Modifier.size(22.dp)
+                                    if (isMastered) Icons.Default.EmojiEvents else Icons.Default.AutoStories,
+                                    null,
+                                    tint = if (isMastered) Color(0xFFFBC02D) else ScPrimary,
+                                    modifier = Modifier.size(24.dp)
                                 )
                                 Spacer(Modifier.height(6.dp))
                                 if (decks.isNotEmpty()) {
                                     val deck = decks.first()
                                     val remaining = (deck.cardCount - deck.studiedCount).coerceAtLeast(0)
                                     Text(
-                                        "$remaining thẻ còn lại",
+                                        if (isMastered) "Hoàn thành xuất sắc!" else "$remaining thẻ còn lại",
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = ScOnSurfaceVariant
+                                        color = if (isMastered) Color(0xFFFBC02D) else ScOnSurfaceVariant,
+                                        fontWeight = if (isMastered) FontWeight.Bold else FontWeight.Normal
                                     )
                                 } else {
                                     Text(
@@ -348,7 +351,10 @@ fun HomeScreen(
                                         .fillMaxWidth(prog)
                                         .fillMaxHeight()
                                         .clip(RoundedCornerShape(99.dp))
-                                        .background(ScPrimary)
+                                        .background(
+                                            if (pf >= 1f) Brush.horizontalGradient(listOf(ScPrimary, Color(0xFF4CAF50)))
+                                            else SolidColor(ScPrimary)
+                                        )
                                 )
                             }
                         }
@@ -784,21 +790,46 @@ fun HomeRecentDeckCard(deck: FlashcardDeck, onClick: () -> Unit) {
         shadowElevation = 2.dp
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Surface(shape = RoundedCornerShape(99.dp), color = chipBg) {
-                Text(
-                    "Flashcard",
-                    color = chipText,
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    fontWeight = FontWeight.SemiBold
-                )
+            val isMastered = progressFraction >= 1f
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(99.dp),
+                    color = if (isMastered) Color(0xFFFFECB3) else chipBg
+                ) {
+                    Text(
+                        if (isMastered) "MASTERED" else "FLASHCARD",
+                        color = if (isMastered) Color(0xFFFFA000) else chipText,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                if (isMastered) {
+                    Icon(
+                        Icons.Default.EmojiEvents,
+                        null,
+                        tint = Color(0xFFFBC02D),
+                        modifier = Modifier.size(18.dp)
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.Whatshot,
+                        null,
+                        tint = accent.copy(alpha = 0.6f),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
             Spacer(Modifier.height(10.dp))
             Text(
                 deck.name,
                 style = MaterialTheme.typography.titleSmall,
                 color = ScOnSurface,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Bold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 lineHeight = 18.sp
@@ -822,36 +853,37 @@ fun HomeRecentDeckCard(deck: FlashcardDeck, onClick: () -> Unit) {
                         .fillMaxWidth(progress)
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(99.dp))
-                        .background(accent)
+                        .background(
+                            if (isMastered) Brush.horizontalGradient(listOf(accent, Color(0xFF4CAF50)))
+                            else SolidColor(accent)
+                        )
                 )
             }
-            if (progressPct > 0) {
-                Spacer(Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "$progressPct% thuộc",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = accent,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    val notLearned = deck.cardCount - deck.studiedCount
-                    if (notLearned > 0) {
-                        Surface(
-                            shape = RoundedCornerShape(99.dp),
-                            color = ScErrorContainer.copy(alpha = 0.7f)
-                        ) {
-                            Text(
-                                "$notLearned cần ôn",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = ScError,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
+            Spacer(Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    if (isMastered) "Hoàn thành 100%" else "$progressPct% thuộc",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (isMastered) Color(0xFF2E7D32) else accent,
+                    fontWeight = FontWeight.Bold
+                )
+                val notLearned = deck.cardCount - deck.studiedCount
+                if (notLearned > 0 && !isMastered) {
+                    Surface(
+                        shape = RoundedCornerShape(99.dp),
+                        color = ScErrorContainer.copy(alpha = 0.7f)
+                    ) {
+                        Text(
+                            "$notLearned cần ôn",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ScError,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
                     }
                 }
             }
