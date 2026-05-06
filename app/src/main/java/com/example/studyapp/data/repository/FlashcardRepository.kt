@@ -42,7 +42,7 @@ class FlashcardRepository(
     suspend fun getCardCountForDeck(deckId: Long): Int = deckDao.getCardCountForDeck(deckId)
 
     suspend fun saveStudyProgress(deckId: Long, lastIndex: Int, studiedCount: Int) {
-        deckDao.saveStudyProgress(deckId, lastIndex, studiedCount)
+        deckDao.saveStudyProgress(deckId, lastIndex, studiedCount, System.currentTimeMillis())
     }
 
     /**

@@ -31,8 +31,8 @@ interface FlashcardDeckDao {
     @Query("SELECT COUNT(*) FROM flashcards WHERE deckId = :deckId")
     suspend fun getCardCountForDeck(deckId: Long): Int
 
-    @Query("UPDATE flashcard_decks SET lastStudiedIndex = :index, studiedCount = :count WHERE id = :deckId")
-    suspend fun saveStudyProgress(deckId: Long, index: Int, count: Int)
+    @Query("UPDATE flashcard_decks SET lastStudiedIndex = :index, studiedCount = :count, lastStudiedAt = :lastStudiedAt WHERE id = :deckId")
+    suspend fun saveStudyProgress(deckId: Long, index: Int, count: Int, lastStudiedAt: Long)
 }
 
 @Dao

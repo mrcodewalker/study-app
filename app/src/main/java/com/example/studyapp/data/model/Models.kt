@@ -12,8 +12,9 @@ data class FlashcardDeck(
     val description: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val cardCount: Int = 0,
-    val lastStudiedIndex: Int = 0,   // index of last card studied
-    val studiedCount: Int = 0        // how many unique cards seen (0..cardCount)
+    val lastStudiedIndex: Int = 0,
+    val studiedCount: Int = 0,
+    val lastStudiedAt: Long = 0L   // epoch millis of last study session, 0 = never
 )
 
 @Entity(

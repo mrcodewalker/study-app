@@ -169,31 +169,90 @@ fun FlashcardScreen(viewModel: FlashcardViewModel, onDeckClick: (Long) -> Unit) 
         )
     }
     showDeleteConfirm?.let { deck ->
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = null },
-            containerColor = ScSurfaceContainerLowest,
-            title = {
-                Text("Xóa bộ thẻ?", color = ScOnSurface, fontWeight = FontWeight.SemiBold)
-            },
-            text = {
-                Text(
-                    "Bộ thẻ \"${deck.name}\" và tất cả flashcard sẽ bị xóa.",
-                    color = ScOnSurfaceVariant
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = { viewModel.deleteDeck(deck); showDeleteConfirm = null },
-                    colors = ButtonDefaults.buttonColors(containerColor = ScError),
-                    shape = RoundedCornerShape(99.dp)
-                ) { Text("Xóa", color = ScOnError) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = null }) {
-                    Text("Hủy", color = ScOnSurfaceVariant)
+        Dialog(onDismissRequest = { showDeleteConfirm = null }) {
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = ScSurfaceContainerLowest,
+                shadowElevation = 8.dp
+            ) {
+                Column {
+                    Box(
+                        modifier = Modifier.fillMaxWidth()
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(ScErrorContainer.copy(0.5f), ScSurfaceContainerLowest)
+                                ),
+                                RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                            )
+                            .padding(24.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp))
+                                    .background(ScErrorContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.DeleteForever, null,
+                                    tint = ScError, modifier = Modifier.size(24.dp))
+                            }
+                            Spacer(Modifier.width(14.dp))
+                            Column {
+                                Text("Xóa bộ thẻ?",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = ScOnSurface, fontWeight = FontWeight.Bold)
+                                Text("Hành động này không thể hoàn tác",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = ScOnSurfaceVariant)
+                            }
+                        }
+                    }
+                    Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = ScErrorContainer.copy(0.25f),
+                            border = BorderStroke(1.dp, ScErrorContainer)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Icon(Icons.Default.Warning, null,
+                                    tint = ScError, modifier = Modifier.size(18.dp))
+                                Text(
+                                    "Bộ thẻ \"${deck.name}\" và tất cả flashcard bên trong sẽ bị xóa vĩnh viễn.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = ScOnSurface,
+                                    lineHeight = 18.sp
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(20.dp))
+                        Row(modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            OutlinedButton(
+                                onClick = { showDeleteConfirm = null },
+                                modifier = Modifier.weight(1f).height(48.dp),
+                                shape = RoundedCornerShape(99.dp),
+                                border = BorderStroke(1.dp, ScOutlineVariant)
+                            ) { Text("Hủy", color = ScOnSurfaceVariant) }
+                            Button(
+                                onClick = { viewModel.deleteDeck(deck); showDeleteConfirm = null },
+                                modifier = Modifier.weight(1f).height(48.dp),
+                                shape = RoundedCornerShape(99.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = ScError)
+                            ) {
+                                Icon(Icons.Default.Delete, null,
+                                    tint = ScOnError, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Xóa", color = ScOnError, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    }
                 }
             }
-        )
+        }
     }
 }
 
@@ -223,9 +282,9 @@ fun DeckCard(
     )
     val progressPct = (progressFraction * 100).toInt()
 
-    // lastStudiedAt field — fallback to createdAt if not present
+    // lastStudiedAt — dùng field thực từ model
     val lastStudiedLabel = formatLastStudied(
-        if (deck.studiedCount > 0) deck.createdAt else null
+        if (deck.lastStudiedAt > 0L) deck.lastStudiedAt else null
     )
 
     Surface(
@@ -282,28 +341,27 @@ fun DeckCard(
 
             Spacer(Modifier.height(6.dp))
 
-            // ── Card count ───────────────────────────────────────────────
-            Text(
-                "${deck.cardCount} thẻ",
-                style = MaterialTheme.typography.bodyMedium,
-                color = ScOnSurfaceVariant
-            )
-
-            // ── Last studied label ───────────────────────────────────────
-            if (lastStudiedLabel != null) {
-                Spacer(Modifier.height(6.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.History, null,
-                        tint = accent,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        lastStudiedLabel,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = ScOnSurfaceVariant
-                    )
+            // ── Last studied + card count row ────────────────────────────
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    "${deck.cardCount} thẻ",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = ScOnSurfaceVariant
+                )
+                if (lastStudiedLabel != null) {
+                    Box(modifier = Modifier.size(4.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(ScOutlineVariant))
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Icon(Icons.Default.History, null,
+                            tint = accent, modifier = Modifier.size(13.dp))
+                        Text(lastStudiedLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ScOnSurfaceVariant)
+                    }
                 }
             }
 
@@ -405,28 +463,74 @@ fun CreateDeckDialog(onDismiss: () -> Unit, onCreate: (String, String) -> Unit) 
     var desc by remember { mutableStateOf("") }
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(24.dp),
             color = ScSurfaceContainerLowest,
-            shadowElevation = 4.dp
+            shadowElevation = 8.dp
         ) {
-            Column(modifier = Modifier.padding(24.dp)) {
-                Text(
-                    "Tạo bộ thẻ mới",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = ScOnSurface,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(Modifier.height(20.dp))
-                ScTextField(name, { name = it }, "Tên bộ thẻ *", singleLine = true)
-                Spacer(Modifier.height(12.dp))
-                ScTextField(desc, { desc = it }, "Mô tả (tuỳ chọn)", maxLines = 3)
-                Spacer(Modifier.height(24.dp))
-                ScDialogButtons(
-                    onDismiss,
-                    { if (name.isNotBlank()) onCreate(name.trim(), desc.trim()) },
-                    name.isNotBlank(),
-                    "Tạo"
-                )
+            Column {
+                // Gradient header
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(ScPrimaryContainer.copy(0.5f), ScSurfaceContainerLowest)
+                            ),
+                            RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                        )
+                        .padding(24.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp))
+                                .background(ScPrimaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.CreateNewFolder, null, 
+                                tint = ScPrimary, modifier = Modifier.size(24.dp))
+                        }
+                        Spacer(Modifier.width(14.dp))
+                        Column {
+                            Text("Tạo bộ thẻ mới",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = ScOnSurface, fontWeight = FontWeight.Bold)
+                            Text("Bắt đầu hành trình học tập",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = ScOnSurfaceVariant)
+                        }
+                    }
+                }
+                
+                Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
+                    ScTextField(name, { name = it }, "Tên bộ thẻ *", singleLine = true)
+                    Spacer(Modifier.height(14.dp))
+                    ScTextField(desc, { desc = it }, "Mô tả (tuỳ chọn)", maxLines = 3)
+                    Spacer(Modifier.height(24.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), 
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        OutlinedButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.weight(1f).height(48.dp),
+                            shape = RoundedCornerShape(99.dp),
+                            border = BorderStroke(1.dp, ScOutlineVariant)
+                        ) { Text("Hủy", color = ScOnSurfaceVariant) }
+                        Button(
+                            onClick = { if (name.isNotBlank()) onCreate(name.trim(), desc.trim()) },
+                            enabled = name.isNotBlank(),
+                            modifier = Modifier.weight(1f).height(48.dp),
+                            shape = RoundedCornerShape(99.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = ScPrimary,
+                                disabledContainerColor = ScPrimaryContainer
+                            )
+                        ) {
+                            Icon(Icons.Default.Add, null, 
+                                tint = ScOnPrimary, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Tạo bộ thẻ", color = ScOnPrimary, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
             }
         }
     }
@@ -443,31 +547,74 @@ fun EditDeckDialog(
     var desc by remember { mutableStateOf(deck.description) }
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(24.dp),
             color = ScSurfaceContainerLowest,
-            shadowElevation = 4.dp
+            shadowElevation = 8.dp
         ) {
-            Column(modifier = Modifier.padding(24.dp)) {
-                Text(
-                    "Chỉnh sửa bộ thẻ",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = ScOnSurface,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(Modifier.height(20.dp))
-                ScTextField(name, { name = it }, "Tên bộ thẻ", singleLine = true)
-                Spacer(Modifier.height(12.dp))
-                ScTextField(desc, { desc = it }, "Mô tả", maxLines = 3)
-                Spacer(Modifier.height(24.dp))
-                ScDialogButtons(
-                    onDismiss,
-                    {
-                        if (name.isNotBlank())
-                            onSave(deck.copy(name = name.trim(), description = desc.trim()))
-                    },
-                    name.isNotBlank(),
-                    "Lưu"
-                )
+            Column {
+                // Gradient header
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(ScTertiaryContainer.copy(0.4f), ScSurfaceContainerLowest)
+                            ),
+                            RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                        )
+                        .padding(24.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp))
+                                .background(ScTertiaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Edit, null, 
+                                tint = ScTertiary, modifier = Modifier.size(24.dp))
+                        }
+                        Spacer(Modifier.width(14.dp))
+                        Column {
+                            Text("Chỉnh sửa bộ thẻ",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = ScOnSurface, fontWeight = FontWeight.Bold)
+                            Text("Cập nhật thông tin bộ thẻ",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = ScOnSurfaceVariant)
+                        }
+                    }
+                }
+                
+                Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
+                    ScTextField(name, { name = it }, "Tên bộ thẻ", singleLine = true)
+                    Spacer(Modifier.height(14.dp))
+                    ScTextField(desc, { desc = it }, "Mô tả", maxLines = 3)
+                    Spacer(Modifier.height(24.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), 
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        OutlinedButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.weight(1f).height(48.dp),
+                            shape = RoundedCornerShape(99.dp),
+                            border = BorderStroke(1.dp, ScOutlineVariant)
+                        ) { Text("Hủy", color = ScOnSurfaceVariant) }
+                        Button(
+                            onClick = {
+                                if (name.isNotBlank())
+                                    onSave(deck.copy(name = name.trim(), description = desc.trim()))
+                            },
+                            enabled = name.isNotBlank(),
+                            modifier = Modifier.weight(1f).height(48.dp),
+                            shape = RoundedCornerShape(99.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = ScTertiary)
+                        ) {
+                            Icon(Icons.Default.Save, null, 
+                                tint = ScOnTertiary, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Lưu thay đổi", color = ScOnTertiary, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
             }
         }
     }
