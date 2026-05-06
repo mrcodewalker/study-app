@@ -28,6 +28,7 @@ import com.example.studyapp.data.db.KMAStudyDatabase
 import com.example.studyapp.data.repository.FlashcardRepository
 import com.example.studyapp.data.repository.NoteRepository
 import com.example.studyapp.data.repository.TodoRepository
+import com.example.studyapp.data.repository.UserActivityRepository
 import com.example.studyapp.ui.screen.*
 import com.example.studyapp.ui.theme.*
 import com.example.studyapp.ui.viewmodel.*
@@ -56,10 +57,11 @@ class MainActivity : ComponentActivity() {
         val flashcardRepo = FlashcardRepository(db.flashcardDeckDao(), db.flashcardDao())
         val noteRepo = NoteRepository(db.noteDao())
         val todoRepo = TodoRepository(db.todoDao())
+        val userActivityRepo = UserActivityRepository(db.userActivityDao())
 
         setContent {
             StudyAppTheme {
-                KMAStudyApp(this, flashcardRepo, noteRepo, todoRepo)
+                KMAStudyApp(this, flashcardRepo, noteRepo, todoRepo, userActivityRepo)
             }
         }
     }
@@ -71,12 +73,26 @@ fun KMAStudyApp(
     context: android.content.Context,
     flashcardRepo: FlashcardRepository,
     noteRepo: NoteRepository,
-    todoRepo: TodoRepository
+    todoRepo: TodoRepository,
+    userActivityRepo: UserActivityRepository
 ) {
     val navController = rememberNavController()
     val flashcardViewModel: FlashcardViewModel = viewModel(factory = FlashcardViewModelFactory(flashcardRepo))
     val noteViewModel: NoteViewModel = viewModel(factory = NoteViewModelFactory(noteRepo))
     val todoViewModel: TodoViewModel = viewModel(factory = TodoViewModelFactory(todoRepo))
+    val userActivityViewModel: UserActivityViewModel = viewModel(factory = UserActivityViewModelFactory(userActivityRepo))
+
+    // Track usage time (attendance + duration)
+    LaunchedEffect(Unit) {
+        // Attendance: record initial activity
+        userActivityViewModel.recordActivity(1000) // 1 second for "checked in"
+        
+        // Loop to track active time every 30 seconds
+        while (true) {
+            kotlinx.coroutines.delay(30000)
+            userActivityViewModel.recordActivity(30000)
+        }
+    }
 
     val bottomItems = listOf(Screen.Home, Screen.Flashcard, Screen.Note, Screen.Todo, Screen.Stats)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -153,6 +169,7 @@ fun KMAStudyApp(
                     flashcardViewModel = flashcardViewModel,
                     noteViewModel = noteViewModel,
                     todoViewModel = todoViewModel,
+                    userActivityViewModel = userActivityViewModel,
                     onNavigateToFlashcard = { navController.navigate(Screen.Flashcard.route) },
                     onNavigateToNote = { navController.navigate(Screen.Note.route) },
                     onNavigateToTodo = { navController.navigate(Screen.Todo.route) },
@@ -186,7 +203,8 @@ fun KMAStudyApp(
                 StatsScreen(
                     flashcardViewModel = flashcardViewModel,
                     noteViewModel = noteViewModel,
-                    todoViewModel = todoViewModel
+                    todoViewModel = todoViewModel,
+                    userActivityViewModel = userActivityViewModel
                 )
             }
         }

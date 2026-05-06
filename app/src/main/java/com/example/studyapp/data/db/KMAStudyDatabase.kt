@@ -14,6 +14,8 @@ import com.example.studyapp.data.model.Flashcard
 import com.example.studyapp.data.model.FlashcardDeck
 import com.example.studyapp.data.model.Note
 import com.example.studyapp.data.model.TodoItem
+import com.example.studyapp.data.model.UserActivity
+import com.example.studyapp.data.dao.UserActivityDao
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(database: SupportSQLiteDatabase) {
@@ -40,9 +42,15 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
     }
 }
 
+val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("CREATE TABLE IF NOT EXISTS `user_activity` (`date` INTEGER NOT NULL, `durationMillis` INTEGER NOT NULL, `lastActiveTime` INTEGER NOT NULL, PRIMARY KEY(`date`))")
+    }
+}
+
 @Database(
-    entities = [FlashcardDeck::class, Flashcard::class, Note::class, TodoItem::class],
-    version = 5,
+    entities = [FlashcardDeck::class, Flashcard::class, Note::class, TodoItem::class, UserActivity::class],
+    version = 6,
     exportSchema = false
 )
 abstract class KMAStudyDatabase : RoomDatabase() {
@@ -50,6 +58,7 @@ abstract class KMAStudyDatabase : RoomDatabase() {
     abstract fun flashcardDao(): FlashcardDao
     abstract fun noteDao(): NoteDao
     abstract fun todoDao(): TodoDao
+    abstract fun userActivityDao(): UserActivityDao
 
     companion object {
         @Volatile
@@ -62,7 +71,7 @@ abstract class KMAStudyDatabase : RoomDatabase() {
                     KMAStudyDatabase::class.java,
                     "kmastudy_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                     .build()
                 INSTANCE = instance
                 instance

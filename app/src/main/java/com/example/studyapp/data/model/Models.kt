@@ -55,3 +55,10 @@ data class TodoItem(
     val dueDate: Long? = null,   // epoch millis, nullable = no due date
     val createdAt: Long = System.currentTimeMillis()
 )
+
+@Entity(tableName = "user_activity")
+data class UserActivity(
+    @PrimaryKey val date: Long, // Midnight of the day in millis
+    val durationMillis: Long = 0,
+    val lastActiveTime: Long = System.currentTimeMillis()
+)

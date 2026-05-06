@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -32,6 +33,7 @@ import com.example.studyapp.ui.theme.*
 import com.example.studyapp.ui.viewmodel.FlashcardViewModel
 import com.example.studyapp.ui.viewmodel.NoteViewModel
 import com.example.studyapp.ui.viewmodel.TodoViewModel
+import com.example.studyapp.ui.viewmodel.UserActivityViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.PI
@@ -43,6 +45,7 @@ fun HomeScreen(
     flashcardViewModel: FlashcardViewModel,
     noteViewModel: NoteViewModel,
     todoViewModel: TodoViewModel,
+    userActivityViewModel: UserActivityViewModel,
     onNavigateToFlashcard: () -> Unit,
     onNavigateToNote: () -> Unit,
     onNavigateToTodo: () -> Unit,
@@ -51,6 +54,7 @@ fun HomeScreen(
     val decks by flashcardViewModel.allDecks.collectAsState()
     val notes by noteViewModel.allNotes.collectAsState()
     val todos by todoViewModel.allTodos.collectAsState()
+    val recentActivity by userActivityViewModel.recentActivity.collectAsState()
 
     val hour = remember { Calendar.getInstance().get(Calendar.HOUR_OF_DAY) }
     val greeting = remember {
@@ -184,7 +188,43 @@ fun HomeScreen(
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("📚", style = MaterialTheme.typography.headlineMedium)
+                            Canvas(modifier = Modifier.fillMaxSize().padding(14.dp)) {
+                                val w = size.width
+                                val h = size.height
+                                
+                                // Premium book with pages
+                                val bookColor = ScPrimary
+                                val pageColor = Color.White
+                                
+                                // Right page
+                                val rightPage = Path().apply {
+                                    moveTo(w * 0.5f, h * 0.2f)
+                                    cubicTo(w * 0.7f, h * 0.15f, w * 0.9f, h * 0.25f, w * 0.95f, h * 0.3f)
+                                    lineTo(w * 0.95f, h * 0.85f)
+                                    cubicTo(w * 0.85f, h * 0.8f, w * 0.7f, h * 0.75f, w * 0.5f, h * 0.8f)
+                                    close()
+                                }
+                                // Left page
+                                val leftPage = Path().apply {
+                                    moveTo(w * 0.5f, h * 0.2f)
+                                    cubicTo(w * 0.3f, h * 0.15f, w * 0.1f, h * 0.25f, w * 0.05f, h * 0.3f)
+                                    lineTo(w * 0.05f, h * 0.85f)
+                                    cubicTo(w * 0.15f, h * 0.8f, w * 0.3f, h * 0.75f, w * 0.5f, h * 0.8f)
+                                    close()
+                                }
+                                
+                                drawPath(leftPage, bookColor)
+                                drawPath(rightPage, bookColor)
+                                
+                                // Spine
+                                drawLine(bookColor, Offset(w * 0.5f, h * 0.2f), Offset(w * 0.5f, h * 0.85f), strokeWidth = 3.dp.toPx())
+                                
+                                // Page lines
+                                drawLine(pageColor.copy(alpha = 0.5f), Offset(w * 0.6f, h * 0.35f), Offset(w * 0.85f, h * 0.35f), strokeWidth = 1.dp.toPx())
+                                drawLine(pageColor.copy(alpha = 0.5f), Offset(w * 0.6f, h * 0.5f), Offset(w * 0.85f, h * 0.5f), strokeWidth = 1.dp.toPx())
+                                drawLine(pageColor.copy(alpha = 0.5f), Offset(w * 0.15f, h * 0.35f), Offset(w * 0.4f, h * 0.35f), strokeWidth = 1.dp.toPx())
+                                drawLine(pageColor.copy(alpha = 0.5f), Offset(w * 0.15f, h * 0.5f), Offset(w * 0.4f, h * 0.5f), strokeWidth = 1.dp.toPx())
+                            }
                         }
                     }
                 }
@@ -561,6 +601,23 @@ fun HomeScreen(
                         }
                     }
                 }
+            }
+        }
+        // ── Activity Chart ───────────────────────────────────────────────────
+        Spacer(Modifier.height(28.dp))
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(tween(500, 300)) + slideInVertically(tween(500, 300)) { 20 }
+        ) {
+            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                Text(
+                    "Hoạt động 7 ngày qua",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = ScOnSurface,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(Modifier.height(16.dp))
+                UsageChart(recentActivity)
             }
         }
 
@@ -981,3 +1038,5 @@ fun HomeStatCard(
 
 @Composable
 fun UpcomingTodoRow(todo: TodoItem) = HomeTodoRow(todo)
+
+

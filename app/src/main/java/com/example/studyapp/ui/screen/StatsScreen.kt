@@ -7,6 +7,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,7 +27,9 @@ import com.example.studyapp.ui.theme.*
 import com.example.studyapp.ui.viewmodel.FlashcardViewModel
 import com.example.studyapp.ui.viewmodel.NoteViewModel
 import com.example.studyapp.ui.viewmodel.TodoViewModel
+import com.example.studyapp.ui.viewmodel.UserActivityViewModel
 import java.util.*
+import java.text.SimpleDateFormat
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -34,11 +38,13 @@ import kotlin.math.sin
 fun StatsScreen(
     flashcardViewModel: FlashcardViewModel,
     noteViewModel: NoteViewModel,
-    todoViewModel: TodoViewModel
+    todoViewModel: TodoViewModel,
+    userActivityViewModel: UserActivityViewModel
 ) {
     val decks by flashcardViewModel.allDecks.collectAsState()
     val notes by noteViewModel.allNotes.collectAsState()
     val todos by todoViewModel.allTodos.collectAsState()
+    val recentActivity by userActivityViewModel.recentActivity.collectAsState()
     val pendingCount by todoViewModel.pendingCount.collectAsState()
 
     val completedCount = todos.count { it.isCompleted }
@@ -107,11 +113,11 @@ fun StatsScreen(
                 )
                 StatSummaryCard(
                     modifier = Modifier.weight(1f),
-                    value = "${notes.size}",
-                    label = "Ghi chú\nđã tạo",
-                    icon = Icons.Default.Note,
-                    accent = ScTertiary,
-                    bg = ScTertiaryContainer
+                    value = formatDurationShort(recentActivity.firstOrNull()?.durationMillis ?: 0L),
+                    label = "Thời gian\nhôm nay",
+                    icon = Icons.Default.Timer,
+                    accent = Color(0xFF673AB7),
+                    bg = Color(0xFFD1C4E9)
                 )
             }
 
@@ -249,7 +255,7 @@ fun StatsScreen(
                         Icon(Icons.Default.Psychology, null,
                             tint = ScTertiary, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Mức độ tập trung",
+                        Text("Thời điểm làm việc hiệu quả",
                             style = MaterialTheme.typography.titleSmall,
                             color = ScOnSurface, fontWeight = FontWeight.SemiBold)
                     }
@@ -276,6 +282,27 @@ fun StatsScreen(
                             }
                         }
                     }
+                }
+            }
+
+            // ── Usage Chart ──
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                color = ScSurfaceContainerLowest,
+                shadowElevation = 2.dp
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Timer, null,
+                            tint = ScPrimary, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Thời gian sử dụng (7 ngày)",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = ScOnSurface, fontWeight = FontWeight.SemiBold)
+                    }
+                    Spacer(Modifier.height(16.dp))
+                    UsageChart(recentActivity)
                 }
             }
 
@@ -541,6 +568,93 @@ fun FocusLineChart(focusData: List<Float>, modifier: Modifier = Modifier) {
 // ── Stat Summary Card ─────────────────────────────────────────────────────────
 
 @Composable
+fun UsageChart(activities: List<com.example.studyapp.data.model.UserActivity>) {
+    val maxDuration = remember(activities) {
+        (activities.maxOfOrNull { it.durationMillis } ?: 1L).coerceAtLeast(60000L)
+    }
+    val days = remember {
+        (0..6).reversed().map { d ->
+            Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -d) }
+        }
+    }
+    val dayFormatter = SimpleDateFormat("EE", Locale("vi"))
+    var selectedDayIndex by remember { mutableStateOf(-1) }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // Details display
+        Box(modifier = Modifier.fillMaxWidth().height(24.dp), contentAlignment = Alignment.Center) {
+            if (selectedDayIndex != -1) {
+                val day = days[selectedDayIndex]
+                val dayStart = (day.clone() as Calendar).apply {
+                    set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+                val activity = activities.find { it.date == dayStart }
+                val durationMins = (activity?.durationMillis ?: 0L) / 60000
+                Text(
+                    text = "${durationMins} phút hoạt động",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = ScPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+        
+        Row(
+            modifier = Modifier.padding(top = 4.dp, bottom = 10.dp).height(100.dp).fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            days.forEachIndexed { index, day ->
+                val dayStart = (day.clone() as Calendar).apply {
+                    set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+                
+                val activity = activities.find { it.date == dayStart }
+                val duration = activity?.durationMillis ?: 0L
+                val barHeight = (duration.toFloat() / maxDuration).coerceIn(0.1f, 1f)
+                val isToday = index == 6
+                val isSelected = selectedDayIndex == index
+                
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally, 
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            selectedDayIndex = if (selectedDayIndex == index) -1 else index
+                        }
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(if (isSelected) 14.dp else 10.dp)
+                            .fillMaxHeight(barHeight)
+                            .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                            .background(
+                                if (isSelected) ScSecondary 
+                                else if (duration > 0) ScPrimary 
+                                else ScOutlineVariant.copy(alpha = 0.3f)
+                            )
+                            .animateContentSize()
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        if (isToday) "Hnay" else dayFormatter.format(day.time).replace("Th ", "T"),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isToday) ScPrimary else ScOnSurfaceVariant,
+                        fontSize = 9.sp,
+                        fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun StatSummaryCard(
     modifier: Modifier,
     value: String,
@@ -549,11 +663,12 @@ fun StatSummaryCard(
     accent: Color,
     bg: Color
 ) {
-    val animatedValue by animateIntAsState(
-        targetValue = value.toIntOrNull() ?: 0,
-        animationSpec = tween(900, easing = EaseOutCubic),
-        label = "count"
-    )
+    val animatedValue = remember(value) { mutableStateOf(0) }
+    LaunchedEffect(value) {
+        // Simple animation logic for non-numeric values like "1h 20m"
+        // If it's a number, we can use animateIntAsState, otherwise just set it
+    }
+    
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
@@ -568,7 +683,7 @@ fun StatSummaryCard(
                 Icon(icon, null, tint = accent, modifier = Modifier.size(20.dp))
             }
             Spacer(Modifier.height(8.dp))
-            Text("$animatedValue", style = MaterialTheme.typography.headlineMedium,
+            Text(value, style = MaterialTheme.typography.titleLarge,
                 color = accent, fontWeight = FontWeight.Bold)
             Text(label, style = MaterialTheme.typography.labelSmall,
                 color = ScOnSurfaceVariant, lineHeight = 14.sp)
@@ -701,5 +816,15 @@ private fun computeEfficiency(todos: List<TodoItem>): Int {
         if (thisWeek > 0) 100 else 0
     } else {
         ((thisWeek - lastWeek) * 100 / lastWeek)
+    }
+}
+
+private fun formatDurationShort(millis: Long): String {
+    val mins = millis / 60000
+    val hours = mins / 60
+    return if (hours > 0) {
+        "${hours}h ${mins % 60}m"
+    } else {
+        "${mins}m"
     }
 }

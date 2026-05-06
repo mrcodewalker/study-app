@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -35,6 +36,11 @@ import androidx.compose.ui.window.Dialog
 import com.example.studyapp.data.model.Flashcard
 import com.example.studyapp.ui.theme.*
 import com.example.studyapp.ui.viewmodel.FlashcardViewModel
+import nl.dionsegijn.konfetti.compose.KonfettiView
+import nl.dionsegijn.konfetti.core.Party
+import nl.dionsegijn.konfetti.core.Position
+import nl.dionsegijn.konfetti.core.emitter.Emitter
+import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -335,16 +341,32 @@ fun FlashcardItem(card: Flashcard, onEdit: () -> Unit, onDelete: () -> Unit) {
         card.isLearned -> Color(0xFF4CAF50) // Green
         else -> ScError.copy(alpha = 0.8f) // Red
     }
+    
+    val scale by animateFloatAsState(
+        targetValue = if (expanded) 1.02f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "scale"
+    )
+    
     val borderColor by animateColorAsState(
         targetValue = if (expanded) statusColor else statusColor.copy(alpha = 0.3f),
-        animationSpec = tween(250), label = "border"
+        animationSpec = tween(400), label = "border"
     )
+
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded },
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clickable { expanded = !expanded },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = ScSurfaceContainerLowest),
-        border = BorderStroke(1.5.dp, borderColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = if (expanded) ScSurfaceContainerLow else ScSurfaceContainerLowest
+        ),
+        border = BorderStroke(if (expanded) 2.dp else 1.5.dp, borderColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (expanded) 6.dp else 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -650,6 +672,21 @@ fun StudyModeScreen(
                         ) { isFlipped = !isFlipped },
                     contentAlignment = Alignment.Center
                 ) {
+                    // Success mini fireworks
+                    val partyRight = Party(
+                        speed = 10f,
+                        maxSpeed = 25f,
+                        damping = 0.9f,
+                        spread = 45,
+                        colors = listOf(0x4CAF50, 0x8BC34A, 0xCDDC39),
+                        position = Position.Relative(1.0, 0.5),
+                        emitter = Emitter(duration = 50, TimeUnit.MILLISECONDS).max(15)
+                    )
+                    KonfettiView(
+                        modifier = Modifier.fillMaxSize(),
+                        parties = if (isAnimatingOut && swipeDirection == 1) listOf(partyRight) else emptyList()
+                    )
+
                     // ── 3D Flip Card ──────────────────────────────────────
                     Box(
                         modifier = Modifier
@@ -988,6 +1025,28 @@ fun StudyModeScreen(
 }
 
 @Composable
+fun CelebrationFireworks() {
+    val party = Party(
+        speed = 0f,
+        maxSpeed = 30f,
+        damping = 0.9f,
+        spread = 360,
+        colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def),
+        position = Position.Relative(0.5, 0.3),
+        emitter = Emitter(duration = 100, TimeUnit.MILLISECONDS).max(100)
+    )
+    KonfettiView(
+        modifier = Modifier.fillMaxSize(),
+        parties = listOf(
+            party,
+            party.copy(position = Position.Relative(0.2, 0.4)),
+            party.copy(position = Position.Relative(0.8, 0.4)),
+            party.copy(position = Position.Relative(0.5, 0.7))
+        )
+    )
+}
+
+@Composable
 fun StudyCompleteScreen(
     totalCards: Int,
     studiedCount: Int,
@@ -1010,13 +1069,11 @@ fun StudyCompleteScreen(
 
     Box(
         modifier = Modifier.fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(ScPrimaryContainer.copy(alpha = 0.4f), ScBackground)
-                )
-            ),
+            .background(ScBackground),
         contentAlignment = Alignment.Center
     ) {
+        // Fireworks layer
+        CelebrationFireworks()
         AnimatedVisibility(
             visible = visible,
             enter = fadeIn(tween(500)) + scaleIn(tween(500), initialScale = 0.85f)
@@ -1107,42 +1164,70 @@ fun StudyCompleteScreen(
                     }
                 }
 
-                // Buttons
+                // Buttons with shimmer
+                val shimmerTransition = rememberInfiniteTransition(label = "shimmer")
+                val shimmerOffset by shimmerTransition.animateFloat(
+                    initialValue = -500f,
+                    targetValue = 500f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(2000, easing = LinearEasing),
+                        repeatMode = RepeatMode.Restart
+                    ),
+                    label = "shimmerOffset"
+                )
+
                 if (notLearnedCount > 0) {
+                    val shimmerBrush = Brush.linearGradient(
+                        colors = listOf(ScError, Color.White.copy(alpha = 0.3f), ScError),
+                        start = Offset(shimmerOffset, shimmerOffset),
+                        end = Offset(shimmerOffset + 150f, shimmerOffset + 150f)
+                    )
                     Button(
                         onClick = onRestartNotLearned,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp)
-                            .graphicsLayer {
-                                shadowElevation = 8f
-                                shape = RoundedCornerShape(99.dp)
-                                clip = true
-                            },
+                            .height(58.dp),
                         shape = RoundedCornerShape(99.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = ScError,
-                            contentColor = ScOnError
-                        )
+                        colors = ButtonDefaults.buttonColors(containerColor = ScError)
                     ) {
-                        Icon(Icons.Default.Refresh, null, modifier = Modifier.size(20.dp))
-                        Spacer(Modifier.width(10.dp))
-                        Text(
-                            "Làm lại $notLearnedCount câu chưa thuộc",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                             Canvas(Modifier.fillMaxSize()) {
+                                 drawRoundRect(shimmerBrush, cornerRadius = CornerRadius(99.dp.toPx()))
+                             }
+                             Row(verticalAlignment = Alignment.CenterVertically) {
+                                 Icon(Icons.Default.Refresh, null, modifier = Modifier.size(20.dp))
+                                 Spacer(Modifier.width(10.dp))
+                                 Text(
+                                     "Làm lại $notLearnedCount câu chưa thuộc",
+                                     style = MaterialTheme.typography.titleMedium,
+                                     fontWeight = FontWeight.Bold
+                                 )
+                             }
+                        }
                     }
                 }
+                
                 Button(
                     onClick = onRestartAll,
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(99.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = ScPrimary)
                 ) {
-                    Icon(Icons.Default.Replay, null, tint = ScOnPrimary, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Học lại từ đầu", color = ScOnPrimary, fontWeight = FontWeight.SemiBold)
+                    val shimmerBrushPrimary = Brush.linearGradient(
+                        colors = listOf(ScPrimary, Color.White.copy(alpha = 0.2f), ScPrimary),
+                        start = Offset(shimmerOffset, shimmerOffset),
+                        end = Offset(shimmerOffset + 100f, shimmerOffset + 100f)
+                    )
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Canvas(Modifier.fillMaxSize()) {
+                            drawRoundRect(shimmerBrushPrimary, cornerRadius = CornerRadius(99.dp.toPx()))
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Replay, null, tint = ScOnPrimary, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Học lại từ đầu", color = ScOnPrimary, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
                 }
                 OutlinedButton(
                     onClick = onContinue,
