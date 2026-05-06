@@ -29,6 +29,7 @@ import com.example.studyapp.data.model.TodoItem
 import com.example.studyapp.notification.NotificationHelper
 import com.example.studyapp.notification.TodoReminderWorker
 import com.example.studyapp.ui.theme.*
+import com.example.studyapp.ui.util.*
 import com.example.studyapp.ui.viewmodel.TodoViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -56,6 +57,7 @@ fun TodoScreen(viewModel: TodoViewModel, context: Context) {
     var editingTodo by remember { mutableStateOf<TodoItem?>(null) }
     var calendarMode by remember { mutableStateOf(CalendarMode.MONTH) }
     var selectedDate by remember { mutableStateOf<Triple<Int, Int, Int>?>(null) }
+    var showClearConfirm by remember { mutableStateOf(false) }
 
     val today = remember {
         Calendar.getInstance().let {
@@ -222,7 +224,7 @@ fun TodoScreen(viewModel: TodoViewModel, context: Context) {
                         }
                         item {
                             TextButton(
-                                onClick = { viewModel.clearCompleted() },
+                                onClick = { showClearConfirm = true },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text("Xóa tất cả đã hoàn thành (${completed.size})",
@@ -269,6 +271,17 @@ fun TodoScreen(viewModel: TodoViewModel, context: Context) {
                 }
                 editingTodo = null
             })
+    }
+
+    if (showClearConfirm) {
+        ConfirmDialog(
+            title = "Dọn dẹp công việc?",
+            message = "Bạn có muốn xóa tất cả ${todos.count { it.isCompleted }} công việc đã hoàn thành không?",
+            iconPath = "sticky-note.png",
+            confirmText = "Dọn dẹp ngay",
+            onDismiss = { showClearConfirm = false },
+            onConfirm = { viewModel.clearCompleted(); showClearConfirm = false }
+        )
     }
 }
 
@@ -699,189 +712,202 @@ fun TodoAddDialog(
     }
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = RoundedCornerShape(24.dp), color = ScSurfaceContainerLowest,
-            shadowElevation = 8.dp) {
-            Column {
-                // Header
-                Box(modifier = Modifier.fillMaxWidth()
-                    .background(Brush.verticalGradient(
-                        listOf(ScPrimaryContainer.copy(0.5f), ScSurfaceContainerLowest)),
-                        RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                    .padding(24.dp)) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = ScSurfaceContainerLowest,
+            shadowElevation = 12.dp
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Header with gradient and icon
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(ScPrimaryContainer.copy(0.4f), ScSurfaceContainerLowest)
+                            ),
+                            RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+                        )
+                        .padding(24.dp)
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp))
-                            .background(ScPrimaryContainer), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.AddTask, null, tint = ScPrimary,
-                                modifier = Modifier.size(24.dp))
+                        Surface(
+                            modifier = Modifier.size(52.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            color = ScPrimary
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Image(
+                                    loadAssetImage("sticky-note.png"),
+                                    null,
+                                    modifier = Modifier.size(30.dp)
+                                )
+                            }
                         }
-                        Spacer(Modifier.width(14.dp))
+                        Spacer(Modifier.width(16.dp))
                         Column {
-                            Text("Thêm công việc",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = ScOnSurface, fontWeight = FontWeight.Bold)
-                            Text("Lên kế hoạch học tập hiệu quả",
+                            Text(
+                                "Công việc mới",
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = ScOnSurface,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "Lên kế hoạch cho mục tiêu của bạn",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = ScOnSurfaceVariant)
+                                color = ScOnSurfaceVariant
+                            )
                         }
                     }
                 }
 
-                Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
-                    ScTextField(value = title, onValueChange = { title = it },
-                        label = "Nội dung công việc", maxLines = 3)
-                    Spacer(Modifier.height(16.dp))
+                Column(modifier = Modifier.padding(24.dp)) {
+                    // Input Title
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        placeholder = { Text("Tên công việc...", color = ScOutline) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = ScPrimary,
+                            unfocusedBorderColor = ScOutlineVariant,
+                            focusedContainerColor = ScSurfaceContainerLowest,
+                            unfocusedContainerColor = ScSurfaceContainerLow
+                        ),
+                        maxLines = 3,
+                        textStyle = MaterialTheme.typography.bodyLarge
+                    )
 
-                    // Date + Time row
-                    Text("Thời hạn", style = MaterialTheme.typography.labelMedium,
-                        color = ScOnSurfaceVariant, fontWeight = FontWeight.SemiBold)
-                    Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        // Date button
-                        OutlinedButton(
-                            onClick = { showDatePicker = true },
-                            shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(1.dp,
-                                if (selectedDateMillis != null) ScPrimary.copy(0.5f) else ScOutlineVariant),
-                            modifier = Modifier.weight(1f),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
-                        ) {
-                            Icon(Icons.Default.CalendarToday, null,
-                                tint = if (selectedDateMillis != null) ScPrimary else ScOnSurfaceVariant,
-                                modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                selectedDateMillis?.let {
-                                    SimpleDateFormat("dd/MM/yyyy", Locale("vi")).format(Date(it))
-                                } ?: "Chọn ngày",
-                                color = if (selectedDateMillis != null) ScPrimary else ScOnSurfaceVariant,
-                                style = MaterialTheme.typography.labelMedium
-                            )
-                        }
-                        // Time button (only if date selected)
-                        AnimatedVisibility(visible = selectedDateMillis != null) {
-                            OutlinedButton(
-                                onClick = { showTimePicker = true },
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp, ScSecondary.copy(0.5f)),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
-                            ) {
-                                Icon(Icons.Default.Schedule, null,
-                                    tint = ScSecondary, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text(String.format("%02d:%02d", selectedHour, selectedMinute),
-                                    color = ScSecondary,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.SemiBold)
-                            }
-                        }
-                        if (selectedDateMillis != null) {
-                            IconButton(onClick = { selectedDateMillis = null },
-                                modifier = Modifier.size(40.dp)) {
-                                Icon(Icons.Default.Clear, null,
-                                    tint = ScOutline, modifier = Modifier.size(16.dp))
-                            }
-                        }
-                    }
-
-                    // Reminder toggle (only if date+time set)
-                    AnimatedVisibility(visible = selectedDateMillis != null) {
-                        Column {
-                            Spacer(Modifier.height(10.dp))
-                            Surface(shape = RoundedCornerShape(12.dp),
-                                color = if (enableReminder) ScPrimaryContainer.copy(0.3f)
-                                        else ScSurfaceContainerLow,
-                                border = BorderStroke(1.dp,
-                                    if (enableReminder) ScPrimary.copy(0.3f) else ScOutlineVariant)
-                            ) {
-                                Row(modifier = Modifier.fillMaxWidth()
-                                    .clickable { enableReminder = !enableReminder }
-                                    .padding(horizontal = 14.dp, vertical = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.NotificationsActive, null,
-                                        tint = if (enableReminder) ScPrimary else ScOnSurfaceVariant,
-                                        modifier = Modifier.size(18.dp))
-                                    Spacer(Modifier.width(10.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text("Nhắc nhở trước 30 phút",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = if (enableReminder) ScPrimary else ScOnSurface,
-                                            fontWeight = FontWeight.SemiBold)
-                                        Text("Gửi thông báo trước khi đến hạn",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = ScOnSurfaceVariant)
-                                    }
-                                    Switch(checked = enableReminder,
-                                        onCheckedChange = { enableReminder = it },
-                                        colors = SwitchDefaults.colors(
-                                            checkedThumbColor = ScOnPrimary,
-                                            checkedTrackColor = ScPrimary,
-                                            uncheckedThumbColor = ScOutline,
-                                            uncheckedTrackColor = ScSurfaceContainerHigh
-                                        ))
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(Modifier.height(16.dp))
-                    // Priority
-                    Text("Độ ưu tiên", style = MaterialTheme.typography.labelMedium,
-                        color = ScOnSurfaceVariant, fontWeight = FontWeight.SemiBold)
-                    Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf(
-                            Triple(0, "Bình thường", ScPrimaryFixedDim),
-                            Triple(1, "Trung bình", ScWarning),
-                            Triple(2, "Cao", ScError)
-                        ).forEach { (value, label, color) ->
-                            FilterChip(
-                                selected = priority == value,
-                                onClick = { priority = value },
-                                label = { Text(label, style = MaterialTheme.typography.labelSmall) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = color.copy(0.15f),
-                                    selectedLabelColor = color,
-                                    containerColor = ScBackground,
-                                    labelColor = ScOnSurfaceVariant
-                                ),
-                                border = FilterChipDefaults.filterChipBorder(
-                                    borderColor = ScOutlineVariant,
-                                    selectedBorderColor = color.copy(0.4f),
-                                    borderWidth = 1.dp, selectedBorderWidth = 1.dp
-                                )
-                            )
-                        }
-                    }
                     Spacer(Modifier.height(20.dp))
-                    Row(modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        OutlinedButton(onClick = onDismiss,
-                            modifier = Modifier.weight(1f).height(48.dp),
-                            shape = RoundedCornerShape(99.dp),
-                            border = BorderStroke(1.dp, ScOutlineVariant)
-                        ) { Text("Hủy", color = ScOnSurfaceVariant) }
+
+                    // Priority Selection
+                    Text(
+                        "Mức độ ưu tiên",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = ScOnSurface,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf(
+                            Triple(0, "Thường", ScPrimary),
+                            Triple(1, "Trung bình", ScWarning),
+                            Triple(2, "Quan trọng", ScError)
+                        ).forEach { (p, label, color) ->
+                            val isSelected = priority == p
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { priority = p },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isSelected) color.copy(alpha = 0.15f) else ScSurfaceContainerLow,
+                                border = if (isSelected) BorderStroke(1.5.dp, color) else null
+                            ) {
+                                Text(
+                                    label,
+                                    modifier = Modifier.padding(vertical = 10.dp),
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = if (isSelected) color else ScOnSurfaceVariant,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(20.dp))
+
+                    // Date & Time Selection
+                    Text(
+                        "Thời hạn & Nhắc nhở",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = ScOnSurface,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        // Date Button
+                        Surface(
+                            modifier = Modifier.weight(1f).clickable { showDatePicker = true },
+                            shape = RoundedCornerShape(16.dp),
+                            color = ScSurfaceContainerLow,
+                            border = if (selectedDateMillis != null) BorderStroke(1.dp, ScPrimary) else null
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Image(loadAssetImage("clock.png"), null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(10.dp))
+                                Text(
+                                    selectedDateMillis?.let {
+                                        SimpleDateFormat("dd/MM/yyyy", Locale("vi")).format(Date(it))
+                                    } ?: "Chọn ngày",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = if (selectedDateMillis != null) ScPrimary else ScOnSurfaceVariant
+                                )
+                            }
+                        }
+
+                        // Time Button
+                        Surface(
+                            modifier = Modifier.weight(0.8f).clickable { showTimePicker = true },
+                            shape = RoundedCornerShape(16.dp),
+                            color = ScSurfaceContainerLow,
+                            border = if (selectedDateMillis != null) BorderStroke(1.dp, ScSecondary) else null
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    String.format("%02d:%02d", selectedHour, selectedMinute),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = if (selectedDateMillis != null) ScSecondary else ScOnSurfaceVariant,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(28.dp))
+
+                    // Action Buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        TextButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.weight(1f).height(52.dp),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Text("Hủy", color = ScOnSurfaceVariant)
+                        }
                         Button(
-                            onClick = {
-                                if (title.isNotBlank())
-                                    onAdd(title, priority, finalDueDate)
-                            },
+                            onClick = { if (title.isNotBlank()) onAdd(title.trim(), priority, finalDueDate) },
                             enabled = title.isNotBlank(),
-                            modifier = Modifier.weight(1f).height(48.dp),
-                            shape = RoundedCornerShape(99.dp),
+                            modifier = Modifier.weight(1.5f).height(52.dp),
+                            shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = ScPrimary)
                         ) {
-                            Icon(Icons.Default.Add, null, tint = ScOnPrimary,
-                                modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Thêm", color = ScOnPrimary, fontWeight = FontWeight.SemiBold)
+                            Image(loadAssetImage("sparkles.png"), null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Tạo công việc", fontWeight = FontWeight.Bold)
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
                 }
             }
         }
     }
 }
+
 
 // expose reminder flag to caller via wrapper
 @OptIn(ExperimentalMaterial3Api::class)

@@ -36,6 +36,8 @@ import androidx.compose.ui.window.Dialog
 import com.example.studyapp.data.model.Flashcard
 import com.example.studyapp.ui.theme.*
 import com.example.studyapp.ui.viewmodel.FlashcardViewModel
+import com.example.studyapp.ui.util.loadAssetImage
+import com.example.studyapp.ui.util.ConfirmDialog
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.Position
@@ -64,6 +66,8 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
     var studySessionKey by remember { mutableStateOf(0) }
     // Override initialStudiedCount — null = dùng từ DB
     var overrideInitialStudied by remember { mutableStateOf<Int?>(null) }
+    var showShuffleConfirm by remember { mutableStateOf(false) }
+    var cardToDelete by remember { mutableStateOf<Flashcard?>(null) }
 
     if (studyMode && cards.isNotEmpty()) {
         val startIndex = deck?.lastStudiedIndex?.coerceIn(0, cards.size - 1) ?: 0
@@ -143,15 +147,19 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
                     )
                 }
                 if (cards.isNotEmpty()) {
-                    IconButton(onClick = { shuffleMode = !shuffleMode }) {
+                    IconButton(onClick = { 
+                        if (!shuffleMode) showShuffleConfirm = true 
+                        else shuffleMode = false 
+                    }) {
                         Icon(
-                            Icons.Default.Shuffle,
+                            loadAssetImage("reload.png"),
                             contentDescription = "Xáo trộn",
-                            tint = if (shuffleMode) ScPrimary else ScOnSurfaceVariant
+                            tint = if (shuffleMode) ScPrimary else ScOnSurfaceVariant,
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                     IconButton(onClick = { showStudyOptions = true }) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = "Học", tint = ScPrimary)
+                        Icon(Icons.Default.PlayCircle, contentDescription = "Học", tint = ScPrimary, modifier = Modifier.size(28.dp))
                     }
                 }
             }
@@ -256,7 +264,7 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
                             FlashcardItem(
                                 card = card,
                                 onEdit = { editingCard = card },
-                                onDelete = { viewModel.deleteCard(card) }
+                                onDelete = { cardToDelete = card }
                             )
                         }
                     }
@@ -330,7 +338,31 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
             onSave = { updated -> viewModel.updateCard(updated); editingCard = null }
         )
     }
+
+    if (showShuffleConfirm) {
+        ConfirmDialog(
+            title = "Xáo trộn bộ thẻ?",
+            message = "Bạn có muốn xáo trộn thứ tự các thẻ khi học không?",
+            iconPath = "reload.png",
+            confirmText = "Xác nhận",
+            onDismiss = { showShuffleConfirm = false },
+            onConfirm = { shuffleMode = true; showShuffleConfirm = false }
+        )
+    }
+
+    cardToDelete?.let { card ->
+        ConfirmDialog(
+            title = "Xóa thẻ này?",
+            message = "Thẻ này sẽ bị xóa vĩnh viễn khỏi bộ thẻ.",
+            iconPath = "fire.png",
+            confirmText = "Xóa ngay",
+            confirmColor = ScError,
+            onDismiss = { cardToDelete = null },
+            onConfirm = { viewModel.deleteCard(card); cardToDelete = null }
+        )
+    }
 }
+
 
 // ── FlashcardItem ─────────────────────────────────────────────────────────────
 
@@ -451,10 +483,15 @@ fun StudyModeScreen(
     var isFlipped by remember { mutableStateOf(false) }
     var showComplete by remember { mutableStateOf(false) }
 
+    // Track các ID thẻ đã học trong session để tránh đếm trùng khi tráo thẻ
+    val sessionStudiedIds = remember(cards) { 
+        mutableSetOf<Long>().apply {
+            addAll(cards.filter { it.isLearned }.map { it.id })
+        }
+    }
+    
     // Track các index chưa thuộc (swipe trái)
-    val notLearnedIndices = remember { mutableStateListOf<Int>() }
-    // Track số câu đã trả lời (cả 2 chiều) cho progress bar - Khởi tạo từ initialIndex để đúng tiến trình khi học tiếp
-    var answeredCount by remember { mutableStateOf(initialIndex) }
+    val notLearnedIndices = remember(cards) { mutableStateListOf<Int>() }
 
     // Drag & swipe state
     var dragOffsetX by remember { mutableStateOf(0f) }
@@ -474,16 +511,31 @@ fun StudyModeScreen(
         label = "offsetX",
         finishedListener = {
             if (isAnimatingOut) {
-                answeredCount++
+                val cardId = cards[currentIndex].id
+                
                 if (swipeDirection == 1) {
                     // Đã thuộc
-                    studiedCount = (studiedCount + 1).coerceAtMost(cards.size)
-                    onUpdateMastery(cards[currentIndex].id, true)
+                    sessionStudiedIds.add(cardId)
+                    onUpdateMastery(cardId, true)
                 } else {
-                    // Chưa thuộc — lưu index lại
+                    // Chưa thuộc
+                    sessionStudiedIds.remove(cardId)
                     notLearnedIndices.add(currentIndex)
-                    onUpdateMastery(cards[currentIndex].id, false)
+                    onUpdateMastery(cardId, false)
                 }
+                
+                // Update studiedCount based on unique learned cards in this view
+                // For subset, this correctly reflects NEWLY learned cards
+                // For all cards, this reflects TOTAL learned cards
+                studiedCount = if (cards.size == sessionStudiedIds.size || cards.any { !it.isLearned }) {
+                    // If isSubset is true, initially sessionStudiedIds is empty.
+                    // If not subset, it starts with all learned cards.
+                    // Actually, just using sessionStudiedIds.size is correct in both cases!
+                    sessionStudiedIds.size
+                } else {
+                    sessionStudiedIds.size
+                }
+                
                 if (currentIndex < cards.size - 1) {
                     currentIndex++
                 } else {
@@ -528,7 +580,6 @@ fun StudyModeScreen(
     val overlayColor = if (rawProgress > 0) ScPrimary else ScError
 
     val card = cards[currentIndex]
-    val progress = answeredCount.toFloat() / cards.size
 
     if (showComplete) {
         val notLearnedCards = notLearnedIndices.map { cards[it] }
@@ -539,7 +590,6 @@ fun StudyModeScreen(
             onRestartAll = {
                 currentIndex = 0
                 studiedCount = 0
-                answeredCount = 0
                 notLearnedIndices.clear()
                 showComplete = false
                 onRestart()
@@ -578,7 +628,7 @@ fun StudyModeScreen(
                     .padding(horizontal = 8.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { onExit(answeredCount, studiedCount) }) {
+                IconButton(onClick = { onExit(currentIndex, studiedCount) }) {
                     Icon(Icons.Default.Close, null, tint = ScOnSurface)
                 }
                 Box(
@@ -589,7 +639,7 @@ fun StudyModeScreen(
                         .background(ScPrimaryContainer.copy(alpha = 0.4f))
                 ) {
                     val animProg by animateFloatAsState(
-                        targetValue = progress,
+                        targetValue = currentIndex.toFloat() / cards.size,
                         animationSpec = tween(600, easing = EaseOutCubic),
                         label = "prog"
                     )
@@ -605,7 +655,7 @@ fun StudyModeScreen(
                 }
                 Spacer(Modifier.width(12.dp))
                 Text(
-                    "$answeredCount/${cards.size}",
+                    "$currentIndex/${cards.size}",
                     style = MaterialTheme.typography.labelMedium,
                     color = ScOnSurfaceVariant,
                     fontWeight = FontWeight.SemiBold

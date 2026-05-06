@@ -5,6 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -12,6 +13,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,6 +29,8 @@ import androidx.compose.ui.window.Dialog
 import com.example.studyapp.data.model.FlashcardDeck
 import com.example.studyapp.ui.theme.*
 import com.example.studyapp.ui.viewmodel.FlashcardViewModel
+import com.example.studyapp.ui.util.loadAssetImage
+import com.example.studyapp.ui.util.ScTextField
 
 private val deckChipColors = listOf(
     Triple(ScPrimaryContainer, ScOnPrimaryContainer, ScPrimary),
@@ -92,15 +97,12 @@ fun FlashcardScreen(viewModel: FlashcardViewModel, onDeckClick: (Long) -> Unit) 
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(120.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(ScPrimaryContainer.copy(alpha = 0.4f))
-                                .border(2.dp, ScOutlineVariant, RoundedCornerShape(24.dp)),
+                                .size(120.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                Icons.Outlined.Style, null,
-                                Modifier.size(52.dp), tint = ScPrimary
+                            Image(
+                                loadAssetImage("play-button.png"), null,
+                                Modifier.fillMaxSize()
                             )
                         }
                         Text(
@@ -122,7 +124,10 @@ fun FlashcardScreen(viewModel: FlashcardViewModel, onDeckClick: (Long) -> Unit) 
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    itemsIndexed(decks, key = { _, d -> d.id }) { idx, deck ->
+                    itemsIndexed(
+                        items = decks,
+                        key = { _, d -> d.id }
+                    ) { idx, deck ->
                         val colorIdx = (deck.id % 3).toInt()
                         var visible by remember { mutableStateOf(false) }
                         LaunchedEffect(deck.id) {
@@ -401,36 +406,6 @@ fun DeckCard(
 
 // ── Shared dialog components ──────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ScTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    singleLine: Boolean = false,
-    maxLines: Int = 4
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label, color = ScOnSurfaceVariant) },
-        singleLine = singleLine,
-        maxLines = if (singleLine) 1 else maxLines,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = ScPrimary,
-            unfocusedBorderColor = ScOutlineVariant,
-            focusedTextColor = ScOnSurface,
-            unfocusedTextColor = ScOnSurface,
-            cursorColor = ScPrimary,
-            focusedLabelColor = ScPrimary,
-            unfocusedLabelColor = ScOnSurfaceVariant,
-            focusedContainerColor = ScSurfaceContainerLowest,
-            unfocusedContainerColor = ScSurfaceContainerLow
-        )
-    )
-}
 
 @Composable
 fun ScDialogButtons(

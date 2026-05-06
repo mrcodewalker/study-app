@@ -1,5 +1,6 @@
 package com.example.studyapp.ui.screen
 
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -11,10 +12,13 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -32,7 +36,7 @@ import java.util.*
 import java.text.SimpleDateFormat
 import kotlin.math.PI
 import kotlin.math.cos
-import kotlin.math.sin
+import com.example.studyapp.ui.util.loadAssetImage
 
 @Composable
 fun StatsScreen(
@@ -99,7 +103,7 @@ fun StatsScreen(
                     modifier = Modifier.weight(1f),
                     value = "$completedCount",
                     label = "Nhiệm vụ\nhoàn thành",
-                    icon = Icons.Default.TaskAlt,
+                    iconPath = "sparkles.png",
                     accent = ScPrimary,
                     bg = ScPrimaryContainer
                 )
@@ -107,7 +111,7 @@ fun StatsScreen(
                     modifier = Modifier.weight(1f),
                     value = "${decks.size}",
                     label = "Bộ thẻ\nđang học",
-                    icon = Icons.Default.Style,
+                    iconPath = "flash-card.png",
                     accent = ScSecondary,
                     bg = ScSecondaryContainer
                 )
@@ -115,7 +119,7 @@ fun StatsScreen(
                     modifier = Modifier.weight(1f),
                     value = formatDurationShort(recentActivity.firstOrNull()?.durationMillis ?: 0L),
                     label = "Thời gian\nhôm nay",
-                    icon = Icons.Default.Timer,
+                    iconPath = "clock.png",
                     accent = Color(0xFF673AB7),
                     bg = Color(0xFFD1C4E9)
                 )
@@ -139,8 +143,12 @@ fun StatsScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text("Hôm nay", style = MaterialTheme.typography.titleSmall,
-                            color = ScOnSurface, fontWeight = FontWeight.SemiBold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Image(loadAssetImage("clock.png"), null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Hôm nay", style = MaterialTheme.typography.titleSmall,
+                                color = ScOnSurface, fontWeight = FontWeight.SemiBold)
+                        }
                         Text("$completedCount/$totalCount nhiệm vụ",
                             style = MaterialTheme.typography.bodySmall, color = ScOnSurfaceVariant)
                         Spacer(Modifier.height(12.dp))
@@ -171,9 +179,13 @@ fun StatsScreen(
                     Column(
                         modifier = Modifier.padding(16.dp).fillMaxHeight()
                     ) {
-                        Text("Tiến độ tuần",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = ScOnSurface, fontWeight = FontWeight.SemiBold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Image(loadAssetImage("analysis.png"), null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Tiến độ tuần",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = ScOnSurface, fontWeight = FontWeight.SemiBold)
+                        }
                         Text("Số việc hoàn thành/ngày",
                             style = MaterialTheme.typography.labelSmall,
                             color = ScOnSurfaceVariant)
@@ -252,8 +264,7 @@ fun StatsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Psychology, null,
-                            tint = ScTertiary, modifier = Modifier.size(20.dp))
+                        Image(loadAssetImage("sparkles.png"), null, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
                         Text("Thời điểm làm việc hiệu quả",
                             style = MaterialTheme.typography.titleSmall,
@@ -294,8 +305,7 @@ fun StatsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Timer, null,
-                            tint = ScPrimary, modifier = Modifier.size(20.dp))
+                        Image(loadAssetImage("clock.png"), null, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
                         Text("Thời gian sử dụng (7 ngày)",
                             style = MaterialTheme.typography.titleSmall,
@@ -343,9 +353,8 @@ fun StatsScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Icon(Icons.Default.LocalFireDepartment, null,
-                            tint = ScSecondary,
-                            modifier = Modifier.size(32.dp))
+                        Image(loadAssetImage("fire.png"), null,
+                            modifier = Modifier.size(40.dp))
                         Column {
                             Text("STREAK",
                                 style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
@@ -404,7 +413,7 @@ fun WeekBarChart(bars: List<Pair<String, Float>>, modifier: Modifier = Modifier)
             val barColor = if (isWeekend) ScSecondary else ScPrimary
             val trackColor = if (isWeekend) ScSecondaryContainer else ScPrimaryContainer
 
-            Column(
+Column(
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Bottom
@@ -567,10 +576,11 @@ fun FocusLineChart(focusData: List<Float>, modifier: Modifier = Modifier) {
 
 // ── Stat Summary Card ─────────────────────────────────────────────────────────
 
+
 @Composable
 fun UsageChart(activities: List<com.example.studyapp.data.model.UserActivity>) {
     val maxDuration = remember(activities) {
-        (activities.maxOfOrNull { it.durationMillis } ?: 1L).coerceAtLeast(60000L)
+        (activities.maxOfOrNull { it.durationMillis } ?: 1L).coerceAtLeast(900000L) // Min 15 mins scale
     }
     val days = remember {
         (0..6).reversed().map { d ->
@@ -581,27 +591,8 @@ fun UsageChart(activities: List<com.example.studyapp.data.model.UserActivity>) {
     var selectedDayIndex by remember { mutableStateOf(-1) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        // Details display
-        Box(modifier = Modifier.fillMaxWidth().height(24.dp), contentAlignment = Alignment.Center) {
-            if (selectedDayIndex != -1) {
-                val day = days[selectedDayIndex]
-                val dayStart = (day.clone() as Calendar).apply {
-                    set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-                }.timeInMillis
-                val activity = activities.find { it.date == dayStart }
-                val durationMins = (activity?.durationMillis ?: 0L) / 60000
-                Text(
-                    text = "${durationMins} phút hoạt động",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = ScPrimary,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-        
         Row(
-            modifier = Modifier.padding(top = 4.dp, bottom = 10.dp).height(100.dp).fillMaxWidth(),
+            modifier = Modifier.padding(top = 8.dp, bottom = 12.dp).height(120.dp).fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
@@ -613,10 +604,48 @@ fun UsageChart(activities: List<com.example.studyapp.data.model.UserActivity>) {
                 
                 val activity = activities.find { it.date == dayStart }
                 val duration = activity?.durationMillis ?: 0L
-                val barHeight = (duration.toFloat() / maxDuration).coerceIn(0.1f, 1f)
                 val isToday = index == 6
                 val isSelected = selectedDayIndex == index
                 
+                // Animated height
+                val targetHeight = (duration.toFloat() / maxDuration).coerceIn(0.08f, 1f)
+                val animatedHeight by animateFloatAsState(
+                    targetValue = targetHeight,
+                    animationSpec = tween(1000, easing = EaseOutBack),
+                    label = "height"
+                )
+                
+                // Animated color
+                val barColor by animateColorAsState(
+                    targetValue = when {
+                        isSelected -> ScSecondary
+                        isToday -> ScPrimary
+                        duration > 0 -> ScPrimary.copy(alpha = 0.8f)
+                        else -> ScOutlineVariant.copy(alpha = 0.2f)
+                    },
+                    animationSpec = tween(400),
+                    label = "color"
+                )
+
+                val barScale by animateFloatAsState(
+                    targetValue = if (isSelected) 1.05f else 1f,
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+                    label = "barScale"
+                )
+                
+                val infiniteTransition = rememberInfiniteTransition(label = "sparkle")
+                val sparkleAlpha by infiniteTransition.animateFloat(
+                    initialValue = 0.3f, targetValue = 1f,
+                    animationSpec = infiniteRepeatable(tween(800, easing = EaseInOutSine), RepeatMode.Reverse),
+                    label = "sparkleAlpha"
+                )
+
+                val animatedWidth by animateDpAsState(
+                    targetValue = if (isSelected) 24.dp else 12.dp,
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+                    label = "width"
+                )
+
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally, 
                     modifier = Modifier
@@ -628,25 +657,49 @@ fun UsageChart(activities: List<com.example.studyapp.data.model.UserActivity>) {
                             selectedDayIndex = if (selectedDayIndex == index) -1 else index
                         }
                 ) {
+                    AnimatedVisibility(
+                        visible = isSelected,
+                        enter = fadeIn() + slideInVertically { 10 },
+                        exit = fadeOut() + slideOutVertically { 10 }
+                    ) {
+                        Text(
+                            text = "${duration / 60000}m",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ScSecondary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                    }
                     Box(
                         modifier = Modifier
-                            .width(if (isSelected) 14.dp else 10.dp)
-                            .fillMaxHeight(barHeight)
-                            .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                            .background(
-                                if (isSelected) ScSecondary 
-                                else if (duration > 0) ScPrimary 
-                                else ScOutlineVariant.copy(alpha = 0.3f)
+                            .width(animatedWidth)
+                            .fillMaxHeight(animatedHeight)
+                            .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
+                            .background(barColor)
+                            .then(
+                                if (isSelected) {
+                                    Modifier.border(
+                                        BorderStroke(2.dp, Brush.sweepGradient(listOf(
+                                            ScPrimary.copy(alpha = sparkleAlpha), 
+                                            ScSecondary.copy(alpha = sparkleAlpha), 
+                                            ScTertiary.copy(alpha = sparkleAlpha), 
+                                            ScPrimary.copy(alpha = sparkleAlpha)
+                                        ))),
+                                        RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp)
+                                    )
+                                } else if (isToday && duration == 0L) {
+                                    Modifier.border(1.dp, ScPrimary.copy(alpha = 0.5f), RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
+                                } else Modifier
                             )
-                            .animateContentSize()
                     )
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(8.dp))
                     Text(
-                        if (isToday) "Hnay" else dayFormatter.format(day.time).replace("Th ", "T"),
+                        text = if (isToday) "Hnay" else dayFormatter.format(day.time).replace("Th ", "T"),
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (isToday) ScPrimary else ScOnSurfaceVariant,
-                        fontSize = 9.sp,
-                        fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
+                        color = if (isSelected || isToday) ScPrimary else ScOnSurfaceVariant,
+                        fontSize = 10.sp,
+                        fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal
                     )
                 }
             }
@@ -659,7 +712,7 @@ fun StatSummaryCard(
     modifier: Modifier,
     value: String,
     label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconPath: String,
     accent: Color,
     bg: Color
 ) {
@@ -680,7 +733,7 @@ fun StatSummaryCard(
                 modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(bg),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, null, tint = accent, modifier = Modifier.size(20.dp))
+                Image(loadAssetImage(iconPath), null, modifier = Modifier.size(24.dp))
             }
             Spacer(Modifier.height(8.dp))
             Text(value, style = MaterialTheme.typography.titleLarge,

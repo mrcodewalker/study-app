@@ -12,6 +12,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +30,7 @@ import com.example.studyapp.ui.theme.*
 import com.example.studyapp.ui.viewmodel.NoteViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import com.example.studyapp.ui.util.loadAssetImage
 
 private val noteAccents = listOf(
     ScPrimary, ScSecondary, ScTertiary, ScWarning, ScError, Color(0xFF7B5EA7)
@@ -105,7 +108,7 @@ fun NoteScreen(viewModel: NoteViewModel) {
                     onValueChange = viewModel::setSearchQuery,
                     placeholder = { Text("Tìm kiếm ghi chú...", color = ScOutline.copy(0.6f)) },
                     leadingIcon = {
-                        Icon(Icons.Default.Search, null, tint = ScOutline, modifier = Modifier.size(20.dp))
+                        Image(loadAssetImage("3d-magnifier.png"), null, modifier = Modifier.size(24.dp))
                     },
                     trailingIcon = {
                         if (searchQuery.isNotBlank())
@@ -138,12 +141,10 @@ fun NoteScreen(viewModel: NoteViewModel) {
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Box(
-                            modifier = Modifier.size(90.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(ScPrimaryContainer.copy(alpha = 0.5f)),
+                            modifier = Modifier.size(90.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Outlined.Note, null, Modifier.size(44.dp), tint = ScPrimary)
+                            Image(loadAssetImage("sticky-note.png"), null, Modifier.fillMaxSize())
                         }
                         Text(
                             if (searchQuery.isBlank()) "Chưa có ghi chú nào"

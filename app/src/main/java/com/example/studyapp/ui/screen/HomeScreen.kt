@@ -13,6 +13,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,7 +40,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.PI
 import kotlin.math.cos
-import kotlin.math.sin
+import com.example.studyapp.ui.util.loadAssetImage
 
 @Composable
 fun HomeScreen(
@@ -178,53 +180,15 @@ fun HomeScreen(
                         )
                         Box(
                             modifier = Modifier
-                                .size(64.dp)
-                                .graphicsLayer { translationY = floatY }
-                                .clip(RoundedCornerShape(18.dp))
-                                .background(
-                                    Brush.radialGradient(
-                                        listOf(ScPrimaryContainer, ScPrimary.copy(alpha = 0.3f))
-                                    )
-                                ),
+                                .size(72.dp)
+                                .graphicsLayer { translationY = floatY },
                             contentAlignment = Alignment.Center
                         ) {
-                            Canvas(modifier = Modifier.fillMaxSize().padding(14.dp)) {
-                                val w = size.width
-                                val h = size.height
-                                
-                                // Premium book with pages
-                                val bookColor = ScPrimary
-                                val pageColor = Color.White
-                                
-                                // Right page
-                                val rightPage = Path().apply {
-                                    moveTo(w * 0.5f, h * 0.2f)
-                                    cubicTo(w * 0.7f, h * 0.15f, w * 0.9f, h * 0.25f, w * 0.95f, h * 0.3f)
-                                    lineTo(w * 0.95f, h * 0.85f)
-                                    cubicTo(w * 0.85f, h * 0.8f, w * 0.7f, h * 0.75f, w * 0.5f, h * 0.8f)
-                                    close()
-                                }
-                                // Left page
-                                val leftPage = Path().apply {
-                                    moveTo(w * 0.5f, h * 0.2f)
-                                    cubicTo(w * 0.3f, h * 0.15f, w * 0.1f, h * 0.25f, w * 0.05f, h * 0.3f)
-                                    lineTo(w * 0.05f, h * 0.85f)
-                                    cubicTo(w * 0.15f, h * 0.8f, w * 0.3f, h * 0.75f, w * 0.5f, h * 0.8f)
-                                    close()
-                                }
-                                
-                                drawPath(leftPage, bookColor)
-                                drawPath(rightPage, bookColor)
-                                
-                                // Spine
-                                drawLine(bookColor, Offset(w * 0.5f, h * 0.2f), Offset(w * 0.5f, h * 0.85f), strokeWidth = 3.dp.toPx())
-                                
-                                // Page lines
-                                drawLine(pageColor.copy(alpha = 0.5f), Offset(w * 0.6f, h * 0.35f), Offset(w * 0.85f, h * 0.35f), strokeWidth = 1.dp.toPx())
-                                drawLine(pageColor.copy(alpha = 0.5f), Offset(w * 0.6f, h * 0.5f), Offset(w * 0.85f, h * 0.5f), strokeWidth = 1.dp.toPx())
-                                drawLine(pageColor.copy(alpha = 0.5f), Offset(w * 0.15f, h * 0.35f), Offset(w * 0.4f, h * 0.35f), strokeWidth = 1.dp.toPx())
-                                drawLine(pageColor.copy(alpha = 0.5f), Offset(w * 0.15f, h * 0.5f), Offset(w * 0.4f, h * 0.5f), strokeWidth = 1.dp.toPx())
-                            }
+                            Image(
+                                painter = loadAssetImage("reading.png"),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize()
+                            )
                         }
                     }
                 }
@@ -342,11 +306,10 @@ fun HomeScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 val isMastered = decks.isNotEmpty() && decks.first().let { it.cardCount > 0 && it.studiedCount >= it.cardCount }
-                                Icon(
-                                    if (isMastered) Icons.Default.EmojiEvents else Icons.Default.AutoStories,
+                                Image(
+                                    loadAssetImage(if (isMastered) "trophy.png" else "flash-card.png"),
                                     null,
-                                    tint = if (isMastered) Color(0xFFFBC02D) else ScPrimary,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(32.dp)
                                 )
                                 Spacer(Modifier.height(6.dp))
                                 if (decks.isNotEmpty()) {
@@ -433,15 +396,15 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     HomeQuickAction(
-                        Modifier.weight(1f), Icons.Filled.Style,
+                        Modifier.weight(1f), "play-button.png",
                         "Thẻ học", ScPrimary, ScPrimaryContainer, onNavigateToFlashcard
                     )
                     HomeQuickAction(
-                        Modifier.weight(1f), Icons.Filled.EditNote,
+                        Modifier.weight(1f), "sparkles.png",
                         "Ghi chú", ScSecondary, ScSecondaryContainer, onNavigateToNote
                     )
                     HomeQuickAction(
-                        Modifier.weight(1f), Icons.Filled.Task,
+                        Modifier.weight(1f), "clock.png",
                         "Công việc", ScTertiary, ScTertiaryContainer, onNavigateToTodo
                     )
                 }
@@ -676,7 +639,7 @@ fun HomeCircularProgress(progress: Float, modifier: Modifier = Modifier) {
 @Composable
 fun HomeQuickAction(
     modifier: Modifier,
-    icon: ImageVector,
+    iconPath: String,
     label: String,
     accent: Color,
     bg: Color,
@@ -717,7 +680,7 @@ fun HomeQuickAction(
                     .background(bg),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, null, tint = accent, modifier = Modifier.size(24.dp))
+                Image(loadAssetImage(iconPath), null, modifier = Modifier.size(24.dp))
             }
             Spacer(Modifier.height(8.dp))
             Text(
@@ -866,18 +829,16 @@ fun HomeRecentDeckCard(deck: FlashcardDeck, onClick: () -> Unit) {
                     )
                 }
                 if (isMastered) {
-                    Icon(
-                        Icons.Default.EmojiEvents,
+                    Image(
+                        loadAssetImage("trophy.png"),
                         null,
-                        tint = Color(0xFFFBC02D),
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 } else {
-                    Icon(
-                        Icons.Default.Whatshot,
+                    Image(
+                        loadAssetImage("fire.png"),
                         null,
-                        tint = accent.copy(alpha = 0.6f),
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -1029,12 +990,13 @@ fun HomeRecentNoteCard(note: com.example.studyapp.data.model.Note, onClick: () -
     }
 }
 
+
 // Keep legacy aliases so other files that reference them still compile
 @Composable
 fun HomeStatCard(
     modifier: Modifier, value: String, label: String,
-    icon: ImageVector, accent: Color, bg: Color, onClick: () -> Unit
-) = HomeQuickAction(modifier, icon, label, accent, bg, onClick)
+    iconPath: String, accent: Color, bg: Color, onClick: () -> Unit
+) = HomeQuickAction(modifier, iconPath, label, accent, bg, onClick)
 
 @Composable
 fun UpcomingTodoRow(todo: TodoItem) = HomeTodoRow(todo)
