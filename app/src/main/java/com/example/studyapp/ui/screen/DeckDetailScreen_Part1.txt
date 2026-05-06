@@ -1,0 +1,9 @@
+// Tôi sẽ tạo DeckDetailScreen với:
+// 1. Card học flashcard TO HƠN (aspect ratio 3:4 như HTML mẫu)
+// 2. Animation lật thẻ 3D với graphicsLayer
+// 3. Swipe gesture để đánh giá (trái = cần xem lại, phải = đã thuộc)
+// 4. Confetti animation khi hoàn thành
+// 5. Modal dialog đẹp hơn với gradient header
+// 6. Progress animation mượt mà
+
+Vì file quá dài (>1000 lines), tôi sẽ viết trực tiếp vào file chính

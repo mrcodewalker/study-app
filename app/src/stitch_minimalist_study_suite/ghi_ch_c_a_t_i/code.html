@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StudyCalm - Notes</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#274e45",
+                        "surface-container-highest": "#e1e3e3",
+                        "on-primary-container": "#3f665c",
+                        "on-error-container": "#93000a",
+                        "secondary-container": "#ded9fd",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed": "#00201a",
+                        "surface-container": "#eceeee",
+                        "surface-dim": "#d8dada",
+                        "secondary-fixed": "#e4dfff",
+                        "tertiary-fixed-dim": "#b4cad8",
+                        "inverse-on-surface": "#eff1f1",
+                        "surface": "#f8fafa",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-container": "#4d616e",
+                        "on-tertiary-fixed": "#071e29",
+                        "on-background": "#191c1d",
+                        "surface-container-low": "#f2f4f4",
+                        "primary-fixed-dim": "#a6cfc3",
+                        "primary-fixed": "#c1ebdf",
+                        "on-secondary-container": "#605d7c",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e6e8e9",
+                        "surface-variant": "#e1e3e3",
+                        "primary-container": "#b8e2d6",
+                        "tertiary-container": "#c6dceb",
+                        "on-tertiary-fixed-variant": "#354955",
+                        "tertiary": "#4d616e",
+                        "secondary-fixed-dim": "#c7c2e6",
+                        "surface-bright": "#f8fafa",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed-variant": "#464361",
+                        "tertiary-fixed": "#d0e6f5",
+                        "on-secondary-fixed": "#1b1833",
+                        "secondary": "#5e5b7a",
+                        "on-error": "#ffffff",
+                        "background": "#f8fafa",
+                        "primary": "#3f665c",
+                        "surface-tint": "#3f665c",
+                        "outline-variant": "#c0c8c5",
+                        "outline": "#717976",
+                        "on-surface": "#191c1d",
+                        "on-surface-variant": "#414846",
+                        "inverse-surface": "#2e3131",
+                        "inverse-primary": "#a6cfc3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "margin-edge": "24px",
+                        "gutter": "16px",
+                        "stack-sm": "12px",
+                        "stack-md": "24px",
+                        "stack-lg": "40px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0", "fontWeight": "400"}],
+                        "headline-md": ["22px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #f8fafa;
+            font-family: 'Inter', sans-serif;
+        }
+        .diffusion-shadow {
+            box-shadow: 0 4px 20px 0 rgba(63, 102, 92, 0.04);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-nav {
+            backdrop-filter: blur(12px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-surface/80 backdrop-blur-md">
+<div class="flex justify-between items-center px-margin-edge py-base w-full max-w-screen-xl mx-auto">
+<div class="flex items-center gap-3">
+<img alt="Profile" class="w-10 h-10 rounded-full border-2 border-primary-container object-cover" data-alt="A close-up high-quality portrait of a young student with a friendly expression, set against a soft-focus library background. The lighting is warm and natural, emphasizing a bright, calm, and studious atmosphere. The color palette features gentle greens and neutrals consistent with a minimalist and tranquil UI design system." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1ZUXRpq1NhHVLa7L1UOVFwXtc0f-WqDVy33HhopXSgN4GiuopETfFBM6JyArGgmbzW4lPe-xQW_W5E4OJc_P8bxK1H0GrlY_Th0PgKJ9upgJNdhnDPImf5TpnmLu2PUQdvXUucUirg0ixM8AOHcmnCJbjwDxZpg7aTUkDtZYhjRnJ7daM-H6XTPzGvScNL1mLIXqe8feeA9Agw3EG93fJo8VQ73abBIK_M2mR6YL85CkSngJXb8pVK7MYfbJnNgtMjRLA6iFRtA"/>
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary">StudyCalm</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary" data-icon="search">search</span>
+</button>
+</div>
+</header>
+<main class="px-margin-edge max-w-screen-xl mx-auto pt-6">
+<!-- Search Header Section -->
+<div class="mb-stack-lg">
+<div class="relative group">
+<div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline" data-icon="search">search</span>
+</div>
+<input class="w-full h-14 pl-12 pr-4 rounded-xl border-none bg-surface-container-low focus:bg-primary-container/20 focus:ring-2 focus:ring-primary-container transition-all placeholder:text-outline/60 text-body-lg" placeholder="Tìm kiếm ghi chú..." type="text"/>
+</div>
+</div>
+<!-- Notes Bento-ish Grid -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-gutter">
+<!-- Note Item: History -->
+<div class="diffusion-shadow rounded-[16px] p-4 bg-primary-container/30 border border-primary-container/10 flex flex-col justify-between h-56 transition-transform active:scale-[0.98] cursor-pointer">
+<div>
+<div class="flex justify-between items-start mb-2">
+<span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-label-md font-label-md">Lịch sử</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="more_vert">more_vert</span>
+</div>
+<h3 class="font-headline-md text-[18px] text-on-surface mb-2 leading-tight">Ghi chú Lịch sử</h3>
+<p class="text-on-surface-variant text-body-md line-clamp-3">Phân tích nguyên nhân dẫn đến các cuộc cách mạng tư sản thế kỷ XVIII...</p>
+</div>
+<div class="text-label-sm text-outline font-label-sm mt-4 uppercase tracking-wider">Hôm nay, 10:30</div>
+</div>
+<!-- Note Item: Math -->
+<div class="diffusion-shadow rounded-[16px] p-4 bg-secondary-container/40 border border-secondary-container/10 flex flex-col justify-between h-48 transition-transform active:scale-[0.98] cursor-pointer">
+<div>
+<div class="flex justify-between items-start mb-2">
+<span class="px-3 py-1 rounded-full bg-secondary/10 text-secondary text-label-md font-label-md">Toán học</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="more_vert">more_vert</span>
+</div>
+<h3 class="font-headline-md text-[18px] text-on-surface mb-2 leading-tight">Công thức Toán</h3>
+<p class="text-on-surface-variant text-body-md line-clamp-2">Tổng hợp các công thức đạo hàm và tích phân cơ bản.</p>
+</div>
+<div class="text-label-sm text-outline font-label-sm mt-4 uppercase tracking-wider">Hôm qua</div>
+</div>
+<!-- Note Item: Physics -->
+<div class="diffusion-shadow rounded-[16px] p-4 bg-tertiary-container/40 border border-tertiary-container/10 flex flex-col justify-between h-64 md:col-span-1 transition-transform active:scale-[0.98] cursor-pointer">
+<div>
+<div class="flex justify-between items-start mb-2">
+<span class="px-3 py-1 rounded-full bg-tertiary/10 text-tertiary text-label-md font-label-md">Vật lý</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="more_vert">more_vert</span>
+</div>
+<h3 class="font-headline-md text-[18px] text-on-surface mb-2 leading-tight">Ôn tập học kỳ I</h3>
+<p class="text-on-surface-variant text-body-md">Các định luật bảo toàn động lượng và năng lượng trong hệ kín. Lưu ý các trường hợp va chạm đàn hồi.</p>
+</div>
+<div class="mt-4">
+<img alt="Physics notes" class="w-full h-24 object-cover rounded-lg mb-2 opacity-80" data-alt="A clean, minimalist 3D rendering of abstract geometric shapes and formulas representing physics concepts like vectors and energy. The scene is illuminated with soft, diffused top-down lighting, using a cool palette of pale blues and whites to maintain a serene and focused mood. The style is modern, technical yet calming, fitting perfectly into a student study application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdzgQrPz4ZxJ_90bL2UggTHUbo2PFzbqPELjAqwYAkng9WjSrDK0umULxN0rZdDZCjv7dEKCwIGZ5j1aRRg8EMLX9enzpk4012czFkjVFjSZYsZUdQWp8QRFkPyA2et2wUWdBz6pFciivjpqY8o-L0sXF7QE6PXTBPTM2DnUFlRXA84Tj5bleP9BfjRvy-QOzjFzLybVqBe8jJP79WdmAoP9vVJXy9L05j4Iy8DhROLF1ytaKz3h2U4nthMO211tYiYiA5qWVG2Q"/>
+<div class="text-label-sm text-outline font-label-sm uppercase tracking-wider">2 ngày trước</div>
+</div>
+</div>
+<!-- Note Item: English -->
+<div class="diffusion-shadow rounded-[16px] p-4 bg-surface-container-highest/50 border border-surface-container-highest/10 flex flex-col justify-between h-52 transition-transform active:scale-[0.98] cursor-pointer">
+<div>
+<div class="flex justify-between items-start mb-2">
+<span class="px-3 py-1 rounded-full bg-on-surface-variant/10 text-on-surface-variant text-label-md font-label-md">Ngoại ngữ</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="more_vert">more_vert</span>
+</div>
+<h3 class="font-headline-md text-[18px] text-on-surface mb-2 leading-tight">Vocabulary List</h3>
+<p class="text-on-surface-variant text-body-md line-clamp-3">Essential verbs for academic writing: implement, distinguish, exacerbate...</p>
+</div>
+<div class="text-label-sm text-outline font-label-sm mt-4 uppercase tracking-wider">3 ngày trước</div>
+</div>
+<!-- Note Item: Chemistry -->
+<div class="diffusion-shadow rounded-[16px] p-4 bg-primary-container/20 border border-primary-container/10 flex flex-col justify-between h-44 transition-transform active:scale-[0.98] cursor-pointer">
+<div>
+<div class="flex justify-between items-start mb-2">
+<span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-label-md font-label-md">Hóa học</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="more_vert">more_vert</span>
+</div>
+<h3 class="font-headline-md text-[18px] text-on-surface mb-2 leading-tight">Phản ứng Hữu cơ</h3>
+<p class="text-on-surface-variant text-body-md line-clamp-2">Cơ chế phản ứng thế nucleophil và tách loại.</p>
+</div>
+<div class="text-label-sm text-outline font-label-sm mt-4 uppercase tracking-wider">Tuần trước</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-on-primary rounded-2xl diffusion-shadow flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined text-3xl" data-icon="add">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-surface-container-lowest/80 backdrop-blur-lg shadow-[0_-4px_20px_0_rgba(63,102,92,0.06)] rounded-t-xl">
+<!-- Home -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high rounded-full transition-all active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-0.5" data-icon="home">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<!-- Cards -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high rounded-full transition-all active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-0.5" data-icon="style">style</span>
+<span class="font-label-md text-label-md">Cards</span>
+</a>
+<!-- Notes (ACTIVE) -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-6 py-1 active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-0.5" data-icon="edit_note" style="font-variation-settings: 'FILL' 1;">edit_note</span>
+<span class="font-label-md text-label-md">Notes</span>
+</a>
+<!-- Tasks -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high rounded-full transition-all active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-0.5" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-md text-label-md">Tasks</span>
+</a>
+</nav>
+</body></html>

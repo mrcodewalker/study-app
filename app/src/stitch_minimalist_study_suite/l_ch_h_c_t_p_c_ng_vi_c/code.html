@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed-variant": "#274e45",
+                    "surface-container-highest": "#e1e3e3",
+                    "on-primary-container": "#3f665c",
+                    "on-error-container": "#93000a",
+                    "secondary-container": "#ded9fd",
+                    "on-primary": "#ffffff",
+                    "on-primary-fixed": "#00201a",
+                    "surface-container": "#eceeee",
+                    "surface-dim": "#d8dada",
+                    "secondary-fixed": "#e4dfff",
+                    "tertiary-fixed-dim": "#b4cad8",
+                    "inverse-on-surface": "#eff1f1",
+                    "surface": "#f8fafa",
+                    "on-tertiary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-container": "#4d616e",
+                    "on-tertiary-fixed": "#071e29",
+                    "on-background": "#191c1d",
+                    "surface-container-low": "#f2f4f4",
+                    "primary-fixed-dim": "#a6cfc3",
+                    "primary-fixed": "#c1ebdf",
+                    "on-secondary-container": "#605d7c",
+                    "on-secondary": "#ffffff",
+                    "surface-container-high": "#e6e8e9",
+                    "surface-variant": "#e1e3e3",
+                    "primary-container": "#b8e2d6",
+                    "tertiary-container": "#c6dceb",
+                    "on-tertiary-fixed-variant": "#354955",
+                    "tertiary": "#4d616e",
+                    "secondary-fixed-dim": "#c7c2e6",
+                    "surface-bright": "#f8fafa",
+                    "error": "#ba1a1a",
+                    "on-secondary-fixed-variant": "#464361",
+                    "tertiary-fixed": "#d0e6f5",
+                    "on-secondary-fixed": "#1b1833",
+                    "secondary": "#5e5b7a",
+                    "on-error": "#ffffff",
+                    "background": "#f8fafa",
+                    "primary": "#3f665c",
+                    "surface-tint": "#3f665c",
+                    "outline-variant": "#c0c8c5",
+                    "outline": "#717976",
+                    "on-surface": "#191c1d",
+                    "on-surface-variant": "#414846",
+                    "inverse-surface": "#2e3131",
+                    "inverse-primary": "#a6cfc3"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "margin-edge": "24px",
+                    "gutter": "16px",
+                    "stack-sm": "12px",
+                    "stack-md": "24px",
+                    "stack-lg": "40px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "label-md": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0", "fontWeight": "400"}],
+                    "headline-md": ["22px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .diffusion-shadow {
+            box-shadow: 0 20px 40px -20px rgba(63, 102, 92, 0.08);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .custom-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen pb-32">
+<!-- TopAppBar Component -->
+<header class="w-full top-0 sticky z-50 bg-surface/80 backdrop-blur-md">
+<div class="flex justify-between items-center px-margin-edge py-base w-full max-w-screen-xl mx-auto">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-primary-container">
+<img alt="Profile" class="w-full h-full object-cover" data-alt="A soft-lit, high-quality 3D avatar profile picture of a young student with a friendly expression. The character is set against a solid pastel mint green background that matches a clean, modern educational app's aesthetic. The lighting is soft and diffused, creating a serene and professional look consistent with a focused study environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiwKNgls9dj_mmbBcLnOd77V3Al-qeEHr_MCUNiOXSEO1u7QS408X3IvOoGgozmeCfvJ1Q5CRV_c-C2zmYyMnxsUJwtZHZ07xPSRVILHru_UbLmYC3KVE22X7X44WJH48xdBBAsDK7xFrc-_-syKkSlxUVW6_gMBgjrgyz4EC2TJtI1K0pIguphAhc_PCYXTCSNMwfVNh73h8UZjnP8omteW2AbeOblP89D98Z8xgMNBHUbnhOk9VCVdE_tNUJmTSxWHFc4gKRXg"/>
+</div>
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary">StudyCalm</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-primary hover:bg-surface-container-high transition-colors active:scale-95">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+</div>
+</header>
+<main class="px-margin-edge pt-stack-sm space-y-stack-md max-w-screen-xl mx-auto">
+<!-- Weekly Horizontal Calendar -->
+<section class="space-y-stack-sm">
+<div class="flex justify-between items-end">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">October 2023</p>
+<h2 class="font-headline-md text-headline-md text-on-surface">This Week</h2>
+</div>
+<button class="text-primary font-label-md px-4 py-2 hover:bg-primary-container/20 rounded-full transition-colors">
+                    View Month
+                </button>
+</div>
+<div class="flex gap-gutter overflow-x-auto py-2 custom-scrollbar">
+<!-- Day Card -->
+<div class="flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-xl bg-surface-container-lowest diffusion-shadow border border-transparent min-w-[64px]">
+<span class="font-label-md text-on-surface-variant">Mon</span>
+<span class="font-headline-md text-on-surface">23</span>
+</div>
+<!-- Active Day Card -->
+<div class="flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-xl bg-primary text-on-primary diffusion-shadow min-w-[64px]">
+<span class="font-label-md opacity-80">Tue</span>
+<span class="font-headline-md font-bold">24</span>
+</div>
+<!-- Day Card -->
+<div class="flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-xl bg-surface-container-lowest diffusion-shadow border border-transparent min-w-[64px]">
+<span class="font-label-md text-on-surface-variant">Wed</span>
+<span class="font-headline-md text-on-surface">25</span>
+</div>
+<!-- Day Card -->
+<div class="flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-xl bg-surface-container-lowest diffusion-shadow border border-transparent min-w-[64px]">
+<span class="font-label-md text-on-surface-variant">Thu</span>
+<span class="font-headline-md text-on-surface">26</span>
+</div>
+<!-- Day Card -->
+<div class="flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-xl bg-surface-container-lowest diffusion-shadow border border-transparent min-w-[64px]">
+<span class="font-label-md text-on-surface-variant">Fri</span>
+<span class="font-headline-md text-on-surface">27</span>
+</div>
+<!-- Day Card -->
+<div class="flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-xl bg-surface-container-lowest diffusion-shadow border border-transparent min-w-[64px]">
+<span class="font-label-md text-on-surface-variant">Sat</span>
+<span class="font-headline-md text-on-surface">28</span>
+</div>
+</div>
+</section>
+<!-- Nhắc nhở học tập Section (Bento-style layout) -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="bg-tertiary-container/30 p-gutter rounded-[16px] diffusion-shadow flex items-center gap-4">
+<div class="bg-tertiary text-on-tertiary p-3 rounded-xl">
+<span class="material-symbols-outlined" data-icon="lightbulb">lightbulb</span>
+</div>
+<div>
+<h3 class="font-headline-md text-body-lg font-bold text-on-tertiary-container">Nhắc nhở học tập</h3>
+<p class="font-body-md text-on-tertiary-fixed-variant opacity-80">Chemistry exam in 3 days. Focus on Organic reactions today.</p>
+</div>
+</div>
+<div class="bg-secondary-container/30 p-gutter rounded-[16px] diffusion-shadow flex items-center gap-4">
+<div class="bg-secondary text-on-secondary p-3 rounded-xl">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div>
+<h3 class="font-headline-md text-body-lg font-bold text-on-secondary-container">Daily Insight</h3>
+<p class="font-body-md text-on-secondary-fixed-variant opacity-80">You're 15% more productive in the morning sessions!</p>
+</div>
+</div>
+</section>
+<!-- Task List Section -->
+<section class="space-y-stack-sm">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-md text-headline-md text-on-surface">Today's Tasks</h2>
+<div class="flex gap-2">
+<span class="bg-primary-container text-on-primary-container font-label-sm px-3 py-1 rounded-full">4 Left</span>
+</div>
+</div>
+<div class="space-y-4">
+<!-- Task Item -->
+<div class="group bg-surface-container-lowest p-gutter rounded-[16px] diffusion-shadow flex items-center gap-4 border border-transparent hover:border-primary-container transition-all">
+<input class="w-6 h-6 rounded-lg border-outline-variant text-primary focus:ring-primary-container transition-all cursor-pointer" type="checkbox"/>
+<div class="flex-grow">
+<h4 class="font-body-lg font-semibold text-on-surface">Math Assignment: Calculus</h4>
+<div class="flex items-center gap-3 mt-1">
+<div class="flex items-center gap-1 text-on-surface-variant font-label-md">
+<span class="material-symbols-outlined text-[16px]" data-icon="schedule">schedule</span>
+                                09:00 AM
+                            </div>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-label-md text-primary bg-primary-container/30 px-2 py-0.5 rounded-full">High Priority</span>
+</div>
+</div>
+</div>
+<!-- Task Item -->
+<div class="group bg-surface-container-lowest p-gutter rounded-[16px] diffusion-shadow flex items-center gap-4 border border-transparent hover:border-primary-container transition-all">
+<input class="w-6 h-6 rounded-lg border-outline-variant text-primary focus:ring-primary-container transition-all cursor-pointer" type="checkbox"/>
+<div class="flex-grow">
+<h4 class="font-body-lg font-semibold text-on-surface">Chemistry Lab Report</h4>
+<div class="flex items-center gap-3 mt-1">
+<div class="flex items-center gap-1 text-on-surface-variant font-label-md">
+<span class="material-symbols-outlined text-[16px]" data-icon="schedule">schedule</span>
+                                11:30 AM
+                            </div>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-label-md text-secondary bg-secondary-container/40 px-2 py-0.5 rounded-full">Study Group</span>
+</div>
+</div>
+</div>
+<!-- Task Item (Checked) -->
+<div class="group bg-surface-container-low p-gutter rounded-[16px] flex items-center gap-4 opacity-60">
+<input checked="" class="w-6 h-6 rounded-lg border-transparent bg-primary text-primary focus:ring-primary-container transition-all cursor-pointer" type="checkbox"/>
+<div class="flex-grow">
+<h4 class="font-body-lg font-semibold text-on-surface line-through">Review History Notes</h4>
+<div class="flex items-center gap-3 mt-1">
+<div class="flex items-center gap-1 text-on-surface-variant font-label-md">
+<span class="material-symbols-outlined text-[16px]" data-icon="schedule">schedule</span>
+                                08:00 AM
+                            </div>
+</div>
+</div>
+</div>
+<!-- Task Item -->
+<div class="group bg-surface-container-lowest p-gutter rounded-[16px] diffusion-shadow flex items-center gap-4 border border-transparent hover:border-primary-container transition-all">
+<input class="w-6 h-6 rounded-lg border-outline-variant text-primary focus:ring-primary-container transition-all cursor-pointer" type="checkbox"/>
+<div class="flex-grow">
+<h4 class="font-body-lg font-semibold text-on-surface">Prepare Presentation</h4>
+<div class="flex items-center gap-3 mt-1">
+<div class="flex items-center gap-1 text-on-surface-variant font-label-md">
+<span class="material-symbols-outlined text-[16px]" data-icon="schedule">schedule</span>
+                                02:00 PM
+                            </div>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-label-md text-tertiary bg-tertiary-container/40 px-2 py-0.5 rounded-full">Design</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating Action Button for adding task -->
+<button class="fixed bottom-24 right-margin-edge w-14 h-14 bg-primary text-on-primary rounded-full diffusion-shadow flex items-center justify-center active:scale-90 transition-transform z-40">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+<!-- BottomNavBar Component -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-surface-container-lowest/80 backdrop-blur-lg rounded-t-xl shadow-[0_-4px_20px_0_rgba(63,102,92,0.06)]">
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high rounded-full transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high rounded-full transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="style">style</span>
+<span class="font-label-md text-label-md">Cards</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high rounded-full transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="font-label-md text-label-md">Notes</span>
+</a>
+<!-- Active Tab: Tasks -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today" data-weight="fill" style="font-variation-settings: 'FILL' 1;">calendar_today</span>
+<span class="font-label-md text-label-md">Tasks</span>
+</a>
+</nav>
+</body></html>

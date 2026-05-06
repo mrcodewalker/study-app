@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .diffusion-shadow {
+            box-shadow: 0 10px 20px -5px rgba(63, 102, 92, 0.06);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#f8fafa",
+                        "on-secondary-container": "#605d7c",
+                        "primary-container": "#b8e2d6",
+                        "tertiary-container": "#c6dceb",
+                        "on-surface-variant": "#414846",
+                        "on-secondary-fixed": "#1b1833",
+                        "outline-variant": "#c0c8c5",
+                        "on-tertiary-container": "#4d616e",
+                        "secondary": "#5e5b7a",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#464361",
+                        "surface-container": "#eceeee",
+                        "outline": "#717976",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed": "#00201a",
+                        "inverse-surface": "#2e3131",
+                        "background": "#f8fafa",
+                        "surface-dim": "#d8dada",
+                        "primary-fixed": "#c1ebdf",
+                        "on-primary-container": "#3f665c",
+                        "surface-container-low": "#f2f4f4",
+                        "secondary-fixed-dim": "#c7c2e6",
+                        "on-primary-fixed-variant": "#274e45",
+                        "tertiary": "#4d616e",
+                        "surface-variant": "#e1e3e3",
+                        "on-tertiary-fixed": "#071e29",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#a6cfc3",
+                        "surface-container-high": "#e6e8e9",
+                        "on-background": "#191c1d",
+                        "surface": "#f8fafa",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#a6cfc3",
+                        "tertiary-fixed": "#d0e6f5",
+                        "inverse-on-surface": "#eff1f1",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#b4cad8",
+                        "on-tertiary-fixed-variant": "#354955",
+                        "surface-tint": "#3f665c",
+                        "secondary-fixed": "#e4dfff",
+                        "secondary-container": "#ded9fd",
+                        "primary": "#3f665c",
+                        "error": "#ba1a1a",
+                        "surface-container-highest": "#e1e3e3",
+                        "on-surface": "#191c1d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "40px",
+                        "stack-md": "24px",
+                        "gutter": "16px",
+                        "margin-edge": "24px",
+                        "base": "8px",
+                        "stack-sm": "12px"
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-bright text-on-surface min-h-screen">
+<!-- Top Navigation Bar -->
+<header class="w-full top-0 sticky bg-surface/80 backdrop-blur-md z-40">
+<div class="flex justify-between items-center px-margin-edge py-base w-full max-w-screen-xl mx-auto">
+<div class="flex items-center gap-base">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-container-high transition-colors active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">close</span>
+</button>
+<h1 class="font-bold text-headline-md text-primary">Tạo thẻ mới</h1>
+</div>
+<div class="flex items-center gap-gutter">
+<button class="hidden md:flex items-center gap-base px-gutter py-2 text-on-surface-variant font-medium hover:bg-surface-container-high rounded-xl transition-all">
+<span class="material-symbols-outlined">help</span>
+<span class="text-label-md font-label-md">Trợ giúp</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="max-w-2xl mx-auto px-margin-edge py-stack-md pb-32">
+<div class="space-y-stack-md">
+<!-- Category Selection Chip-style Dropdown -->
+<section class="space-y-base">
+<label class="text-label-sm font-label-sm text-on-surface-variant block uppercase tracking-wider ml-1">Bộ thẻ tập trung</label>
+<div class="relative group">
+<select class="w-full appearance-none bg-surface-container-low border-none rounded-2xl px-gutter py-4 text-body-md font-body-md text-on-surface focus:ring-2 focus:ring-primary-container transition-all cursor-pointer">
+<option value="bio">Sinh học đại cương</option>
+<option value="math">Toán giải tích 1</option>
+<option value="psych">Tâm lý học hành vi</option>
+<option value="lang">Tiếng Anh chuyên ngành</option>
+</select>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">
+<span class="material-symbols-outlined">expand_more</span>
+</div>
+</div>
+</section>
+<!-- Card Editor Area -->
+<div class="space-y-stack-sm">
+<!-- Front Side Card -->
+<section class="bg-surface-container-lowest rounded-[24px] diffusion-shadow p-gutter space-y-base border border-surface-container">
+<div class="flex justify-between items-center px-2">
+<span class="text-label-sm font-label-sm text-primary uppercase font-bold tracking-widest">Mặt trước</span>
+<div class="flex gap-base">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] cursor-pointer hover:text-primary transition-colors">image</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] cursor-pointer hover:text-primary transition-colors">mic</span>
+</div>
+</div>
+<textarea class="w-full min-h-[160px] bg-transparent border-none focus:ring-0 text-headline-md font-headline-md placeholder:text-on-surface-variant/40 resize-none px-2" placeholder="Nhập câu hỏi hoặc thuật ngữ..."></textarea>
+</section>
+<!-- Soft Connector Visual -->
+<div class="flex justify-center -my-2 relative z-10">
+<div class="bg-primary-container w-10 h-10 rounded-full flex items-center justify-center text-on-primary-container shadow-sm">
+<span class="material-symbols-outlined text-[20px]">sync_alt</span>
+</div>
+</div>
+<!-- Back Side Card -->
+<section class="bg-surface-container-lowest rounded-[24px] diffusion-shadow p-gutter space-y-base border border-surface-container">
+<div class="flex justify-between items-center px-2">
+<span class="text-label-sm font-label-sm text-secondary uppercase font-bold tracking-widest">Mặt sau</span>
+<div class="flex gap-base">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] cursor-pointer hover:text-secondary transition-colors">format_list_bulleted</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] cursor-pointer hover:text-secondary transition-colors">palette</span>
+</div>
+</div>
+<textarea class="w-full min-h-[220px] bg-transparent border-none focus:ring-0 text-body-lg font-body-lg placeholder:text-on-surface-variant/40 resize-none px-2 leading-relaxed" placeholder="Nhập định nghĩa hoặc câu trả lời chi tiết..."></textarea>
+</section>
+</div>
+<!-- Hint / Additional Info -->
+<div class="flex items-start gap-stack-sm bg-tertiary-container/20 p-gutter rounded-2xl">
+<span class="material-symbols-outlined text-tertiary">lightbulb</span>
+<p class="text-label-md font-label-md text-on-tertiary-container">
+                    Mẹo: Giữ cho phần 'Mặt sau' ngắn gọn sẽ giúp bạn ghi nhớ nhanh hơn và hiệu quả hơn trong các phiên học tập trung.
+                </p>
+</div>
+</div>
+</main>
+<!-- Visual Decorative Element (Abstract) -->
+<div class="fixed top-1/4 -right-16 -z-10 w-64 h-64 bg-primary-container/20 rounded-full blur-3xl"></div>
+<div class="fixed bottom-1/4 -left-16 -z-10 w-80 h-80 bg-secondary-container/20 rounded-full blur-3xl"></div>
+<!-- Sticky Bottom Action Area -->
+<footer class="fixed bottom-0 left-0 w-full p-margin-edge bg-gradient-to-t from-surface-bright via-surface-bright to-transparent pt-12 pointer-events-none">
+<div class="max-w-2xl mx-auto flex gap-gutter pointer-events-auto">
+<button class="flex-1 bg-primary text-on-primary py-4 px-gutter rounded-full font-bold text-body-lg diffusion-shadow hover:bg-on-primary-fixed-variant transition-all active:scale-95 flex items-center justify-center gap-base">
+<span class="material-symbols-outlined">check</span>
+                Lưu thẻ
+            </button>
+<button class="w-16 h-16 bg-surface-container-highest text-on-surface-variant rounded-full flex items-center justify-center hover:bg-outline-variant transition-all active:scale-90">
+<span class="material-symbols-outlined">add_to_photos</span>
+</button>
+</div>
+</footer>
+<!-- Imagery Integration (Bento Style Preview Side) -->
+<aside class="hidden xl:block fixed right-12 top-1/2 -translate-y-1/2 w-80 space-y-gutter">
+<div class="bg-surface-container-lowest p-gutter rounded-[32px] diffusion-shadow space-y-gutter overflow-hidden">
+<h3 class="font-bold text-on-surface-variant text-label-md uppercase tracking-wider px-2">Xem trước</h3>
+<div class="aspect-[4/5] rounded-2xl overflow-hidden relative">
+<img class="w-full h-full object-cover" data-alt="A serene, minimalist flat lay of an open notebook with soft pencil sketches and neat handwriting. The scene is bathed in natural, diffused morning light filtered through a sheer curtain, highlighting a calm, focused academic environment. The color palette consists of soft mint greens, pale creams, and warm wood tones, creating a tranquil atmosphere perfect for studying." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGkjlPyWIChsRzZGkszSLpraYcHfHxJXsAmF2vYB_eQCKCvhT5F35tZ_ykqp8NUmXOG5_bF6PY0-LZRVCjBPMoEu84Hdgj9vFE0NSuhQws1mgTt_wIi4ZNdurgOsK7xqXG0BOLiKW3r9c4EL0Ua-VbIzAKRWsPHc5u7Rcz328YkYYaURvXiLD-tPHRRVm0t5QPDNXkhltPnvPPd35C_FK6bi0lcOZLk-4RuBif73gd6R677XiOx5HpReWpr6IHAf-0EMFkio4mHg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent flex items-end p-gutter">
+<p class="text-white font-medium text-body-md">Học tập hiệu quả hơn với giao diện trực quan.</p>
+</div>
+</div>
+<div class="flex items-center gap-base px-2">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full bg-primary-container border-2 border-surface-container-lowest"></div>
+<div class="w-8 h-8 rounded-full bg-secondary-container border-2 border-surface-container-lowest"></div>
+<div class="w-8 h-8 rounded-full bg-tertiary-container border-2 border-surface-container-lowest"></div>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">42 học sinh đang ôn bộ thẻ này</span>
+</div>
+</div>
+</aside>
+</body></html>

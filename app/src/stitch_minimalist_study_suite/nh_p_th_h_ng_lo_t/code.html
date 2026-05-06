@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StudyCalm - Bulk Import</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .diffusion-shadow {
+            box-shadow: 0 10px 20px -5px rgba(63, 102, 92, 0.05);
+        }
+        body {
+            background-color: #f8fafa;
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-tint": "#3f665c",
+                    "surface-container-low": "#f2f4f4",
+                    "on-primary-fixed": "#00201a",
+                    "on-tertiary-container": "#4d616e",
+                    "on-primary-fixed-variant": "#274e45",
+                    "primary-fixed-dim": "#a6cfc3",
+                    "secondary-container": "#ded9fd",
+                    "secondary": "#5e5b7a",
+                    "background": "#f8fafa",
+                    "outline": "#717976",
+                    "on-surface": "#191c1d",
+                    "error": "#ba1a1a",
+                    "surface-container-highest": "#e1e3e3",
+                    "surface-container-lowest": "#ffffff",
+                    "on-background": "#191c1d",
+                    "secondary-fixed": "#e4dfff",
+                    "inverse-on-surface": "#eff1f1",
+                    "tertiary-fixed": "#d0e6f5",
+                    "tertiary-container": "#c6dceb",
+                    "primary": "#3f665c",
+                    "inverse-primary": "#a6cfc3",
+                    "on-secondary-fixed": "#1b1833",
+                    "surface-variant": "#e1e3e3",
+                    "surface-bright": "#f8fafa",
+                    "on-primary-container": "#3f665c",
+                    "inverse-surface": "#2e3131",
+                    "on-tertiary-fixed-variant": "#354955",
+                    "on-error-container": "#93000a",
+                    "secondary-fixed-dim": "#c7c2e6",
+                    "tertiary": "#4d616e",
+                    "tertiary-fixed-dim": "#b4cad8",
+                    "on-primary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "surface": "#f8fafa",
+                    "surface-container-high": "#e6e8e9",
+                    "on-surface-variant": "#414846",
+                    "on-error": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#464361",
+                    "on-secondary-container": "#605d7c",
+                    "primary-fixed": "#c1ebdf",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-fixed": "#071e29",
+                    "surface-dim": "#d8dada",
+                    "surface-container": "#eceeee",
+                    "primary-container": "#b8e2d6",
+                    "outline-variant": "#c0c8c5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-edge": "24px",
+                    "gutter": "16px",
+                    "stack-lg": "40px",
+                    "base": "8px",
+                    "stack-md": "24px",
+                    "stack-sm": "12px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-md": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-md": ["22px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0", "fontWeight": "400"}],
+                    "headline-lg": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0", "fontWeight": "400"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-surface/80 backdrop-blur-md">
+<div class="flex justify-between items-center px-margin-edge py-base w-full max-w-screen-xl mx-auto">
+<div class="flex items-center gap-base">
+<img alt="Profile" class="w-10 h-10 rounded-full object-cover border-2 border-primary-container" data-alt="A close-up professional portrait of a calm student with soft lighting and a minimalist aesthetic. The image features a shallow depth of field with a neutral, soft-toned background that matches the serene study brand. The lighting is warm and natural, creating an encouraging and focused atmosphere consistent with a clean productivity app interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRCM6xRrD8CaQHY5bgU9YNGXZbdZd_mTZjZfM7xVQlwJA3N37W-09Ozt5u69VghPgyWW6M4I7muTuXL8IiwgtbYk4D8Lj_OIF_E-0B9sHmDM2bNQzxkAB8NpNSUt7Rr9XocopfS3bkyqUj0oD9OP2fptTT-D22S8bhNOUiM27u4pyj5-Mv-WjueIa2DXt2qkd4y30uXSI0c5dnC5QMDD08MKJD50V_ue_5s6U72EroDMWZElAL3_P2WnGN1K_IF4vW74qhQeyVWw"/>
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary">StudyCalm</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary" data-icon="search">search</span>
+</button>
+</div>
+</header>
+<main class="max-w-screen-md mx-auto px-margin-edge pt-stack-md pb-32">
+<!-- Hero Section -->
+<div class="mb-stack-md">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-base">Bulk Creation</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Transform your notes into study decks in seconds. Paste your content below.</p>
+</div>
+<!-- Instructions Card -->
+<div class="bg-secondary-container/30 rounded-xl p-gutter mb-stack-md diffusion-shadow">
+<div class="flex items-start gap-base">
+<span class="material-symbols-outlined text-secondary" data-icon="info">info</span>
+<div>
+<p class="font-label-md text-label-md text-secondary font-bold uppercase tracking-wider mb-1">How it works</p>
+<p class="font-body-md text-body-md text-on-secondary-container">
+                        Place each flashcard on a new line. Use the <span class="font-bold text-secondary">~</span> symbol to separate the term and definition.
+                    </p>
+<div class="mt-base bg-surface-container-lowest/60 rounded-lg p-base font-mono text-[13px] text-on-surface-variant italic">
+                        Photosynthesis ~ The process by which plants use sunlight to synthesize foods.
+                    </div>
+</div>
+</div>
+</div>
+<!-- Input Section -->
+<div class="flex flex-col gap-gutter">
+<div class="relative">
+<textarea class="w-full min-h-[320px] p-gutter rounded-xl border-none bg-surface-container-low focus:ring-2 focus:ring-primary-container focus:bg-primary-container/10 transition-all font-body-lg text-body-lg placeholder:text-outline-variant diffusion-shadow" placeholder="Term ~ Definition
+Mitochondria ~ The powerhouse of the cell
+H2O ~ Chemical formula for water"></textarea>
+<div class="absolute bottom-base right-base flex gap-2">
+<span class="bg-surface-container-highest px-3 py-1 rounded-full text-label-sm font-label-sm text-on-surface-variant">3 lines detected</span>
+</div>
+</div>
+<!-- Preview Section -->
+<div class="mt-base">
+<div class="flex items-center justify-between mb-base px-2">
+<h3 class="font-label-md text-label-md text-on-surface-variant font-bold uppercase tracking-widest">Live Preview</h3>
+<button class="text-primary font-label-md hover:underline">Clear all</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<!-- Preview Card 1 -->
+<div class="bg-surface-container-lowest p-gutter rounded-xl diffusion-shadow border-l-4 border-primary-container flex flex-col gap-2">
+<span class="text-label-sm font-label-sm text-primary uppercase">Front</span>
+<p class="font-body-lg text-body-lg font-semibold text-on-surface">Photosynthesis</p>
+<hr class="border-surface-container-high"/>
+<span class="text-label-sm font-label-sm text-secondary uppercase mt-1">Back</span>
+<p class="font-body-md text-body-md text-on-surface-variant">The process by which plants use sunlight to synthesize foods from carbon dioxide and water.</p>
+</div>
+<!-- Preview Card 2 -->
+<div class="bg-surface-container-lowest p-gutter rounded-xl diffusion-shadow border-l-4 border-tertiary-container flex flex-col gap-2">
+<span class="text-label-sm font-label-sm text-primary uppercase">Front</span>
+<p class="font-body-lg text-body-lg font-semibold text-on-surface">Mitochondria</p>
+<hr class="border-surface-container-high"/>
+<span class="text-label-sm font-label-sm text-secondary uppercase mt-1">Back</span>
+<p class="font-body-md text-body-md text-on-surface-variant">An organelle found in large numbers in most cells, in which the biochemical processes of respiration and energy production occur.</p>
+</div>
+</div>
+</div>
+<!-- Action Button -->
+<div class="mt-stack-md pb-stack-lg">
+<button class="w-full py-4 bg-primary text-on-primary rounded-full font-headline-md text-headline-md flex items-center justify-center gap-base shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+                    Import Cards
+                </button>
+<p class="text-center mt-base font-label-sm text-label-sm text-outline">Importing will add these to your "Biology 101" deck.</p>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-surface-container-lowest backdrop-blur-lg rounded-t-xl shadow-[0_-4px_20px_0_rgba(63,102,92,0.06)]">
+<div class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high rounded-full transition-all active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-transform duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="style" style="font-variation-settings: 'FILL' 1;">style</span>
+<span class="font-label-md text-label-md">Cards</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high rounded-full transition-all active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="font-label-md text-label-md">Notes</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high rounded-full transition-all active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-md text-label-md">Tasks</span>
+</div>
+</nav>
+<!-- Contextual FAB - Hidden as per user being in a sub-flow, but if it were home it would be here -->
+</body></html>

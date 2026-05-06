@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed-variant": "#274e45",
+                    "surface-container-highest": "#e1e3e3",
+                    "on-primary-container": "#3f665c",
+                    "on-error-container": "#93000a",
+                    "secondary-container": "#ded9fd",
+                    "on-primary": "#ffffff",
+                    "on-primary-fixed": "#00201a",
+                    "surface-container": "#eceeee",
+                    "surface-dim": "#d8dada",
+                    "secondary-fixed": "#e4dfff",
+                    "tertiary-fixed-dim": "#b4cad8",
+                    "inverse-on-surface": "#eff1f1",
+                    "surface": "#f8fafa",
+                    "on-tertiary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-container": "#4d616e",
+                    "on-tertiary-fixed": "#071e29",
+                    "on-background": "#191c1d",
+                    "surface-container-low": "#f2f4f4",
+                    "primary-fixed-dim": "#a6cfc3",
+                    "primary-fixed": "#c1ebdf",
+                    "on-secondary-container": "#605d7c",
+                    "on-secondary": "#ffffff",
+                    "surface-container-high": "#e6e8e9",
+                    "surface-variant": "#e1e3e3",
+                    "primary-container": "#b8e2d6",
+                    "tertiary-container": "#c6dceb",
+                    "on-tertiary-fixed-variant": "#354955",
+                    "tertiary": "#4d616e",
+                    "secondary-fixed-dim": "#c7c2e6",
+                    "surface-bright": "#f8fafa",
+                    "error": "#ba1a1a",
+                    "on-secondary-fixed-variant": "#464361",
+                    "tertiary-fixed": "#d0e6f5",
+                    "on-secondary-fixed": "#1b1833",
+                    "secondary": "#5e5b7a",
+                    "on-error": "#ffffff",
+                    "background": "#f8fafa",
+                    "primary": "#3f665c",
+                    "surface-tint": "#3f665c",
+                    "outline-variant": "#c0c8c5",
+                    "outline": "#717976",
+                    "on-surface": "#191c1d",
+                    "on-surface-variant": "#414846",
+                    "inverse-surface": "#2e3131",
+                    "inverse-primary": "#a6cfc3"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "margin-edge": "24px",
+                    "gutter": "16px",
+                    "stack-sm": "12px",
+                    "stack-md": "24px",
+                    "stack-lg": "40px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "label-md": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0", "fontWeight": "400"}],
+                    "headline-md": ["22px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .diffusion-shadow {
+            box-shadow: 0 20px 40px -10px rgba(63, 102, 92, 0.06);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky bg-surface/80 backdrop-blur-md z-40">
+<div class="flex justify-between items-center px-margin-edge py-base w-full max-w-screen-xl mx-auto">
+<div class="flex items-center gap-base">
+<span class="material-symbols-outlined text-primary text-headline-md active:scale-95 transition-transform cursor-pointer" data-icon="arrow_back">arrow_back</span>
+<span class="font-headline-lg text-headline-lg font-bold text-primary">StudyCalm</span>
+</div>
+<div class="flex items-center gap-gutter">
+<span class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-2 rounded-full transition-colors cursor-pointer" data-icon="search">search</span>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of a young adult student with a warm, friendly expression. The lighting is soft and natural, reflecting a bright and calm academic environment. The background is a soft, out-of-focus library setting with pastel tones of mint and cream, maintaining the brand's peaceful and organized aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLiBsSSVbPFZSQjB7vo3TZ9h9H7Dx3PYbQBdvgJtSKgBvdLoKtrb0pDUf0sbC3whnqHFLi7G9xbklGDGKQSiNf89aRc658bj3rOmav2oyMqhY7-KJ4dEuYX7Vsuxbbafo8sN55mS_W5x9-9S3olDdRx94rCizFDcYID_qybAMaAeZ3okiWaUk3iH_aSsBdjAGW3uOS87yHPNwJxhpaS2X9Scj9vShVgyPsNUnG4Vr9ghzJiaR0BXXOHk5KleXMzL-RvsswbFzXKg"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col items-center justify-center px-margin-edge pb-32">
+<!-- Flashcard Container -->
+<div class="w-full max-w-md relative">
+<!-- Progress Bar -->
+<div class="w-full h-2 bg-primary-container/30 rounded-full mb-stack-md overflow-hidden">
+<div class="h-full bg-primary w-[30%] rounded-full"></div>
+</div>
+<!-- The Main Card -->
+<div class="aspect-[3/4] w-full bg-surface-container-lowest rounded-[16px] diffusion-shadow flex flex-col items-center justify-center p-gutter text-center border border-surface-container-high transition-all active:scale-[0.98]">
+<div class="mb-stack-sm">
+<span class="inline-block px-3 py-1 rounded-full bg-tertiary-container text-on-tertiary-container font-label-md text-label-md">Biology</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface-variant px-base">Photosynthesis</h1>
+<p class="font-body-md text-body-md text-outline mt-stack-sm">Tap to reveal definition</p>
+</div>
+<!-- Progress Text -->
+<div class="mt-stack-md text-center">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">3/10 thẻ</p>
+</div>
+</div>
+<!-- Session Controls -->
+<div class="mt-stack-lg w-full max-w-md space-y-gutter">
+<!-- Flip Button (Primary Action) -->
+<button class="w-full py-4 rounded-full bg-primary text-on-primary font-headline-md text-headline-md flex items-center justify-center gap-base active:scale-95 transition-transform diffusion-shadow">
+<span class="material-symbols-outlined" data-icon="sync">sync</span>
+                Lật thẻ
+            </button>
+<!-- Status Buttons (Shown after Flip - Hidden by default or semi-visible for UI demo) -->
+<div class="flex gap-gutter w-full">
+<button class="flex-1 py-4 rounded-full bg-error-container text-on-error-container font-label-md text-label-md flex flex-col items-center justify-center border border-outline-variant/10 active:scale-95 transition-transform">
+<span class="material-symbols-outlined mb-1" data-icon="history">history</span>
+                    Cần xem lại
+                </button>
+<button class="flex-1 py-4 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md flex flex-col items-center justify-center border border-outline-variant/10 active:scale-95 transition-transform">
+<span class="material-symbols-outlined mb-1" data-icon="check_circle">check_circle</span>
+                    Đã thuộc
+                </button>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-surface-container-lowest backdrop-blur-lg shadow-[0_-4px_20px_0_rgba(63,102,92,0.06)] rounded-t-xl">
+<!-- Home -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high rounded-full transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<!-- Cards (Active) -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="style" data-weight="fill" style="font-variation-settings: 'FILL' 1;">style</span>
+<span class="font-label-md text-label-md">Cards</span>
+</a>
+<!-- Notes -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high rounded-full transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="font-label-md text-label-md">Notes</span>
+</a>
+<!-- Tasks -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high rounded-full transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-md text-label-md">Tasks</span>
+</a>
+</nav>
+<!-- Decorative Elements for "Cognitive Calm" -->
+<div class="fixed top-20 -left-20 w-64 h-64 bg-primary-container/20 rounded-full blur-[100px] pointer-events-none -z-10"></div>
+<div class="fixed bottom-40 -right-20 w-72 h-72 bg-secondary-container/20 rounded-full blur-[100px] pointer-events-none -z-10"></div>
+</body></html>

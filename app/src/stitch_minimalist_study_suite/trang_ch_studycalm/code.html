@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .diffusion-shadow {
+            box-shadow: 0 10px 20px -5px rgba(63, 102, 92, 0.05);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#274e45",
+                        "surface-container-highest": "#e1e3e3",
+                        "on-primary-container": "#3f665c",
+                        "on-error-container": "#93000a",
+                        "secondary-container": "#ded9fd",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed": "#00201a",
+                        "surface-container": "#eceeee",
+                        "surface-dim": "#d8dada",
+                        "secondary-fixed": "#e4dfff",
+                        "tertiary-fixed-dim": "#b4cad8",
+                        "inverse-on-surface": "#eff1f1",
+                        "surface": "#f8fafa",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-container": "#4d616e",
+                        "on-tertiary-fixed": "#071e29",
+                        "on-background": "#191c1d",
+                        "surface-container-low": "#f2f4f4",
+                        "primary-fixed-dim": "#a6cfc3",
+                        "primary-fixed": "#c1ebdf",
+                        "on-secondary-container": "#605d7c",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e6e8e9",
+                        "surface-variant": "#e1e3e3",
+                        "primary-container": "#b8e2d6",
+                        "tertiary-container": "#c6dceb",
+                        "on-tertiary-fixed-variant": "#354955",
+                        "tertiary": "#4d616e",
+                        "secondary-fixed-dim": "#c7c2e6",
+                        "surface-bright": "#f8fafa",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed-variant": "#464361",
+                        "tertiary-fixed": "#d0e6f5",
+                        "on-secondary-fixed": "#1b1833",
+                        "secondary": "#5e5b7a",
+                        "on-error": "#ffffff",
+                        "background": "#f8fafa",
+                        "primary": "#3f665c",
+                        "surface-tint": "#3f665c",
+                        "outline-variant": "#c0c8c5",
+                        "outline": "#717976",
+                        "on-surface": "#191c1d",
+                        "on-surface-variant": "#414846",
+                        "inverse-surface": "#2e3131",
+                        "inverse-primary": "#a6cfc3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "margin-edge": "24px",
+                        "gutter": "16px",
+                        "stack-sm": "12px",
+                        "stack-md": "24px",
+                        "stack-lg": "40px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0", "fontWeight": "400"}],
+                        "headline-md": ["22px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-32">
+<!-- Top App Bar -->
+<header class="w-full top-0 sticky bg-surface/80 backdrop-blur-md z-50">
+<div class="flex justify-between items-center px-margin-edge py-base w-full max-w-screen-xl mx-auto">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-primary-container">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a young student with a friendly expression, captured in soft, natural morning light. The background is a blurred modern study space with pale mint and white accents, maintaining a clean and minimalist aesthetic. The lighting is bright and airy, reflecting a calm and focused atmosphere suitable for a productivity app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBd-gDXFFqV51Wj9YrdQBHi7t3V-izivA2I_qvVW0ldipoWl2oXfMiGHnm1LCWbrYDoK3lJE1f7FhXaNGOn1GnnIVgOJdVQ_YwJo4E2FZC-TtbzkEj8i5bB47hSLbwjsOaRayVnPelUcMBdRUUXicCMLoxa-5a0h1EiEh7Npyij5nxUBGJj5tPFj6raBeByuso9_f7Zsc3qphCK4BvbSLaKFd2tUCB9T9KFa99uGm4VnFsJlLsIUSyuiI31aoyNjU96PqfRe7CUNg"/>
+</div>
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary">StudyCalm</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary" data-icon="search">search</span>
+</button>
+</div>
+</header>
+<main class="max-w-screen-xl mx-auto px-margin-edge pt-stack-md space-y-stack-lg">
+<!-- Welcome Message -->
+<section>
+<h2 class="font-headline-lg text-headline-lg text-on-background">Chào buổi sáng, Nam!</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Hôm nay bạn có 3 mục tiêu cần hoàn thành.</p>
+</section>
+<!-- Daily Overview & Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Circular Progress Card -->
+<div class="md:col-span-5 bg-surface-container-lowest rounded-xl p-6 diffusion-shadow flex flex-col items-center justify-center text-center space-y-4">
+<div class="relative w-40 h-40">
+<!-- SVG Progress Circle -->
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-primary-container" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-width="12"></circle>
+<circle class="text-primary" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-dasharray="440" stroke-dashoffset="110" stroke-linecap="round" stroke-width="12"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-headline-lg text-headline-lg text-primary">75%</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Hoàn thành</span>
+</div>
+</div>
+<div class="space-y-1">
+<h3 class="font-headline-md text-headline-md text-on-surface">Mục tiêu học tập</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Còn 45 phút nữa để đạt mục tiêu ngày.</p>
+</div>
+</div>
+<!-- Continue Learning Card -->
+<div class="md:col-span-7 bg-surface-container-lowest rounded-xl p-6 diffusion-shadow flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<div class="space-y-1">
+<span class="inline-block px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">Tiếp tục học</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Tiếng Anh Giao Tiếp</h3>
+</div>
+<button class="text-primary hover:bg-primary-container/20 p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<!-- Flashcard Preview -->
+<div class="mt-6 p-6 rounded-xl bg-surface-container-low border border-primary-container/30 border-dashed flex flex-col items-center text-center space-y-3">
+<span class="material-symbols-outlined text-primary scale-125" data-icon="style">style</span>
+<p class="font-body-lg text-body-lg italic text-on-surface">"How have you been lately?"</p>
+<p class="font-label-md text-label-md text-on-surface-variant">Bấm để lật thẻ (24 thẻ còn lại)</p>
+</div>
+<div class="mt-6">
+<div class="w-full bg-primary-container/30 h-2 rounded-full">
+<div class="bg-primary h-2 rounded-full w-[60%]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Daily Tasks Section -->
+<section class="space-y-4">
+<div class="flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md text-on-surface">Công việc hôm nay</h3>
+<button class="font-label-md text-label-md text-primary font-semibold">Xem tất cả</button>
+</div>
+<div class="space-y-3">
+<!-- Task Item 1 -->
+<div class="bg-surface-container-lowest p-4 rounded-xl diffusion-shadow flex items-center gap-4 group hover:bg-surface-container-low transition-colors">
+<div class="w-6 h-6 rounded-md border-2 border-primary-container flex items-center justify-center group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-[18px] text-transparent group-hover:text-primary transition-colors" data-icon="check">check</span>
+</div>
+<div class="flex-1">
+<h4 class="font-body-lg text-body-lg text-on-surface">Hoàn thành bài tập Giải tích</h4>
+<div class="flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant" data-icon="schedule">schedule</span>
+<span class="font-label-md text-label-md text-on-surface-variant">14:00 - 15:30</span>
+</div>
+</div>
+<span class="px-3 py-1 rounded-full bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm">Toán học</span>
+</div>
+<!-- Task Item 2 -->
+<div class="bg-surface-container-lowest p-4 rounded-xl diffusion-shadow flex items-center gap-4 group hover:bg-surface-container-low transition-colors">
+<div class="w-6 h-6 rounded-md border-2 border-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px] text-transparent" data-icon="check">check</span>
+</div>
+<div class="flex-1">
+<h4 class="font-body-lg text-body-lg text-on-surface">Đọc chương 4 - Lịch sử Kinh tế</h4>
+<div class="flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant" data-icon="schedule">schedule</span>
+<span class="font-label-md text-label-md text-on-surface-variant">16:00 - 17:00</span>
+</div>
+</div>
+<span class="px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">Lịch sử</span>
+</div>
+<!-- Task Item 3 (Completed state example) -->
+<div class="bg-surface-container-low/50 p-4 rounded-xl flex items-center gap-4 opacity-60">
+<div class="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px] text-on-primary" data-icon="check" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="flex-1">
+<h4 class="font-body-lg text-body-lg text-on-surface line-through">Luyện viết 10 từ mới</h4>
+<div class="flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant" data-icon="done_all">done_all</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Hoàn thành lúc 08:30</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Subjects Chips / Quick Filter -->
+<section class="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
+<span class="flex-shrink-0 px-4 py-2 rounded-full bg-primary text-on-primary font-label-md text-label-md">Tất cả</span>
+<span class="flex-shrink-0 px-4 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:bg-primary-container/50 transition-colors">Toán học</span>
+<span class="flex-shrink-0 px-4 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:bg-primary-container/50 transition-colors">Ngoại ngữ</span>
+<span class="flex-shrink-0 px-4 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:bg-primary-container/50 transition-colors">Lịch sử</span>
+<span class="flex-shrink-0 px-4 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:bg-primary-container/50 transition-colors">Kỹ năng</span>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-surface-container-lowest backdrop-blur-lg shadow-[0_-4px_20px_0_rgba(63,102,92,0.06)] rounded-t-xl">
+<!-- Home (Active) -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="home" data-weight="fill" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<!-- Cards -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high rounded-full transition-all active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="style">style</span>
+<span class="font-label-md text-label-md">Cards</span>
+</a>
+<!-- Notes -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high rounded-full transition-all active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="font-label-md text-label-md">Notes</span>
+</a>
+<!-- Tasks -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-surface-container-high rounded-full transition-all active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-md text-label-md">Tasks</span>
+</a>
+</nav>
+<!-- Floating Action Button (FAB) Contextual for Home -->
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-on-primary rounded-2xl shadow-lg flex items-center justify-center active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[32px]" data-icon="add">add</span>
+</button>
+</body></html>
