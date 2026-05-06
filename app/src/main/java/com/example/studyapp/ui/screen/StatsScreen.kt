@@ -657,21 +657,8 @@ fun UsageChart(activities: List<com.example.studyapp.data.model.UserActivity>) {
                             selectedDayIndex = if (selectedDayIndex == index) -1 else index
                         }
                 ) {
-                    AnimatedVisibility(
-                        visible = isSelected,
-                        enter = fadeIn() + slideInVertically { 10 },
-                        exit = fadeOut() + slideOutVertically { 10 }
-                    ) {
-                        Text(
-                            text = "${duration / 60000}m",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = ScSecondary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 10.sp,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                    }
                     Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .width(animatedWidth)
                             .fillMaxHeight(animatedHeight)
@@ -692,7 +679,22 @@ fun UsageChart(activities: List<com.example.studyapp.data.model.UserActivity>) {
                                     Modifier.border(1.dp, ScPrimary.copy(alpha = 0.5f), RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
                                 } else Modifier
                             )
-                    )
+                    ) {
+                        val textAlpha by animateFloatAsState(
+                            targetValue = if (isSelected && duration > 0) 1f else 0f,
+                            animationSpec = tween(300),
+                            label = "textAlpha"
+                        )
+                        if (textAlpha > 0.01f) {
+                            Text(
+                                text = "${duration / 60000}m",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = textAlpha),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 9.sp
+                            )
+                        }
+                    }
                     Spacer(Modifier.height(8.dp))
                     Text(
                         text = if (isToday) "Hnay" else dayFormatter.format(day.time).replace("Th ", "T"),

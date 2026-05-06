@@ -803,6 +803,7 @@ fun HomeRecentDeckCard(deck: FlashcardDeck, onClick: () -> Unit) {
     Surface(
         modifier = Modifier
             .width(170.dp)
+            .height(165.dp)
             .scale(scale)
             .clickable { pressed = true; onClick() },
         shape = RoundedCornerShape(18.dp),
@@ -858,7 +859,7 @@ fun HomeRecentDeckCard(deck: FlashcardDeck, onClick: () -> Unit) {
                 style = MaterialTheme.typography.bodySmall,
                 color = ScOnSurfaceVariant
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.weight(1f))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -936,6 +937,7 @@ fun HomeRecentNoteCard(note: com.example.studyapp.data.model.Note, onClick: () -
     Surface(
         modifier = Modifier
             .width(150.dp)
+            .height(155.dp)
             .scale(scale)
             .clickable { pressed = true; onClick() },
         shape = RoundedCornerShape(18.dp),
@@ -977,7 +979,7 @@ fun HomeRecentNoteCard(note: com.example.studyapp.data.model.Note, onClick: () -
                 overflow = TextOverflow.Ellipsis,
                 lineHeight = 17.sp
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.weight(1f))
             // Bottom accent line
             Box(
                 modifier = Modifier

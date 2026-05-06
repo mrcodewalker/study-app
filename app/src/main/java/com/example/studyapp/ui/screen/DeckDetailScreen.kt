@@ -484,14 +484,11 @@ fun StudyModeScreen(
     var showComplete by remember { mutableStateOf(false) }
 
     // Track các ID thẻ đã học trong session để tránh đếm trùng khi tráo thẻ
-    val sessionStudiedIds = remember(cards) { 
+    val sessionStudiedIds = remember { 
         mutableSetOf<Long>().apply {
             addAll(cards.filter { it.isLearned }.map { it.id })
         }
     }
-    
-    // Track các index chưa thuộc (swipe trái)
-    val notLearnedIndices = remember(cards) { mutableStateListOf<Int>() }
 
     // Drag & swipe state
     var dragOffsetX by remember { mutableStateOf(0f) }
@@ -520,21 +517,11 @@ fun StudyModeScreen(
                 } else {
                     // Chưa thuộc
                     sessionStudiedIds.remove(cardId)
-                    notLearnedIndices.add(currentIndex)
                     onUpdateMastery(cardId, false)
                 }
                 
                 // Update studiedCount based on unique learned cards in this view
-                // For subset, this correctly reflects NEWLY learned cards
-                // For all cards, this reflects TOTAL learned cards
-                studiedCount = if (cards.size == sessionStudiedIds.size || cards.any { !it.isLearned }) {
-                    // If isSubset is true, initially sessionStudiedIds is empty.
-                    // If not subset, it starts with all learned cards.
-                    // Actually, just using sessionStudiedIds.size is correct in both cases!
-                    sessionStudiedIds.size
-                } else {
-                    sessionStudiedIds.size
-                }
+                studiedCount = sessionStudiedIds.size
                 
                 if (currentIndex < cards.size - 1) {
                     currentIndex++
@@ -582,21 +569,20 @@ fun StudyModeScreen(
     val card = cards[currentIndex]
 
     if (showComplete) {
-        val notLearnedCards = notLearnedIndices.map { cards[it] }
+        val actualNotLearnedCards = cards.filter { !sessionStudiedIds.contains(it.id) }
         StudyCompleteScreen(
             totalCards = cards.size,
             studiedCount = studiedCount,
-            notLearnedCount = notLearnedIndices.size,
+            notLearnedCount = actualNotLearnedCards.size,
             onRestartAll = {
                 currentIndex = 0
                 studiedCount = 0
-                notLearnedIndices.clear()
                 showComplete = false
                 onRestart()
             },
             onRestartNotLearned = {
-                if (notLearnedCards.isNotEmpty()) {
-                    onRestartNotLearned(notLearnedCards)
+                if (actualNotLearnedCards.isNotEmpty()) {
+                    onRestartNotLearned(actualNotLearnedCards)
                 }
             },
             onContinue = { onExit(cards.size, studiedCount) } // Khi hoàn thành, vị trí cuối cùng là cards.size
