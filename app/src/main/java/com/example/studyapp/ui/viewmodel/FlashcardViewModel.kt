@@ -33,19 +33,19 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
     private val _bulkPreview = MutableStateFlow(BulkPreviewState())
     val bulkPreview: StateFlow<BulkPreviewState> = _bulkPreview.asStateFlow()
 
-    private val _selectedDeck = MutableStateFlow<FlashcardDeck?>(null)
-    val selectedDeck: StateFlow<FlashcardDeck?> = _selectedDeck.asStateFlow()
+    val selectedDeck: StateFlow<FlashcardDeck?> = combine(
+        _selectedDeckId,
+        allDecks
+    ) { deckId, decks ->
+        if (deckId != null) decks.firstOrNull { it.id == deckId } else null
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     fun selectDeck(deckId: Long) {
         _selectedDeckId.value = deckId
-        viewModelScope.launch {
-            _selectedDeck.value = repository.getDeckById(deckId)
-        }
     }
 
     fun clearSelection() {
         _selectedDeckId.value = null
-        _selectedDeck.value = null
     }
 
     fun createDeck(name: String, description: String) {
@@ -110,6 +110,7 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
     fun saveStudyProgress(deckId: Long, lastIndex: Int, studiedCount: Int) {
         viewModelScope.launch {
             repository.saveStudyProgress(deckId, lastIndex, studiedCount)
+            // selectedDeck tự động cập nhật qua combine với allDecks
         }
     }
 }

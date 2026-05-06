@@ -16,7 +16,13 @@ interface FlashcardDeckDao {
     """)
     fun getAllDecks(): Flow<List<FlashcardDeck>>
 
-    @Query("SELECT * FROM flashcard_decks WHERE id = :deckId")
+    @Query("""
+        SELECT d.*, COUNT(c.id) as cardCount 
+        FROM flashcard_decks d 
+        LEFT JOIN flashcards c ON c.deckId = d.id 
+        WHERE d.id = :deckId
+        GROUP BY d.id
+    """)
     suspend fun getDeckById(deckId: Long): FlashcardDeck?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

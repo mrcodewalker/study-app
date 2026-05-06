@@ -88,37 +88,105 @@ fun HomeScreen(
             visible = visible,
             enter = fadeIn(tween(500)) + slideInVertically(tween(500)) { -30 }
         ) {
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
                         Brush.verticalGradient(
-                            listOf(ScPrimaryContainer.copy(alpha = 0.45f), ScBackground)
+                            listOf(
+                                ScPrimaryContainer.copy(alpha = 0.5f),
+                                ScPrimaryContainer.copy(alpha = 0.2f),
+                                ScBackground
+                            )
                         )
                     )
-                    .padding(horizontal = 24.dp, vertical = 24.dp)
             ) {
-                Text(
-                    greeting,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = ScPrimary,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    "KMAStudy",
-                    style = MaterialTheme.typography.displaySmall,
-                    color = ScOnSurface,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.5).sp
-                )
-                if (totalCount > 0) {
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        "Hôm nay bạn có $totalCount mục tiêu cần hoàn thành.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = ScOnSurfaceVariant
+                // Decorative circles
+                Canvas(modifier = Modifier.fillMaxWidth().height(180.dp)) {
+                    drawCircle(
+                        color = ScPrimary.copy(alpha = 0.08f),
+                        radius = 120.dp.toPx(),
+                        center = Offset(size.width * 0.85f, -40.dp.toPx())
                     )
+                    drawCircle(
+                        color = ScSecondary.copy(alpha = 0.06f),
+                        radius = 80.dp.toPx(),
+                        center = Offset(size.width * 0.15f, size.height * 0.7f)
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 28.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                greeting,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = ScPrimary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                "KMAStudy",
+                                style = MaterialTheme.typography.displaySmall,
+                                color = ScOnSurface,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.5).sp
+                            )
+                            if (totalCount > 0) {
+                                Spacer(Modifier.height(6.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Surface(
+                                        shape = RoundedCornerShape(99.dp),
+                                        color = ScPrimaryContainer.copy(alpha = 0.6f)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.CheckCircle, null,
+                                                tint = ScPrimary,
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                            Text(
+                                                "$completedCount/$totalCount nhiệm vụ",
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = ScPrimary,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        // Animated icon
+                        val infiniteTransition = rememberInfiniteTransition(label = "float")
+                        val floatY by infiniteTransition.animateFloat(
+                            initialValue = 0f, targetValue = -8f,
+                            animationSpec = infiniteRepeatable(
+                                tween(2000, easing = EaseInOutSine), RepeatMode.Reverse
+                            ),
+                            label = "float"
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .graphicsLayer { translationY = floatY }
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(
+                                    Brush.radialGradient(
+                                        listOf(ScPrimaryContainer, ScPrimary.copy(alpha = 0.3f))
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("📚", style = MaterialTheme.typography.headlineMedium)
+                        }
+                    }
                 }
             }
         }
@@ -378,12 +446,68 @@ fun HomeScreen(
             }
         }
 
+        // ── Recent notes ─────────────────────────────────────────────────────
+        if (notes.isNotEmpty()) {
+            Spacer(Modifier.height(28.dp))
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn(tween(500, 450)) + slideInVertically(tween(500, 450)) { 20 }
+            ) {
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Ghi chú gần đây",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = ScOnSurface,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f)
+                        )
+                        TextButton(
+                            onClick = onNavigateToNote,
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text(
+                                "Xem tất cả",
+                                color = ScPrimary,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        itemsIndexed(notes.take(10), key = { _, n -> n.id }) { idx, note ->
+                            var cardVis by remember { mutableStateOf(false) }
+                            LaunchedEffect(Unit) {
+                                kotlinx.coroutines.delay((idx * 60).toLong())
+                                cardVis = true
+                            }
+                            AnimatedVisibility(
+                                visible = cardVis,
+                                enter = fadeIn(tween(350)) + slideInHorizontally(tween(350)) { 40 }
+                            ) {
+                                HomeRecentNoteCard(note, onClick = onNavigateToNote)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // ── Recent decks ─────────────────────────────────────────────────────
         if (decks.isNotEmpty()) {
             Spacer(Modifier.height(28.dp))
             AnimatedVisibility(
                 visible = visible,
-                enter = fadeIn(tween(500, 450)) + slideInVertically(tween(500, 450)) { 20 }
+                enter = fadeIn(tween(500, 550)) + slideInVertically(tween(500, 550)) { 20 }
             ) {
                 Column {
                     Row(
@@ -416,10 +540,10 @@ fun HomeScreen(
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        itemsIndexed(decks.take(5), key = { _, d -> d.id }) { idx, deck ->
+                        itemsIndexed(decks.take(10), key = { _, d -> d.id }) { idx, deck ->
                             var cardVis by remember { mutableStateOf(false) }
                             LaunchedEffect(Unit) {
-                                kotlinx.coroutines.delay((idx * 80).toLong())
+                                kotlinx.coroutines.delay((idx * 60).toLong())
                                 cardVis = true
                             }
                             AnimatedVisibility(
@@ -703,13 +827,115 @@ fun HomeRecentDeckCard(deck: FlashcardDeck, onClick: () -> Unit) {
             }
             if (progressPct > 0) {
                 Spacer(Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "$progressPct% thuộc",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = accent,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    val notLearned = deck.cardCount - deck.studiedCount
+                    if (notLearned > 0) {
+                        Surface(
+                            shape = RoundedCornerShape(99.dp),
+                            color = ScErrorContainer.copy(alpha = 0.7f)
+                        ) {
+                            Text(
+                                "$notLearned cần ôn",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = ScError,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── Recent note card (horizontal scroll) ─────────────────────────────────────
+
+private val homeNoteAccents = listOf(
+    ScPrimary, ScSecondary, ScTertiary, ScWarning, ScError, Color(0xFF7B5EA7)
+)
+private val homeNoteBgs = listOf(
+    Color(0xFFFFFFFF), Color(0xFFEAF5F1), Color(0xFFF0EDFF),
+    Color(0xFFE8F3F9), Color(0xFFFFF8E1), Color(0xFFF5F0FF),
+)
+
+@Composable
+fun HomeRecentNoteCard(note: com.example.studyapp.data.model.Note, onClick: () -> Unit) {
+    val colorIdx = note.color.coerceIn(0, homeNoteBgs.size - 1)
+    val bg = homeNoteBgs[colorIdx]
+    val accent = homeNoteAccents[colorIdx]
+    val dateFormat = remember { SimpleDateFormat("dd/MM", Locale.getDefault()) }
+
+    var pressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.96f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "scale"
+    )
+
+    Surface(
+        modifier = Modifier
+            .width(150.dp)
+            .scale(scale)
+            .clickable { pressed = true; onClick() },
+        shape = RoundedCornerShape(18.dp),
+        color = bg,
+        shadowElevation = 2.dp,
+        border = BorderStroke(1.dp, accent.copy(alpha = 0.15f))
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            // Accent dot + date
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier.size(7.dp).clip(CircleShape).background(accent)
+                )
+                Spacer(Modifier.weight(1f))
                 Text(
-                    "$progressPct%",
+                    dateFormat.format(Date(note.updatedAt)),
                     style = MaterialTheme.typography.labelSmall,
-                    color = accent,
-                    fontWeight = FontWeight.SemiBold
+                    color = ScOutline.copy(0.7f)
                 )
             }
+            Spacer(Modifier.height(8.dp))
+            if (note.title.isNotBlank()) {
+                Text(
+                    note.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = ScOnSurface,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 18.sp
+                )
+                Spacer(Modifier.height(4.dp))
+            }
+            Text(
+                note.content.ifBlank { "Không có nội dung" },
+                style = MaterialTheme.typography.bodySmall,
+                color = if (note.content.isBlank()) ScOutline else ScOnSurfaceVariant,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 17.sp
+            )
+            Spacer(Modifier.height(10.dp))
+            // Bottom accent line
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .clip(RoundedCornerShape(99.dp))
+                    .background(accent.copy(alpha = 0.25f))
+            )
         }
     }
 }

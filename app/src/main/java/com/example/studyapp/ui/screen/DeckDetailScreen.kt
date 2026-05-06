@@ -2,6 +2,7 @@
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.animation.core.EaseOutBack
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
@@ -12,8 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.*import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,19 +51,53 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
     var editingCard by remember { mutableStateOf<Flashcard?>(null) }
     var studyMode by remember { mutableStateOf(false) }
     var shuffleMode by remember { mutableStateOf(false) }
+    var showStudyOptions by remember { mutableStateOf(false) }
+    // null = học tất cả, non-null = học lại các thẻ chưa thuộc
+    var studySubset by remember { mutableStateOf<List<Flashcard>?>(null) }
+    // Key để force recompose StudyModeScreen khi restart
+    var studySessionKey by remember { mutableStateOf(0) }
+    // Override initialStudiedCount — null = dùng từ DB
+    var overrideInitialStudied by remember { mutableStateOf<Int?>(null) }
 
     if (studyMode && cards.isNotEmpty()) {
         val startIndex = deck?.lastStudiedIndex?.coerceIn(0, cards.size - 1) ?: 0
-        val studyCards = if (shuffleMode) remember(cards) { cards.shuffled() } else cards
-        StudyModeScreen(
-            cards = studyCards,
-            initialIndex = if (shuffleMode) 0 else startIndex,
-            initialStudiedCount = deck?.studiedCount ?: 0,
-            onExit = { lastIdx, studiedCnt ->
-                viewModel.saveStudyProgress(deckId, lastIdx, studiedCnt)
-                studyMode = false
-            }
-        )
+        val baseCards = studySubset ?: cards
+        val studyCards = if (shuffleMode) remember(baseCards) { baseCards.shuffled() } else baseCards
+        val isSubset = studySubset != null
+        val initStudied = overrideInitialStudied ?: (if (isSubset) 0 else (deck?.studiedCount ?: 0))
+        key(studySessionKey) {
+            StudyModeScreen(
+                cards = studyCards,
+                initialIndex = if (shuffleMode || isSubset || (overrideInitialStudied == 0)) 0 else startIndex,
+                initialStudiedCount = initStudied,
+                onExit = { lastIdx, studiedCnt ->
+                    if (isSubset) {
+                        // Ôn lại chưa thuộc xong: cộng thêm số câu vừa thuộc vào tổng
+                        val prevStudied = deck?.studiedCount ?: 0
+                        val newTotal = (prevStudied + studiedCnt).coerceAtMost(cards.size)
+                        // Nếu đã thuộc hết thì đánh dấu hoàn thành (lastIndex = cards.size)
+                        val newLastIdx = if (newTotal >= cards.size) cards.size else lastIdx
+                        viewModel.saveStudyProgress(deckId, newLastIdx, newTotal)
+                    } else {
+                        viewModel.saveStudyProgress(deckId, lastIdx, studiedCnt)
+                    }
+                    studySubset = null
+                    overrideInitialStudied = null
+                    studyMode = false
+                },
+                onRestart = {
+                    studySubset = null
+                    overrideInitialStudied = 0
+                    viewModel.saveStudyProgress(deckId, 0, 0)
+                    studySessionKey++
+                },
+                onRestartNotLearned = { notLearned ->
+                    studySubset = notLearned
+                    overrideInitialStudied = 0
+                    studySessionKey++
+                }
+            )
+        }
         return
     }
 
@@ -105,7 +139,7 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
                             tint = if (shuffleMode) ScPrimary else ScOnSurfaceVariant
                         )
                     }
-                    IconButton(onClick = { studyMode = true }) {
+                    IconButton(onClick = { showStudyOptions = true }) {
                         Icon(Icons.Default.PlayArrow, contentDescription = "Học", tint = ScPrimary)
                     }
                 }
@@ -218,6 +252,42 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
         }
     }
 
+    if (showStudyOptions) {
+        val studiedSoFar = deck?.studiedCount ?: 0
+        val lastIdx = deck?.lastStudiedIndex ?: 0
+        // "Tiếp tục" chỉ khi đang dở giữa chừng: đã có lastIndex > 0 và chưa đến thẻ cuối
+        val canContinue = lastIdx > 0 && lastIdx < cards.size - 1
+        val notLearnedCount = (cards.size - studiedSoFar).coerceAtLeast(0)
+        StudyOptionsDialog(
+            totalCards = cards.size,
+            notLearnedCount = notLearnedCount,
+            hasProgress = canContinue,
+            onDismiss = { showStudyOptions = false },
+            onContinue = {
+                showStudyOptions = false
+                studySubset = null
+                overrideInitialStudied = null
+                studySessionKey++
+                studyMode = true
+            },
+            onRestartAll = {
+                showStudyOptions = false
+                studySubset = null
+                overrideInitialStudied = 0
+                viewModel.saveStudyProgress(deckId, 0, 0)
+                studySessionKey++
+                studyMode = true
+            },
+            onRestartNotLearned = {
+                showStudyOptions = false
+                studySubset = if (studiedSoFar < cards.size) cards.drop(studiedSoFar) else cards
+                overrideInitialStudied = 0
+                studySessionKey++
+                studyMode = true
+            }
+        )
+    }
+
     if (showAddSingle) {
         AddSingleCardDialog(
             onDismiss = { showAddSingle = false },
@@ -326,37 +396,57 @@ fun FlashcardItem(card: Flashcard, onEdit: () -> Unit, onDelete: () -> Unit) {
 }
 
 // ── StudyModeScreen — Tinder-style swipe ─────────────────────────────────────
-// ── StudyModeScreen — Tinder-style swipe ─────────────────────────────────────
 
 @Composable
 fun StudyModeScreen(
     cards: List<Flashcard>,
     initialIndex: Int,
     initialStudiedCount: Int,
-    onExit: (Int, Int) -> Unit
+    onExit: (Int, Int) -> Unit,
+    onRestart: () -> Unit,
+    onRestartNotLearned: (List<Flashcard>) -> Unit = {}
 ) {
     var currentIndex by remember { mutableStateOf(initialIndex.coerceIn(0, cards.size - 1)) }
     var studiedCount by remember { mutableStateOf(initialStudiedCount) }
     var isFlipped by remember { mutableStateOf(false) }
     var showComplete by remember { mutableStateOf(false) }
 
-    // Drag state
+    // Track các index chưa thuộc (swipe trái)
+    val notLearnedIndices = remember { mutableStateListOf<Int>() }
+    // Track số câu đã trả lời (cả 2 chiều) cho progress bar
+    var answeredCount by remember { mutableStateOf(0) }
+
+    // Drag & swipe state
     var dragOffsetX by remember { mutableStateOf(0f) }
     var isAnimatingOut by remember { mutableStateOf(false) }
-    var swipeDirection by remember { mutableStateOf(0) } // -1=left(ôn), 1=right(thuộc)
+    var swipeDirection by remember { mutableStateOf(0) } // -1=left, 1=right
+
+    // Ngưỡng swipe: phải kéo >320dp mới trigger
+    val SWIPE_THRESHOLD = 320f
+    val SCREEN_WIDTH = 420f // approximate dp
 
     val animOffsetX by animateFloatAsState(
         targetValue = dragOffsetX,
         animationSpec = if (isAnimatingOut)
-            tween(300, easing = FastOutLinearInEasing)
+            tween(380, easing = FastOutLinearInEasing)
         else
-            spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+            spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow),
         label = "offsetX",
         finishedListener = {
             if (isAnimatingOut) {
-                if (swipeDirection == 1) studiedCount = (studiedCount + 1).coerceAtMost(cards.size)
-                if (currentIndex < cards.size - 1) currentIndex++
-                else showComplete = true
+                answeredCount++
+                if (swipeDirection == 1) {
+                    // Đã thuộc
+                    studiedCount = (studiedCount + 1).coerceAtMost(cards.size)
+                } else {
+                    // Chưa thuộc — lưu index lại
+                    notLearnedIndices.add(currentIndex)
+                }
+                if (currentIndex < cards.size - 1) {
+                    currentIndex++
+                } else {
+                    showComplete = true
+                }
                 dragOffsetX = 0f
                 isAnimatingOut = false
                 swipeDirection = 0
@@ -365,38 +455,75 @@ fun StudyModeScreen(
         }
     )
 
-    // Card entrance
+    // 3D flip animation
+    val flipRotation by animateFloatAsState(
+        targetValue = if (isFlipped) 180f else 0f,
+        animationSpec = tween(420, easing = FastOutSlowInEasing),
+        label = "flip"
+    )
+
+    // Card entrance animation
     var cardVisible by remember { mutableStateOf(false) }
     LaunchedEffect(currentIndex) {
         cardVisible = false
-        kotlinx.coroutines.delay(60)
+        kotlinx.coroutines.delay(50)
         cardVisible = true
         isFlipped = false
     }
 
-    val swipeProgress = (animOffsetX / 380f).coerceIn(-1f, 1f)
-    val cardRotation = swipeProgress * 10f
-    val overlayAlpha = abs(swipeProgress).coerceIn(0f, 0.5f)
-    val overlayColor = if (swipeProgress > 0) ScPrimary else ScError
+    // swipeProgress: 0 ở giữa, chỉ bắt đầu có màu khi kéo >30% ngưỡng
+    val rawProgress = (animOffsetX / SCREEN_WIDTH).coerceIn(-1f, 1f)
+    // Màu chỉ hiện khi kéo >40% ngưỡng (tức ~0.25 của màn hình)
+    val colorThreshold = 0.25f
+    val swipeColorProgress = when {
+        rawProgress > colorThreshold -> ((rawProgress - colorThreshold) / (1f - colorThreshold)).coerceIn(0f, 1f)
+        rawProgress < -colorThreshold -> ((-rawProgress - colorThreshold) / (1f - colorThreshold)).coerceIn(0f, 1f)
+        else -> 0f
+    }
+    val swipeSign = if (rawProgress > 0) 1f else if (rawProgress < 0) -1f else 0f
+    val cardRotation = rawProgress * 12f
+    val overlayAlpha = swipeColorProgress * 0.45f
+    val overlayColor = if (rawProgress > 0) ScPrimary else ScError
 
     val card = cards[currentIndex]
-    val progress = (currentIndex + 1).toFloat() / cards.size
+    val progress = answeredCount.toFloat() / cards.size
 
     if (showComplete) {
+        val notLearnedCards = notLearnedIndices.map { cards[it] }
         StudyCompleteScreen(
             totalCards = cards.size,
             studiedCount = studiedCount,
-            onRestart = { currentIndex = 0; studiedCount = 0; showComplete = false },
-            onExit = { onExit(currentIndex, studiedCount) }
+            notLearnedCount = notLearnedIndices.size,
+            onRestartAll = {
+                currentIndex = 0
+                studiedCount = 0
+                answeredCount = 0
+                notLearnedIndices.clear()
+                showComplete = false
+                onRestart()
+            },
+            onRestartNotLearned = {
+                if (notLearnedCards.isNotEmpty()) {
+                    onRestartNotLearned(notLearnedCards)
+                }
+            },
+            onContinue = { onExit(studiedCount, studiedCount) } // studiedCount = số thuộc trong lần này
         )
         return
     }
 
     Box(
-        modifier = Modifier.fillMaxSize()
-            .background(Brush.verticalGradient(
-                listOf(ScPrimaryContainer.copy(alpha = 0.2f), ScBackground, ScBackground)
-            ))
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        ScPrimaryContainer.copy(alpha = 0.15f),
+                        ScBackground,
+                        ScBackground
+                    )
+                )
+            )
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -404,14 +531,18 @@ fun StudyModeScreen(
         ) {
             // ── Top bar ──────────────────────────────────────────────────
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { onExit(currentIndex, studiedCount) }) {
                     Icon(Icons.Default.Close, null, tint = ScOnSurface)
                 }
                 Box(
-                    modifier = Modifier.weight(1f).height(6.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(6.dp)
                         .clip(RoundedCornerShape(99.dp))
                         .background(ScPrimaryContainer.copy(alpha = 0.4f))
                 ) {
@@ -420,86 +551,70 @@ fun StudyModeScreen(
                         animationSpec = tween(600, easing = EaseOutCubic),
                         label = "prog"
                     )
-                    Box(modifier = Modifier.fillMaxWidth(animProg).fillMaxHeight()
-                        .clip(RoundedCornerShape(99.dp)).background(ScPrimary))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(animProg)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(99.dp))
+                            .background(
+                                Brush.horizontalGradient(listOf(ScPrimary, ScPrimaryFixedDim))
+                            )
+                    )
                 }
                 Spacer(Modifier.width(12.dp))
-                Text("${currentIndex + 1}/${cards.size}",
+                Text(
+                    "$answeredCount/${cards.size}",
                     style = MaterialTheme.typography.labelMedium,
-                    color = ScOnSurfaceVariant, fontWeight = FontWeight.SemiBold)
+                    color = ScOnSurfaceVariant,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
 
-            // ── Swipe hint labels ────────────────────────────────────────
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                val leftAlpha = (-swipeProgress).coerceIn(0f, 1f)
-                Surface(
-                    shape = RoundedCornerShape(99.dp),
-                    color = ScErrorContainer.copy(alpha = 0.08f + leftAlpha * 0.5f),
-                    border = BorderStroke(1.5.dp, ScError.copy(alpha = 0.15f + leftAlpha * 0.85f))
-                ) {
-                    Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Icon(Icons.Default.Close, null,
-                            tint = ScError.copy(alpha = 0.4f + leftAlpha * 0.6f),
-                            modifier = Modifier.size(14.dp))
-                        Text("Cần ôn", style = MaterialTheme.typography.labelSmall,
-                            color = ScError.copy(alpha = 0.4f + leftAlpha * 0.6f),
-                            fontWeight = FontWeight.Bold)
-                    }
-                }
-                val rightAlpha = swipeProgress.coerceIn(0f, 1f)
-                Surface(
-                    shape = RoundedCornerShape(99.dp),
-                    color = ScPrimaryContainer.copy(alpha = 0.08f + rightAlpha * 0.5f),
-                    border = BorderStroke(1.5.dp, ScPrimary.copy(alpha = 0.15f + rightAlpha * 0.85f))
-                ) {
-                    Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("Đã thuộc", style = MaterialTheme.typography.labelSmall,
-                            color = ScPrimary.copy(alpha = 0.4f + rightAlpha * 0.6f),
-                            fontWeight = FontWeight.Bold)
-                        Icon(Icons.Default.Check, null,
-                            tint = ScPrimary.copy(alpha = 0.4f + rightAlpha * 0.6f),
-                            modifier = Modifier.size(14.dp))
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(8.dp))
 
             // ── Card ─────────────────────────────────────────────────────
             AnimatedVisibility(
                 visible = cardVisible,
-                enter = fadeIn(tween(250)) + scaleIn(tween(250), initialScale = 0.93f),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).weight(1f)
+                enter = fadeIn(tween(200)) + scaleIn(
+                    tween(280, easing = EaseOutBack),
+                    initialScale = 0.88f
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .weight(1f)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .graphicsLayer {
                             translationX = animOffsetX
-                            translationY = abs(animOffsetX) * 0.08f
+                            translationY = abs(animOffsetX) * 0.06f
                             rotationZ = cardRotation
+                            // Slight scale down when dragging
+                            val dragScale = 1f - abs(rawProgress) * 0.04f
+                            scaleX = dragScale
+                            scaleY = dragScale
                         }
                         .pointerInput(currentIndex) {
                             detectHorizontalDragGestures(
                                 onDragEnd = {
                                     if (!isAnimatingOut) {
                                         when {
-                                            dragOffsetX > 120f -> {
-                                                swipeDirection = 1; isAnimatingOut = true
-                                                dragOffsetX = 900f
+                                            dragOffsetX > SWIPE_THRESHOLD -> {
+                                                swipeDirection = 1
+                                                isAnimatingOut = true
+                                                dragOffsetX = 1100f
                                             }
-                                            dragOffsetX < -120f -> {
-                                                swipeDirection = -1; isAnimatingOut = true
-                                                dragOffsetX = -900f
+                                            dragOffsetX < -SWIPE_THRESHOLD -> {
+                                                swipeDirection = -1
+                                                isAnimatingOut = true
+                                                dragOffsetX = -1100f
                                             }
-                                            else -> dragOffsetX = 0f
+                                            else -> {
+                                                // Snap back với spring
+                                                dragOffsetX = 0f
+                                            }
                                         }
                                     }
                                 },
@@ -508,136 +623,270 @@ fun StudyModeScreen(
                                 }
                             )
                         }
-                        .clickable(enabled = !isAnimatingOut) { isFlipped = !isFlipped },
+                        .clickable(
+                            enabled = !isAnimatingOut,
+                            indication = null,
+                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+                        ) { isFlipped = !isFlipped },
                     contentAlignment = Alignment.Center
                 ) {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        shape = RoundedCornerShape(24.dp),
-                        color = ScSurfaceContainerLowest,
-                        shadowElevation = 8.dp,
-                        border = BorderStroke(
-                            1.5.dp,
-                            when {
-                                swipeProgress > 0.1f -> ScPrimary.copy(alpha = swipeProgress.coerceAtMost(1f))
-                                swipeProgress < -0.1f -> ScError.copy(alpha = (-swipeProgress).coerceAtMost(1f))
-                                isFlipped -> ScTertiaryContainer
-                                else -> ScPrimaryContainer
-                            }
-                        )
+                    // ── 3D Flip Card ──────────────────────────────────────
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                rotationY = flipRotation
+                                cameraDistance = 12f * density
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            // Color overlay on swipe
-                            if (overlayAlpha > 0.01f) {
-                                Box(modifier = Modifier.fillMaxSize()
-                                    .background(overlayColor.copy(alpha = overlayAlpha),
-                                        RoundedCornerShape(24.dp)))
-                            }
-                            // Crossfade front/back
-                            Crossfade(targetState = isFlipped,
-                                animationSpec = tween(220), label = "flip") { flipped ->
-                                if (!flipped) {
-                                    Column(
-                                        modifier = Modifier.fillMaxSize().padding(32.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center
-                                    ) {
-                                        Surface(shape = RoundedCornerShape(99.dp),
-                                            color = ScPrimaryContainer) {
-                                            Row(modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                                Icon(Icons.Default.HelpOutline, null,
-                                                    tint = ScPrimary, modifier = Modifier.size(12.dp))
-                                                Text("Mặt trước", color = ScOnPrimaryContainer,
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    fontWeight = FontWeight.Bold)
-                                            }
-                                        }
-                                        Spacer(Modifier.height(28.dp))
-                                        Text(card.front,
-                                            style = MaterialTheme.typography.headlineSmall,
-                                            color = ScOnSurface, fontWeight = FontWeight.SemiBold,
-                                            textAlign = TextAlign.Center, lineHeight = 34.sp)
-                                        Spacer(Modifier.height(36.dp))
-                                        Row(verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                            Icon(Icons.Default.TouchApp, null,
-                                                tint = ScOutline, modifier = Modifier.size(16.dp))
-                                            Text("Nhấn để xem đáp án",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = ScOutline)
-                                        }
+                        // Mặt trước (hiện khi chưa lật)
+                        if (flipRotation <= 90f) {
+                            Surface(
+                                modifier = Modifier.fillMaxSize(),
+                                shape = RoundedCornerShape(28.dp),
+                                color = ScSurfaceContainerLowest,
+                                shadowElevation = 12.dp,
+                                border = BorderStroke(
+                                    1.5.dp,
+                                    when {
+                                        swipeColorProgress > 0f && rawProgress > 0 ->
+                                            ScPrimary.copy(alpha = swipeColorProgress)
+                                        swipeColorProgress > 0f && rawProgress < 0 ->
+                                            ScError.copy(alpha = swipeColorProgress)
+                                        else -> ScPrimaryContainer.copy(alpha = 0.6f)
                                     }
-                                } else {
+                                )
+                            ) {
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    // Gradient overlay khi swipe
+                                    if (overlayAlpha > 0.01f) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(
+                                                    overlayColor.copy(alpha = overlayAlpha),
+                                                    RoundedCornerShape(28.dp)
+                                                )
+                                        )
+                                    }
                                     Column(
-                                        modifier = Modifier.fillMaxSize().padding(32.dp),
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(32.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.Center
                                     ) {
-                                        Surface(shape = RoundedCornerShape(99.dp),
-                                            color = ScTertiaryContainer) {
-                                            Row(modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                        Surface(
+                                            shape = RoundedCornerShape(99.dp),
+                                            color = ScPrimaryContainer
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                                                 verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                                Icon(Icons.Default.LightMode, null,
-                                                    tint = ScTertiary, modifier = Modifier.size(12.dp))
-                                                Text("Đáp án", color = ScOnTertiaryContainer,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.HelpOutline, null,
+                                                    tint = ScPrimary,
+                                                    modifier = Modifier.size(12.dp)
+                                                )
+                                                Text(
+                                                    "Mặt trước",
+                                                    color = ScOnPrimaryContainer,
                                                     style = MaterialTheme.typography.labelSmall,
-                                                    fontWeight = FontWeight.Bold)
+                                                    fontWeight = FontWeight.Bold
+                                                )
                                             }
                                         }
                                         Spacer(Modifier.height(28.dp))
-                                        Text(card.back,
+                                        Text(
+                                            card.front,
                                             style = MaterialTheme.typography.headlineSmall,
-                                            color = ScTertiary, fontWeight = FontWeight.SemiBold,
-                                            textAlign = TextAlign.Center, lineHeight = 34.sp)
+                                            color = ScOnSurface,
+                                            fontWeight = FontWeight.SemiBold,
+                                            textAlign = TextAlign.Center,
+                                            lineHeight = 34.sp
+                                        )
                                         Spacer(Modifier.height(28.dp))
-                                        Surface(shape = RoundedCornerShape(12.dp),
-                                            color = ScSurfaceContainerLow) {
-                                            Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                                verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(Icons.Default.SwipeLeft, null,
-                                                    tint = ScError.copy(0.7f), modifier = Modifier.size(16.dp))
-                                                Text("Cần ôn", color = ScOnSurfaceVariant,
-                                                    style = MaterialTheme.typography.labelSmall)
+                                        // Tap hint
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.TouchApp, null,
+                                                tint = ScOutline,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Text(
+                                                "Nhấn để lật thẻ",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = ScOutline
+                                            )
+                                        }
+                                        Spacer(Modifier.height(10.dp))
+                                        // Swipe hint
+                                        Surface(
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = ScSurfaceContainerLow.copy(alpha = 0.8f)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text("👈", style = MaterialTheme.typography.labelMedium)
+                                                Text(
+                                                    "Cần ôn",
+                                                    color = ScError.copy(0.8f),
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
                                                 Text("·", color = ScOutlineVariant,
                                                     style = MaterialTheme.typography.labelSmall)
-                                                Text("Đã thuộc", color = ScOnSurfaceVariant,
-                                                    style = MaterialTheme.typography.labelSmall)
-                                                Icon(Icons.Default.SwipeRight, null,
-                                                    tint = ScPrimary.copy(0.7f), modifier = Modifier.size(16.dp))
+                                                Text(
+                                                    "Đã thuộc",
+                                                    color = ScPrimary.copy(0.8f),
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
+                                                Text("👉", style = MaterialTheme.typography.labelMedium)
                                             }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    // Stamp overlays
-                    if (swipeProgress > 0.18f) {
-                        Box(modifier = Modifier.align(Alignment.TopStart).padding(20.dp)) {
-                            Surface(shape = RoundedCornerShape(8.dp),
-                                color = ScPrimary.copy(alpha = (swipeProgress * 1.5f).coerceAtMost(0.9f)),
-                                border = BorderStroke(2.dp, ScPrimary)) {
-                                Text("THUỘC ✓", color = ScOnPrimary,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
+                        // Mặt sau (hiện khi đã lật, cần mirror lại)
+                        if (flipRotation > 90f) {
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .graphicsLayer { rotationY = 180f },
+                                shape = RoundedCornerShape(28.dp),
+                                color = ScSurfaceContainerLowest,
+                                shadowElevation = 12.dp,
+                                border = BorderStroke(
+                                    1.5.dp,
+                                    when {
+                                        swipeColorProgress > 0f && rawProgress > 0 ->
+                                            ScPrimary.copy(alpha = swipeColorProgress)
+                                        swipeColorProgress > 0f && rawProgress < 0 ->
+                                            ScError.copy(alpha = swipeColorProgress)
+                                        else -> ScTertiaryContainer.copy(alpha = 0.8f)
+                                    }
+                                )
+                            ) {
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    if (overlayAlpha > 0.01f) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(
+                                                    overlayColor.copy(alpha = overlayAlpha),
+                                                    RoundedCornerShape(28.dp)
+                                                )
+                                        )
+                                    }
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(32.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Surface(
+                                            shape = RoundedCornerShape(99.dp),
+                                            color = ScTertiaryContainer
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.LightMode, null,
+                                                    tint = ScTertiary,
+                                                    modifier = Modifier.size(12.dp)
+                                                )
+                                                Text(
+                                                    "Đáp án",
+                                                    color = ScOnTertiaryContainer,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+                                        Spacer(Modifier.height(28.dp))
+                                        Text(
+                                            card.back,
+                                            style = MaterialTheme.typography.headlineSmall,
+                                            color = ScTertiary,
+                                            fontWeight = FontWeight.SemiBold,
+                                            textAlign = TextAlign.Center,
+                                            lineHeight = 34.sp
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
-                    if (swipeProgress < -0.18f) {
-                        Box(modifier = Modifier.align(Alignment.TopEnd).padding(20.dp)) {
-                            Surface(shape = RoundedCornerShape(8.dp),
-                                color = ScError.copy(alpha = ((-swipeProgress) * 1.5f).coerceAtMost(0.9f)),
-                                border = BorderStroke(2.dp, ScError)) {
-                                Text("ÔN LẠI", color = ScOnError,
-                                    style = MaterialTheme.typography.titleMedium,
+
+                    // ── Stamp overlays (chỉ hiện khi kéo đủ xa) ─────────
+                    val stampAlpha = swipeColorProgress
+                    if (stampAlpha > 0.05f && rawProgress > 0) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(24.dp)
+                                .graphicsLayer {
+                                    alpha = stampAlpha
+                                    rotationZ = -15f
+                                    scaleX = 0.8f + stampAlpha * 0.2f
+                                    scaleY = 0.8f + stampAlpha * 0.2f
+                                }
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color.Transparent,
+                                border = BorderStroke(3.dp, ScPrimary)
+                            ) {
+                                Text(
+                                    "THUỘC ✓",
+                                    color = ScPrimary,
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.ExtraBold,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                                )
+                            }
+                        }
+                    }
+                    if (stampAlpha > 0.05f && rawProgress < 0) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(24.dp)
+                                .graphicsLayer {
+                                    alpha = stampAlpha
+                                    rotationZ = 15f
+                                    scaleX = 0.8f + stampAlpha * 0.2f
+                                    scaleY = 0.8f + stampAlpha * 0.2f
+                                }
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color.Transparent,
+                                border = BorderStroke(3.dp, ScError)
+                            ) {
+                                Text(
+                                    "ÔN LẠI",
+                                    color = ScError,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                                )
                             }
                         }
                     }
@@ -646,15 +895,43 @@ fun StudyModeScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            // ── Bottom buttons ────────────────────────────────────────────
+            // ── Bottom buttons: Quay lại | Cần ôn | Đã thuộc ─────────────
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                // Nút Quay lại — disabled ở thẻ đầu tiên
+                val canGoBack = currentIndex > 0
+                FilledTonalIconButton(
+                    onClick = {
+                        if (canGoBack && !isAnimatingOut) {
+                            currentIndex--
+                            isFlipped = false
+                        }
+                    },
+                    enabled = canGoBack,
+                    modifier = Modifier.size(56.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = ScSurfaceContainerLow,
+                        contentColor = ScOnSurface,
+                        disabledContainerColor = ScSurfaceContainerLow.copy(alpha = 0.4f),
+                        disabledContentColor = ScOnSurface.copy(alpha = 0.3f)
+                    )
+                ) {
+                    Icon(Icons.Default.ArrowBack, null, modifier = Modifier.size(22.dp))
+                }
+
+                // Cần ôn
                 Button(
                     onClick = {
                         if (!isAnimatingOut) {
-                            swipeDirection = -1; isAnimatingOut = true; dragOffsetX = -900f
+                            swipeDirection = -1
+                            isAnimatingOut = true
+                            dragOffsetX = -1100f
                         }
                     },
                     modifier = Modifier.weight(1f).height(56.dp),
@@ -665,10 +942,14 @@ fun StudyModeScreen(
                     Spacer(Modifier.width(6.dp))
                     Text("Cần ôn", color = ScError, fontWeight = FontWeight.SemiBold)
                 }
+
+                // Đã thuộc
                 Button(
                     onClick = {
                         if (!isAnimatingOut) {
-                            swipeDirection = 1; isAnimatingOut = true; dragOffsetX = 900f
+                            swipeDirection = 1
+                            isAnimatingOut = true
+                            dragOffsetX = 1100f
                         }
                     },
                     modifier = Modifier.weight(1f).height(56.dp),
@@ -690,8 +971,10 @@ fun StudyModeScreen(
 fun StudyCompleteScreen(
     totalCards: Int,
     studiedCount: Int,
-    onRestart: () -> Unit,
-    onExit: () -> Unit
+    notLearnedCount: Int,
+    onRestartAll: () -> Unit,
+    onRestartNotLearned: () -> Unit,
+    onContinue: () -> Unit
 ) {
     val pct = if (totalCards > 0) (studiedCount * 100 / totalCards) else 0
 
@@ -805,8 +1088,20 @@ fun StudyCompleteScreen(
                 }
 
                 // Buttons
+                if (notLearnedCount > 0) {
+                    Button(
+                        onClick = onRestartNotLearned,
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape = RoundedCornerShape(99.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = ScError)
+                    ) {
+                        Icon(Icons.Default.Replay, null, tint = ScOnError, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Làm lại $notLearnedCount câu chưa thuộc", color = ScOnError, fontWeight = FontWeight.SemiBold)
+                    }
+                }
                 Button(
-                    onClick = onRestart,
+                    onClick = onRestartAll,
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(99.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = ScPrimary)
@@ -816,7 +1111,7 @@ fun StudyCompleteScreen(
                     Text("Học lại từ đầu", color = ScOnPrimary, fontWeight = FontWeight.SemiBold)
                 }
                 OutlinedButton(
-                    onClick = onExit,
+                    onClick = onContinue,
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(99.dp),
                     border = BorderStroke(1.dp, ScOutlineVariant)
@@ -850,6 +1145,148 @@ private fun CardFaceLabel(
         Surface(shape = RoundedCornerShape(99.dp), color = bgColor) {
             Text(hint, style = MaterialTheme.typography.labelSmall, color = onBgColor,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
+        }
+    }
+}
+
+// ── StudyOptionsDialog ────────────────────────────────────────────────────────
+
+@Composable
+fun StudyOptionsDialog(
+    totalCards: Int,
+    notLearnedCount: Int,
+    hasProgress: Boolean,
+    onDismiss: () -> Unit,
+    onContinue: () -> Unit,
+    onRestartAll: () -> Unit,
+    onRestartNotLearned: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = ScSurfaceContainerLowest,
+            shadowElevation = 8.dp
+        ) {
+            Column {
+                // Header
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(ScPrimaryContainer.copy(0.5f), ScSurfaceContainerLowest)
+                            ),
+                            RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+                        )
+                        .padding(24.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp))
+                                .background(ScPrimaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.PlayArrow, null, tint = ScPrimary, modifier = Modifier.size(26.dp))
+                        }
+                        Spacer(Modifier.width(14.dp))
+                        Column {
+                            Text(
+                                "Bắt đầu học",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = ScOnSurface, fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "$totalCards thẻ trong bộ này",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = ScOnSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)) {
+
+                    // Option 1: Tiếp tục (chỉ hiện nếu có progress)
+                    if (hasProgress) {
+                        StudyOptionItem(
+                            icon = Icons.Default.PlayCircle,
+                            iconBg = ScPrimaryContainer,
+                            iconTint = ScPrimary,
+                            title = "Tiếp tục học",
+                            subtitle = "Tiếp tục từ chỗ đã dừng",
+                            onClick = onContinue
+                        )
+                    }
+
+                    // Option 2: Ôn lại chưa thuộc (chỉ hiện nếu có câu chưa thuộc)
+                    if (notLearnedCount > 0) {
+                        StudyOptionItem(
+                            icon = Icons.Default.Refresh,
+                            iconBg = ScErrorContainer,
+                            iconTint = ScError,
+                            title = "Ôn lại chưa thuộc",
+                            subtitle = "$notLearnedCount thẻ cần ôn thêm",
+                            onClick = onRestartNotLearned
+                        )
+                    }
+
+                    // Option 3: Học lại từ đầu
+                    StudyOptionItem(
+                        icon = Icons.Default.Replay,
+                        iconBg = ScSecondaryContainer,
+                        iconTint = ScSecondary,
+                        title = "Học lại từ đầu",
+                        subtitle = "Reset và học toàn bộ $totalCards thẻ",
+                        onClick = onRestartAll
+                    )
+
+                    Spacer(Modifier.height(4.dp))
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Hủy", color = ScOnSurfaceVariant)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StudyOptionItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconBg: Color,
+    iconTint: Color,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        color = ScSurfaceContainerLow,
+        border = BorderStroke(1.dp, ScOutlineVariant.copy(alpha = 0.5f))
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Box(
+                modifier = Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(iconBg),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, null, tint = iconTint, modifier = Modifier.size(22.dp))
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleSmall,
+                    color = ScOnSurface, fontWeight = FontWeight.SemiBold)
+                Text(subtitle, style = MaterialTheme.typography.bodySmall,
+                    color = ScOnSurfaceVariant)
+            }
+            Icon(Icons.Default.ChevronRight, null, tint = ScOutline, modifier = Modifier.size(20.dp))
         }
     }
 }

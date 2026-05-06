@@ -51,6 +51,12 @@ fun StatsScreen(
     // Heatmap data for current year
     val heatmapData = remember(todos) { computeHeatmap(todos) }
 
+    // Focus level by time of day (morning, afternoon, evening)
+    val focusData = remember(todos) { computeFocusLevel(todos) }
+
+    // Efficiency: compare this week vs last week
+    val efficiency = remember(todos) { computeEfficiency(todos) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -248,7 +254,10 @@ fun StatsScreen(
                             color = ScOnSurface, fontWeight = FontWeight.SemiBold)
                     }
                     Spacer(Modifier.height(12.dp))
-                    FocusLineChart(modifier = Modifier.fillMaxWidth().height(100.dp))
+                    FocusLineChart(
+                        focusData = focusData,
+                        modifier = Modifier.fillMaxWidth().height(100.dp)
+                    )
                     Spacer(Modifier.height(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -291,7 +300,8 @@ fun StatsScreen(
                             Text("HIỆU SUẤT",
                                 style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
                                 color = ScOnPrimaryContainer)
-                            Text("+12%",
+                            val sign = if (efficiency >= 0) "+" else ""
+                            Text("$sign$efficiency%",
                                 style = MaterialTheme.typography.headlineMedium,
                                 color = ScOnPrimaryContainer, fontWeight = FontWeight.Bold)
                         }
@@ -456,9 +466,15 @@ fun ActivityHeatmap(data: Map<Int, Int>, modifier: Modifier = Modifier) {
 // ── Focus Line Chart ──────────────────────────────────────────────────────────
 
 @Composable
-fun FocusLineChart(modifier: Modifier = Modifier) {
-    // Static demo data matching Stitch design
-    val points = listOf(0.8f, 0.2f, 0.5f, 0.3f, 0.6f, 0.4f, 0.9f)
+fun FocusLineChart(focusData: List<Float>, modifier: Modifier = Modifier) {
+    // focusData: 7 điểm theo giờ trong ngày (0-23h chia 7 khoảng)
+    val points = if (focusData.all { it == 0f }) {
+        // Không có data — hiển thị đường phẳng ở giữa
+        List(7) { 0.5f }
+    } else {
+        focusData
+    }
+    val hasData = focusData.any { it > 0f }
 
     Canvas(modifier = modifier) {
         val w = size.width
@@ -596,23 +612,94 @@ private fun computeHeatmap(todos: List<TodoItem>): Map<Int, Int> {
     return map
 }
 
+/**
+ * Tính streak: số ngày liên tiếp có ít nhất 1 task hoàn thành,
+ * tính từ hôm nay trở về trước.
+ */
 private fun computeStreak(todos: List<TodoItem>): Int {
     val completedDays = todos.filter { it.isCompleted && it.dueDate != null }
         .map {
             val c = Calendar.getInstance().apply { timeInMillis = it.dueDate!! }
-            Triple(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH))
+            c.set(Calendar.HOUR_OF_DAY, 0)
+            c.set(Calendar.MINUTE, 0)
+            c.set(Calendar.SECOND, 0)
+            c.set(Calendar.MILLISECOND, 0)
+            c.timeInMillis
         }.toSet()
 
     var streak = 0
-    val cal = Calendar.getInstance()
+    val cal = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+
+    // Kiểm tra từ hôm nay trở về trước
     while (true) {
-        val key = Triple(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH))
-        if (completedDays.contains(key)) {
+        if (completedDays.contains(cal.timeInMillis)) {
             streak++
             cal.add(Calendar.DAY_OF_YEAR, -1)
-        } else break
+        } else {
+            break
+        }
     }
     return streak
 }
 
 private fun isLeapYear(year: Int) = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
+
+/**
+ * Tính mức độ tập trung theo 7 khoảng thời gian trong ngày dựa trên
+ * số task đã hoàn thành (dueDate) trong 30 ngày gần nhất.
+ * Khoảng: 0-3h, 4-6h, 7-10h, 11-13h, 14-17h, 18-20h, 21-23h
+ */
+private fun computeFocusLevel(todos: List<TodoItem>): List<Float> {
+    val slots = IntArray(7) // đếm task theo khoảng giờ
+    val thirtyDaysAgo = System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000
+
+    todos.filter { it.isCompleted && it.dueDate != null && it.dueDate >= thirtyDaysAgo }
+        .forEach { todo ->
+            val cal = Calendar.getInstance().apply { timeInMillis = todo.dueDate!! }
+            val hour = cal.get(Calendar.HOUR_OF_DAY)
+            val slot = when (hour) {
+                in 0..3   -> 0
+                in 4..6   -> 1
+                in 7..10  -> 2
+                in 11..13 -> 3
+                in 14..17 -> 4
+                in 18..20 -> 5
+                else      -> 6
+            }
+            slots[slot]++
+        }
+
+    val max = slots.max().coerceAtLeast(1).toFloat()
+    return slots.map { it / max }
+}
+
+/**
+ * Tính hiệu suất: so sánh số task hoàn thành tuần này vs tuần trước.
+ * Trả về phần trăm thay đổi (dương = tốt hơn, âm = kém hơn).
+ */
+private fun computeEfficiency(todos: List<TodoItem>): Int {
+    val cal = Calendar.getInstance()
+    // Đầu tuần này (Thứ 2)
+    val dow = cal.get(Calendar.DAY_OF_WEEK)
+    val daysFromMon = (dow + 5) % 7
+    cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0)
+    cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
+    cal.add(Calendar.DAY_OF_YEAR, -daysFromMon)
+    val thisWeekStart = cal.timeInMillis
+    val lastWeekStart = thisWeekStart - 7L * 24 * 60 * 60 * 1000
+
+    val completedTodos = todos.filter { it.isCompleted && it.dueDate != null }
+    val thisWeek = completedTodos.count { it.dueDate!! >= thisWeekStart }
+    val lastWeek = completedTodos.count { it.dueDate!! in lastWeekStart until thisWeekStart }
+
+    return if (lastWeek == 0) {
+        if (thisWeek > 0) 100 else 0
+    } else {
+        ((thisWeek - lastWeek) * 100 / lastWeek)
+    }
+}
