@@ -3,6 +3,7 @@ package com.example.studyapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -54,6 +55,8 @@ sealed class Screen(val route: String, val label: String, val selectedIcon: Imag
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Install splash screen BEFORE super.onCreate
+        installSplashScreen()
         super.onCreate(savedInstanceState)
 
         // Create notification channel
@@ -72,7 +75,12 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             StudyAppTheme {
-                KMAStudyApp(this, flashcardRepo, noteRepo, todoRepo, userActivityRepo)
+                var splashDone by remember { mutableStateOf(false) }
+                if (!splashDone) {
+                    SplashScreen(onFinished = { splashDone = true })
+                } else {
+                    KMAStudyApp(this, flashcardRepo, noteRepo, todoRepo, userActivityRepo)
+                }
             }
         }
     }
@@ -135,56 +143,73 @@ fun KMAStudyApp(
                         border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier.fillMaxSize().padding(horizontal = 4.dp),
                             horizontalArrangement = Arrangement.SpaceAround,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             bottomItems.forEachIndexed { index, screen ->
                                 val isMiddle = index == 2 // Screen.Note
                                 val isSelected = currentRoute == screen.route
-                                
+
                                 if (isMiddle) {
-                                    // Placeholder for middle button space
-                                    Spacer(modifier = Modifier.width(72.dp))
+                                    Spacer(modifier = Modifier.width(64.dp))
                                 } else {
-                                    IconButton(
-                                        onClick = {
-                                            navController.navigate(screen.route) {
-                                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                                launchSingleTop = true
-                                                restoreState = true
-                                            }
-                                        },
-                                        modifier = Modifier.size(48.dp)
-                                    ) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            val iconScale by animateFloatAsState(
-                                                targetValue = if (isSelected) 1.2f else 1f,
-                                                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                                                label = "scale"
-                                            )
-                                            
-                                            BadgedBox(badge = {
-                                                if (screen == Screen.Todo && pendingCount > 0) {
-                                                    Badge(containerColor = DangerRed) {
-                                                        Text("$pendingCount", style = MaterialTheme.typography.labelSmall, color = Color.White)
-                                                    }
+                                    val iconScale by animateFloatAsState(
+                                        targetValue = if (isSelected) 1.15f else 1f,
+                                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                                        label = "scale_${screen.route}"
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxHeight()
+                                            .clickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = null
+                                            ) {
+                                                navController.navigate(screen.route) {
+                                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                                    launchSingleTop = true
+                                                    restoreState = true
                                                 }
-                                            }) {
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.Center
+                                        ) {
+                                            Box(contentAlignment = Alignment.TopEnd) {
                                                 Icon(
                                                     imageVector = if (isSelected) screen.selectedIcon else screen.unselectedIcon,
                                                     contentDescription = screen.label,
                                                     tint = if (isSelected) ScPrimary else ScOnSurfaceVariant.copy(alpha = 0.7f),
-                                                    modifier = Modifier.size(24.dp).graphicsLayer {
-                                                        scaleX = iconScale
-                                                        scaleY = iconScale
-                                                    }
+                                                    modifier = Modifier
+                                                        .size(24.dp)
+                                                        .graphicsLayer { scaleX = iconScale; scaleY = iconScale }
                                                 )
+                                                if (screen == Screen.Todo && pendingCount > 0) {
+                                                    Surface(
+                                                        modifier = Modifier
+                                                            .offset(x = 8.dp, y = (-6).dp)
+                                                            .defaultMinSize(minWidth = 16.dp, minHeight = 16.dp),
+                                                        shape = RoundedCornerShape(99.dp),
+                                                        color = DangerRed
+                                                    ) {
+                                                        Text(
+                                                            text = if (pendingCount > 99) "99+" else "$pendingCount",
+                                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                                            color = Color.White,
+                                                            fontWeight = FontWeight.Bold,
+                                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                                        )
+                                                    }
+                                                }
                                             }
                                             if (isSelected) {
+                                                Spacer(Modifier.height(3.dp))
                                                 Box(
                                                     modifier = Modifier
-                                                        .padding(top = 2.dp)
                                                         .size(4.dp)
                                                         .clip(CircleShape)
                                                         .background(ScPrimary)

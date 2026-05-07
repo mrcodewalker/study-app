@@ -18,13 +18,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,8 +36,6 @@ import com.example.studyapp.ui.viewmodel.TodoViewModel
 import com.example.studyapp.ui.viewmodel.UserActivityViewModel
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.math.PI
-import kotlin.math.cos
 import com.example.studyapp.ui.util.loadAssetImage
 
 @Composable
@@ -80,8 +75,56 @@ fun HomeScreen(
             .sortedBy { it.dueDate }.take(3)
     }
 
+    // ── Intro animation states ────────────────────────────────────────────────
     var visible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { visible = true }
+    var iconLanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        visible = true
+        kotlinx.coroutines.delay(700)
+        iconLanded = true
+    }
+
+    // Slide từ trái sang phải với bounce
+    val iconOffsetX by animateDpAsState(
+        targetValue = if (visible) 0.dp else (-100).dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "iconX"
+    )
+    // Nảy lên nhẹ sau khi đến nơi
+    val iconOffsetY by animateDpAsState(
+        targetValue = if (iconLanded) 0.dp else 4.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioHighBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "iconY"
+    )
+    val iconAlpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(300),
+        label = "iconAlpha"
+    )
+    val iconScale by animateFloatAsState(
+        targetValue = if (visible) 1f else 0.5f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "iconScale"
+    )
+    // Rotation nhẹ khi slide vào
+    val iconRotation by animateFloatAsState(
+        targetValue = if (iconLanded) 0f else -12f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "iconRot"
+    )
 
     Column(
         modifier = Modifier
@@ -135,13 +178,21 @@ fun HomeScreen(
                                 fontWeight = FontWeight.SemiBold
                             )
                             Spacer(Modifier.height(4.dp))
-                            Text(
-                                "KMAStudy",
-                                style = MaterialTheme.typography.displaySmall,
-                                color = ScOnSurface,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = (-0.5).sp
-                            )
+
+                            // ── Icon + Title với slide-bounce animation ──
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Text(
+                                    "KMAStudy",
+                                    style = MaterialTheme.typography.displaySmall,
+                                    color = ScOnSurface,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = (-0.5).sp
+                                )
+                            }
+
                             if (totalCount > 0) {
                                 Spacer(Modifier.height(6.dp))
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -170,7 +221,8 @@ fun HomeScreen(
                                 }
                             }
                         }
-                        // Animated icon
+
+                        // Floating reading icon (right side)
                         val infiniteTransition = rememberInfiniteTransition(label = "float")
                         val floatY by infiniteTransition.animateFloat(
                             initialValue = 0f, targetValue = -8f,
@@ -222,28 +274,18 @@ fun HomeScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        HomeCircularProgress(
-                            progress = todayProgress,
-                            modifier = Modifier.size(110.dp)
-                        )
+                        HomeCircularProgress(progress = todayProgress, modifier = Modifier.size(110.dp))
                         Spacer(Modifier.height(12.dp))
-                        Text(
-                            "Mục tiêu học tập",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = ScOnSurface,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        Text("Mục tiêu học tập", style = MaterialTheme.typography.titleSmall, color = ScOnSurface, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(2.dp))
                         Text(
-                            if (totalCount == 0) "Chưa có nhiệm vụ"
-                            else "Còn ${totalCount - completedCount} nhiệm vụ",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = ScOnSurfaceVariant
+                            if (totalCount == 0) "Chưa có nhiệm vụ" else "Còn ${totalCount - completedCount} nhiệm vụ",
+                            style = MaterialTheme.typography.bodySmall, color = ScOnSurfaceVariant
                         )
                     }
                 }
 
-                // Continue learning / quick stats card
+                // Continue learning card
                 Surface(
                     modifier = Modifier.weight(7f).fillMaxHeight(),
                     shape = RoundedCornerShape(20.dp),
@@ -254,20 +296,15 @@ fun HomeScreen(
                         modifier = Modifier.padding(20.dp).fillMaxHeight(),
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
-                        // Header
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.Top,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column {
-                                Surface(
-                                    shape = RoundedCornerShape(99.dp),
-                                    color = ScSecondaryContainer
-                                ) {
+                                Surface(shape = RoundedCornerShape(99.dp), color = ScSecondaryContainer) {
                                     Text(
-                                        "Tiếp tục học",
-                                        color = ScOnSecondaryContainer,
+                                        "Tiếp tục học", color = ScOnSecondaryContainer,
                                         style = MaterialTheme.typography.labelSmall,
                                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                         fontWeight = FontWeight.SemiBold
@@ -276,42 +313,23 @@ fun HomeScreen(
                                 Spacer(Modifier.height(6.dp))
                                 Text(
                                     if (decks.isNotEmpty()) decks.first().name else "Chưa có bộ thẻ",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = ScOnSurface,
-                                    fontWeight = FontWeight.SemiBold,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
+                                    style = MaterialTheme.typography.titleMedium, color = ScOnSurface,
+                                    fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis
                                 )
                             }
-                            IconButton(
-                                onClick = onNavigateToFlashcard,
-                                modifier = Modifier.size(36.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.ArrowForward, null,
-                                    tint = ScPrimary,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                            IconButton(onClick = onNavigateToFlashcard, modifier = Modifier.size(36.dp)) {
+                                Icon(Icons.Default.ArrowForward, null, tint = ScPrimary, modifier = Modifier.size(20.dp))
                             }
                         }
 
-                        // Flashcard preview box
                         Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp),
                             color = ScSurfaceContainerLow,
                             border = BorderStroke(1.dp, ScPrimaryContainer.copy(alpha = 0.5f))
                         ) {
-                            Column(
-                                modifier = Modifier.padding(14.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
+                            Column(modifier = Modifier.padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                 val isMastered = decks.isNotEmpty() && decks.first().let { it.cardCount > 0 && it.studiedCount >= it.cardCount }
-                                Image(
-                                    loadAssetImage(if (isMastered) "trophy.png" else "flash-card.png"),
-                                    null,
-                                    modifier = Modifier.size(32.dp)
-                                )
+                                Image(loadAssetImage(if (isMastered) "trophy.png" else "flash-card.png"), null, modifier = Modifier.size(32.dp))
                                 Spacer(Modifier.height(6.dp))
                                 if (decks.isNotEmpty()) {
                                     val deck = decks.first()
@@ -323,42 +341,22 @@ fun HomeScreen(
                                         fontWeight = if (isMastered) FontWeight.Bold else FontWeight.Normal
                                     )
                                 } else {
-                                    Text(
-                                        "Nhấn + để tạo bộ thẻ",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = ScOnSurfaceVariant
-                                    )
+                                    Text("Nhấn + để tạo bộ thẻ", style = MaterialTheme.typography.labelMedium, color = ScOnSurfaceVariant)
                                 }
                             }
                         }
 
-                        // Progress bar
                         if (decks.isNotEmpty()) {
                             val deck = decks.first()
-                            val pf = if (deck.cardCount > 0)
-                                (deck.studiedCount.toFloat() / deck.cardCount).coerceIn(0f, 1f)
-                            else 0f
-                            val prog by animateFloatAsState(
-                                targetValue = pf,
-                                animationSpec = tween(900, easing = EaseOutCubic),
-                                label = "prog"
-                            )
+                            val pf = if (deck.cardCount > 0) (deck.studiedCount.toFloat() / deck.cardCount).coerceIn(0f, 1f) else 0f
+                            val prog by animateFloatAsState(targetValue = pf, animationSpec = tween(900, easing = EaseOutCubic), label = "prog")
                             Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(6.dp)
-                                    .clip(RoundedCornerShape(99.dp))
+                                modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(99.dp))
                                     .background(ScPrimaryContainer.copy(alpha = 0.35f))
                             ) {
                                 Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth(prog)
-                                        .fillMaxHeight()
-                                        .clip(RoundedCornerShape(99.dp))
-                                        .background(
-                                            if (pf >= 1f) Brush.horizontalGradient(listOf(ScPrimary, Color(0xFF4CAF50)))
-                                            else SolidColor(ScPrimary)
-                                        )
+                                    modifier = Modifier.fillMaxWidth(prog).fillMaxHeight().clip(RoundedCornerShape(99.dp))
+                                        .background(if (pf >= 1f) Brush.horizontalGradient(listOf(ScPrimary, Color(0xFF4CAF50))) else SolidColor(ScPrimary))
                                 )
                             }
                         }
@@ -375,39 +373,19 @@ fun HomeScreen(
             enter = fadeIn(tween(500, 250)) + slideInVertically(tween(500, 250)) { 20 }
         ) {
             Column {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "Truy cập nhanh",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = ScOnSurface,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+                Text(
+                    "Truy cập nhanh", style = MaterialTheme.typography.titleSmall,
+                    color = ScOnSurface, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
                 Spacer(Modifier.height(10.dp))
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    HomeQuickAction(
-                        Modifier.weight(1f), "flash-card.png",
-                        "Thẻ học", ScPrimary, ScPrimaryContainer, onNavigateToFlashcard
-                    )
-                    HomeQuickAction(
-                        Modifier.weight(1f), "sticky-note.png",
-                        "Ghi chú", ScSecondary, ScSecondaryContainer, onNavigateToNote
-                    )
-                    HomeQuickAction(
-                        Modifier.weight(1f), "clipboard.png",
-                        "Công việc", ScTertiary, ScTertiaryContainer, onNavigateToTodo
-                    )
+                    HomeQuickAction(Modifier.weight(1f), "flash-card.png", "Thẻ học", ScPrimary, ScPrimaryContainer, onNavigateToFlashcard)
+                    HomeQuickAction(Modifier.weight(1f), "sticky-note.png", "Ghi chú", ScSecondary, ScSecondaryContainer, onNavigateToNote)
+                    HomeQuickAction(Modifier.weight(1f), "clipboard.png", "Công việc", ScTertiary, ScTertiaryContainer, onNavigateToTodo)
                 }
             }
         }
@@ -421,35 +399,16 @@ fun HomeScreen(
             ) {
                 Column {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            "Công việc hôm nay",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = ScOnSurface,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.weight(1f)
-                        )
-                        TextButton(
-                            onClick = onNavigateToTodo,
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text(
-                                "Xem tất cả",
-                                color = ScPrimary,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
+                        Text("Công việc hôm nay", style = MaterialTheme.typography.titleSmall, color = ScOnSurface, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        TextButton(onClick = onNavigateToTodo, contentPadding = PaddingValues(0.dp)) {
+                            Text("Xem tất cả", color = ScPrimary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                         }
                     }
                     Spacer(Modifier.height(8.dp))
-                    Column(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         upcomingTodos.forEach { HomeTodoRow(it) }
                     }
                 }
@@ -465,45 +424,20 @@ fun HomeScreen(
             ) {
                 Column {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            "Ghi chú gần đây",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = ScOnSurface,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.weight(1f)
-                        )
-                        TextButton(
-                            onClick = onNavigateToNote,
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text(
-                                "Xem tất cả",
-                                color = ScPrimary,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
+                        Text("Ghi chú gần đây", style = MaterialTheme.typography.titleSmall, color = ScOnSurface, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        TextButton(onClick = onNavigateToNote, contentPadding = PaddingValues(0.dp)) {
+                            Text("Xem tất cả", color = ScPrimary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                         }
                     }
                     Spacer(Modifier.height(8.dp))
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
+                    LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         itemsIndexed(notes.take(10), key = { _, n -> n.id }) { idx, note ->
                             var cardVis by remember { mutableStateOf(false) }
-                            LaunchedEffect(Unit) {
-                                kotlinx.coroutines.delay((idx * 60).toLong())
-                                cardVis = true
-                            }
-                            AnimatedVisibility(
-                                visible = cardVis,
-                                enter = fadeIn(tween(350)) + slideInHorizontally(tween(350)) { 40 }
-                            ) {
+                            LaunchedEffect(Unit) { kotlinx.coroutines.delay((idx * 60).toLong()); cardVis = true }
+                            AnimatedVisibility(visible = cardVis, enter = fadeIn(tween(350)) + slideInHorizontally(tween(350)) { 40 }) {
                                 HomeRecentNoteCard(note, onClick = onNavigateToNote)
                             }
                         }
@@ -521,45 +455,20 @@ fun HomeScreen(
             ) {
                 Column {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            "Bộ thẻ gần đây",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = ScOnSurface,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.weight(1f)
-                        )
-                        TextButton(
-                            onClick = onNavigateToFlashcard,
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text(
-                                "Xem tất cả",
-                                color = ScPrimary,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
+                        Text("Bộ thẻ gần đây", style = MaterialTheme.typography.titleSmall, color = ScOnSurface, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        TextButton(onClick = onNavigateToFlashcard, contentPadding = PaddingValues(0.dp)) {
+                            Text("Xem tất cả", color = ScPrimary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                         }
                     }
                     Spacer(Modifier.height(8.dp))
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
+                    LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         itemsIndexed(decks.take(10), key = { _, d -> d.id }) { idx, deck ->
                             var cardVis by remember { mutableStateOf(false) }
-                            LaunchedEffect(Unit) {
-                                kotlinx.coroutines.delay((idx * 60).toLong())
-                                cardVis = true
-                            }
-                            AnimatedVisibility(
-                                visible = cardVis,
-                                enter = fadeIn(tween(350)) + slideInHorizontally(tween(350)) { 40 }
-                            ) {
+                            LaunchedEffect(Unit) { kotlinx.coroutines.delay((idx * 60).toLong()); cardVis = true }
+                            AnimatedVisibility(visible = cardVis, enter = fadeIn(tween(350)) + slideInHorizontally(tween(350)) { 40 }) {
                                 HomeRecentDeckCard(deck, onClick = { onDeckClick(deck.id) })
                             }
                         }
@@ -567,6 +476,7 @@ fun HomeScreen(
                 }
             }
         }
+
         // ── Activity Chart ───────────────────────────────────────────────────
         Spacer(Modifier.height(28.dp))
         AnimatedVisibility(
@@ -574,12 +484,7 @@ fun HomeScreen(
             enter = fadeIn(tween(500, 300)) + slideInVertically(tween(500, 300)) { 20 }
         ) {
             Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-                Text(
-                    "Hoạt động 7 ngày qua",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = ScOnSurface,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text("Hoạt động 7 ngày qua", style = MaterialTheme.typography.titleSmall, color = ScOnSurface, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(16.dp))
                 UsageChart(recentActivity)
             }
@@ -589,7 +494,7 @@ fun HomeScreen(
     }
 }
 
-// ── Circular progress (Stitch style) ─────────────────────────────────────────
+// ── Circular progress ─────────────────────────────────────────────────────────
 
 @Composable
 fun HomeCircularProgress(progress: Float, modifier: Modifier = Modifier) {
@@ -605,39 +510,12 @@ fun HomeCircularProgress(progress: Float, modifier: Modifier = Modifier) {
             val stroke = 11.dp.toPx()
             val radius = (size.minDimension - stroke) / 2f
             val center = Offset(size.width / 2f, size.height / 2f)
-            drawCircle(
-                color = ScPrimaryContainer,
-                radius = radius,
-                center = center,
-                style = Stroke(width = stroke, cap = StrokeCap.Round)
-            )
-            
-            val diameter = size.minDimension - stroke
-            val left = (size.width - diameter) / 2f
-            val top = (size.height - diameter) / 2f
-            
-            drawArc(
-                color = ScPrimary,
-                startAngle = -90f,
-                sweepAngle = animatedProgress * 360f,
-                useCenter = false,
-                topLeft = Offset(left, top),
-                size = Size(diameter, diameter),
-                style = Stroke(width = stroke, cap = StrokeCap.Round)
-            )
+            drawCircle(color = ScPrimaryContainer, radius = radius, center = center, style = Stroke(width = stroke, cap = StrokeCap.Round))
+            drawArc(color = ScPrimary, startAngle = -90f, sweepAngle = animatedProgress * 360f, useCenter = false, style = Stroke(width = stroke, cap = StrokeCap.Round))
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                "$pct%",
-                style = MaterialTheme.typography.headlineSmall,
-                color = ScPrimary,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                "Hoàn thành",
-                style = MaterialTheme.typography.labelSmall,
-                color = ScOnSurfaceVariant
-            )
+            Text("$pct%", style = MaterialTheme.typography.headlineSmall, color = ScPrimary, fontWeight = FontWeight.Bold)
+            Text("Hoàn thành", style = MaterialTheme.typography.labelSmall, color = ScOnSurfaceVariant)
         }
     }
 }
@@ -645,14 +523,7 @@ fun HomeCircularProgress(progress: Float, modifier: Modifier = Modifier) {
 // ── Quick action card ─────────────────────────────────────────────────────────
 
 @Composable
-fun HomeQuickAction(
-    modifier: Modifier,
-    iconPath: String,
-    label: String,
-    accent: Color,
-    bg: Color,
-    onClick: () -> Unit
-) {
+fun HomeQuickAction(modifier: Modifier, iconPath: String, label: String, accent: Color, bg: Color, onClick: () -> Unit) {
     var pressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         targetValue = if (pressed) 0.92f else 1f,
@@ -662,41 +533,23 @@ fun HomeQuickAction(
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulse by infiniteTransition.animateFloat(
         initialValue = 1f, targetValue = 1.06f,
-        animationSpec = infiniteRepeatable(
-            tween(1200, easing = EaseInOutSine), RepeatMode.Reverse
-        ),
+        animationSpec = infiniteRepeatable(tween(1200, easing = EaseInOutSine), RepeatMode.Reverse),
         label = "pulse"
     )
 
     Surface(
-        modifier = modifier
-            .scale(scale)
-            .clickable { pressed = true; onClick() },
-        shape = RoundedCornerShape(16.dp),
-        color = ScSurfaceContainerLowest,
-        shadowElevation = 2.dp
+        modifier = modifier.scale(scale).clickable { pressed = true; onClick() },
+        shape = RoundedCornerShape(16.dp), color = ScSurfaceContainerLowest, shadowElevation = 2.dp
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .scale(pulse)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(bg),
+                modifier = Modifier.size(46.dp).scale(pulse).clip(RoundedCornerShape(14.dp)).background(bg),
                 contentAlignment = Alignment.Center
             ) {
                 Image(loadAssetImage(iconPath), null, modifier = Modifier.size(24.dp))
             }
             Spacer(Modifier.height(8.dp))
-            Text(
-                label,
-                style = MaterialTheme.typography.labelMedium,
-                color = ScOnSurface,
-                fontWeight = FontWeight.SemiBold
-            )
+            Text(label, style = MaterialTheme.typography.labelMedium, color = ScOnSurface, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -706,9 +559,7 @@ fun HomeQuickAction(
 @Composable
 fun HomeTodoRow(todo: TodoItem) {
     val isOverdue = todo.dueDate != null && todo.dueDate < System.currentTimeMillis()
-    val dueDateStr = todo.dueDate?.let {
-        SimpleDateFormat("HH:mm, dd/MM", Locale("vi")).format(Date(it))
-    }
+    val dueDateStr = todo.dueDate?.let { SimpleDateFormat("HH:mm, dd/MM", Locale("vi")).format(Date(it)) }
     val priorityChip = when (todo.priority) {
         2 -> Pair("Cao", ScTertiaryContainer)
         1 -> Pair("TB", ScSecondaryContainer)
@@ -716,72 +567,34 @@ fun HomeTodoRow(todo: TodoItem) {
     }
 
     Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = ScSurfaceContainerLowest,
-        border = BorderStroke(1.dp, if (isOverdue) ScErrorContainer else ScOutlineVariant),
-        shadowElevation = 1.dp
+        shape = RoundedCornerShape(14.dp), color = ScSurfaceContainerLowest,
+        border = BorderStroke(1.dp, if (isOverdue) ScErrorContainer else ScOutlineVariant), shadowElevation = 1.dp
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Checkbox placeholder
-            Box(
-                modifier = Modifier
-                    .size(22.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.5.dp, ScPrimaryContainer, RoundedCornerShape(6.dp))
-            )
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.size(22.dp).clip(RoundedCornerShape(6.dp)).border(1.5.dp, ScPrimaryContainer, RoundedCornerShape(6.dp)))
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    todo.title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = ScOnSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Text(todo.title, style = MaterialTheme.typography.bodyMedium, color = ScOnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (dueDateStr != null) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 3.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Schedule, null,
-                            tint = if (isOverdue) ScError else ScOnSurfaceVariant,
-                            modifier = Modifier.size(12.dp)
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 3.dp)) {
+                        Icon(Icons.Default.Schedule, null, tint = if (isOverdue) ScError else ScOnSurfaceVariant, modifier = Modifier.size(12.dp))
                         Spacer(Modifier.width(3.dp))
-                        Text(
-                            dueDateStr,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (isOverdue) ScError else ScOnSurfaceVariant
-                        )
+                        Text(dueDateStr, style = MaterialTheme.typography.labelSmall, color = if (isOverdue) ScError else ScOnSurfaceVariant)
                     }
                 }
             }
             if (priorityChip != null) {
                 Spacer(Modifier.width(8.dp))
-                Surface(
-                    shape = RoundedCornerShape(99.dp),
-                    color = priorityChip.second
-                ) {
-                    Text(
-                        priorityChip.first,
-                        color = ScOnSurface,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        fontWeight = FontWeight.SemiBold
-                    )
+                Surface(shape = RoundedCornerShape(99.dp), color = priorityChip.second) {
+                    Text(priorityChip.first, color = ScOnSurface, style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp), fontWeight = FontWeight.SemiBold)
                 }
             }
         }
     }
 }
 
-// ── Recent deck card (horizontal scroll) ─────────────────────────────────────
+// ── Recent deck card ──────────────────────────────────────────────────────────
 
 @Composable
 fun HomeRecentDeckCard(deck: FlashcardDeck, onClick: () -> Unit) {
@@ -793,124 +606,47 @@ fun HomeRecentDeckCard(deck: FlashcardDeck, onClick: () -> Unit) {
     )[colorIdx]
 
     var pressed by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.96f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label = "scale"
-    )
-    val progressFraction = if (deck.cardCount > 0)
-        (deck.studiedCount.toFloat() / deck.cardCount).coerceIn(0f, 1f)
-    else 0f
-    val progress by animateFloatAsState(
-        targetValue = progressFraction,
-        animationSpec = tween(1000, easing = EaseOutCubic),
-        label = "progress"
-    )
+    val scale by animateFloatAsState(targetValue = if (pressed) 0.96f else 1f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy), label = "scale")
+    val progressFraction = if (deck.cardCount > 0) (deck.studiedCount.toFloat() / deck.cardCount).coerceIn(0f, 1f) else 0f
+    val progress by animateFloatAsState(targetValue = progressFraction, animationSpec = tween(1000, easing = EaseOutCubic), label = "progress")
     val progressPct = (progressFraction * 100).toInt()
 
     Surface(
-        modifier = Modifier
-            .width(170.dp)
-            .height(165.dp)
-            .scale(scale)
-            .clickable { pressed = true; onClick() },
-        shape = RoundedCornerShape(18.dp),
-        color = ScSurfaceContainerLowest,
-        shadowElevation = 2.dp
+        modifier = Modifier.width(170.dp).height(165.dp).scale(scale).clickable { pressed = true; onClick() },
+        shape = RoundedCornerShape(18.dp), color = ScSurfaceContainerLowest, shadowElevation = 2.dp
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             val isMastered = progressFraction >= 1f
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(99.dp),
-                    color = if (isMastered) Color(0xFFFFECB3) else chipBg
-                ) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Surface(shape = RoundedCornerShape(99.dp), color = if (isMastered) Color(0xFFFFECB3) else chipBg) {
                     Text(
                         if (isMastered) "MASTERED" else "FLASHCARD",
                         color = if (isMastered) Color(0xFFFFA000) else chipText,
                         style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        fontWeight = FontWeight.Bold
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp), fontWeight = FontWeight.Bold
                     )
                 }
-                if (isMastered) {
-                    Image(
-                        loadAssetImage("trophy.png"),
-                        null,
-                        modifier = Modifier.size(24.dp)
-                    )
-                } else {
-                    Image(
-                        loadAssetImage("fire.png"),
-                        null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
+                Image(loadAssetImage(if (isMastered) "trophy.png" else "fire.png"), null, modifier = Modifier.size(if (isMastered) 24.dp else 18.dp))
             }
             Spacer(Modifier.height(10.dp))
-            Text(
-                deck.name,
-                style = MaterialTheme.typography.titleSmall,
-                color = ScOnSurface,
-                fontWeight = FontWeight.Bold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                lineHeight = 18.sp
-            )
+            Text(deck.name, style = MaterialTheme.typography.titleSmall, color = ScOnSurface, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 18.sp)
             Spacer(Modifier.height(4.dp))
-            Text(
-                "${deck.cardCount} thẻ",
-                style = MaterialTheme.typography.bodySmall,
-                color = ScOnSurfaceVariant
-            )
+            Text("${deck.cardCount} thẻ", style = MaterialTheme.typography.bodySmall, color = ScOnSurfaceVariant)
             Spacer(Modifier.weight(1f))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(99.dp))
-                    .background(chipBg.copy(alpha = 0.5f))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(progress)
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(99.dp))
-                        .background(
-                            if (isMastered) Brush.horizontalGradient(listOf(accent, Color(0xFF4CAF50)))
-                            else SolidColor(accent)
-                        )
-                )
+            Box(modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(99.dp)).background(chipBg.copy(alpha = 0.5f))) {
+                Box(modifier = Modifier.fillMaxWidth(progress).fillMaxHeight().clip(RoundedCornerShape(99.dp))
+                    .background(if (isMastered) Brush.horizontalGradient(listOf(accent, Color(0xFF4CAF50))) else SolidColor(accent)))
             }
             Spacer(Modifier.height(6.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     if (isMastered) "Hoàn thành 100%" else "$progressPct% thuộc",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (isMastered) Color(0xFF2E7D32) else accent,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.labelSmall, color = if (isMastered) Color(0xFF2E7D32) else accent, fontWeight = FontWeight.Bold
                 )
                 val notLearned = deck.cardCount - deck.studiedCount
                 if (notLearned > 0 && !isMastered) {
-                    Surface(
-                        shape = RoundedCornerShape(99.dp),
-                        color = ScErrorContainer.copy(alpha = 0.7f)
-                    ) {
-                        Text(
-                            "$notLearned cần ôn",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = ScError,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
+                    Surface(shape = RoundedCornerShape(99.dp), color = ScErrorContainer.copy(alpha = 0.7f)) {
+                        Text("$notLearned cần ôn", style = MaterialTheme.typography.labelSmall, color = ScError, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                     }
                 }
             }
@@ -918,15 +654,10 @@ fun HomeRecentDeckCard(deck: FlashcardDeck, onClick: () -> Unit) {
     }
 }
 
-// ── Recent note card (horizontal scroll) ─────────────────────────────────────
+// ── Recent note card ──────────────────────────────────────────────────────────
 
-private val homeNoteAccents = listOf(
-    ScPrimary, ScSecondary, ScTertiary, ScWarning, ScError, Color(0xFF7B5EA7)
-)
-private val homeNoteBgs = listOf(
-    Color(0xFFFFFFFF), Color(0xFFEAF5F1), Color(0xFFF0EDFF),
-    Color(0xFFE8F3F9), Color(0xFFFFF8E1), Color(0xFFF5F0FF),
-)
+private val homeNoteAccents = listOf(ScPrimary, ScSecondary, ScTertiary, ScWarning, ScError, Color(0xFF7B5EA7))
+private val homeNoteBgs = listOf(Color(0xFFFFFFFF), Color(0xFFEAF5F1), Color(0xFFF0EDFF), Color(0xFFE8F3F9), Color(0xFFFFF8E1), Color(0xFFF5F0FF))
 
 @Composable
 fun HomeRecentNoteCard(note: com.example.studyapp.data.model.Note, onClick: () -> Unit) {
@@ -936,79 +667,40 @@ fun HomeRecentNoteCard(note: com.example.studyapp.data.model.Note, onClick: () -
     val dateFormat = remember { SimpleDateFormat("dd/MM", Locale.getDefault()) }
 
     var pressed by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.96f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label = "scale"
-    )
+    val scale by animateFloatAsState(targetValue = if (pressed) 0.96f else 1f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy), label = "scale")
 
     Surface(
-        modifier = Modifier
-            .width(150.dp)
-            .height(155.dp)
-            .scale(scale)
-            .clickable { pressed = true; onClick() },
-        shape = RoundedCornerShape(18.dp),
-        color = bg,
-        shadowElevation = 2.dp,
+        modifier = Modifier.width(150.dp).height(155.dp).scale(scale).clickable { pressed = true; onClick() },
+        shape = RoundedCornerShape(18.dp), color = bg, shadowElevation = 2.dp,
         border = BorderStroke(1.dp, accent.copy(alpha = 0.15f))
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
-            // Accent dot + date
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(7.dp).clip(CircleShape).background(accent)
-                )
+                Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(accent))
                 Spacer(Modifier.weight(1f))
-                Text(
-                    dateFormat.format(Date(note.updatedAt)),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = ScOutline.copy(0.7f)
-                )
+                Text(dateFormat.format(Date(note.updatedAt)), style = MaterialTheme.typography.labelSmall, color = ScOutline.copy(0.7f))
             }
             Spacer(Modifier.height(8.dp))
             if (note.title.isNotBlank()) {
-                Text(
-                    note.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = ScOnSurface,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    lineHeight = 18.sp
-                )
+                Text(note.title, style = MaterialTheme.typography.titleSmall, color = ScOnSurface, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 18.sp)
                 Spacer(Modifier.height(4.dp))
             }
             Text(
                 note.content.ifBlank { "Không có nội dung" },
                 style = MaterialTheme.typography.bodySmall,
                 color = if (note.content.isBlank()) ScOutline else ScOnSurfaceVariant,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
-                lineHeight = 17.sp
+                maxLines = 3, overflow = TextOverflow.Ellipsis, lineHeight = 17.sp
             )
             Spacer(Modifier.weight(1f))
-            // Bottom accent line
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(3.dp)
-                    .clip(RoundedCornerShape(99.dp))
-                    .background(accent.copy(alpha = 0.25f))
-            )
+            Box(modifier = Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(99.dp)).background(accent.copy(alpha = 0.25f)))
         }
     }
 }
 
-
-// Keep legacy aliases so other files that reference them still compile
+// Keep legacy aliases
 @Composable
-fun HomeStatCard(
-    modifier: Modifier, value: String, label: String,
-    iconPath: String, accent: Color, bg: Color, onClick: () -> Unit
-) = HomeQuickAction(modifier, iconPath, label, accent, bg, onClick)
+fun HomeStatCard(modifier: Modifier, value: String, label: String, iconPath: String, accent: Color, bg: Color, onClick: () -> Unit) =
+    HomeQuickAction(modifier, iconPath, label, accent, bg, onClick)
 
 @Composable
 fun UpcomingTodoRow(todo: TodoItem) = HomeTodoRow(todo)
-
-

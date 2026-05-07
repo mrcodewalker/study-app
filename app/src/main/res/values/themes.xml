@@ -1,3 +1,15 @@
 <resources>
     <style name="Theme.StudyApp" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Splash screen theme using core-splashscreen -->
+    <style name="Theme.StudyApp.Splash" parent="Theme.SplashScreen">
+        <!-- Icon background color -->
+        <item name="windowSplashScreenBackground">#F8FAFA</item>
+        <!-- The icon (book asset) -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_anim</item>
+        <!-- Duration of the animated icon (ms) -->
+        <item name="windowSplashScreenAnimationDuration">800</item>
+        <!-- Theme to switch to after splash -->
+        <item name="postSplashScreenTheme">@style/Theme.StudyApp</item>
+    </style>
 </resources>
