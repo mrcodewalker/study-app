@@ -109,34 +109,25 @@ fun AiChatBubble(
     val screenHeightPx = with(density) { config.screenHeightDp.dp.toPx() }
     val bubbleSizePx   = with(density) { 70.dp.toPx() }
 
-    // Random 1 GIF từ assets/gif/ — random ngay khi khởi tạo, re-pick khi gifShuffleKey thay đổi
-    var botGifAsset by remember { mutableStateOf("gif/anime-bunny.gif") }
-    
-    // Random ngay lần đầu vào app
-    LaunchedEffect(Unit) {
-        botGifAsset = try {
-            val files = context.assets.list(BOT_GIF_DIR)
-                ?.filter { it.endsWith(".gif") }
-                ?.takeIf { it.isNotEmpty() }
-                ?: listOf("anime-bunny.gif")
-            "$BOT_GIF_DIR/${files.random()}"
-        } catch (_: Exception) {
-            "gif/anime-bunny.gif"
-        }
+    // Random 1 GIF từ assets/gif/ — random ngay từ lần render đầu tiên
+    fun pickRandomGif(): String = try {
+        val files = context.assets.list(BOT_GIF_DIR)
+            ?.filter { it.endsWith(".gif") }
+            ?.takeIf { it.isNotEmpty() }
+            ?: listOf("anime-bunny.gif")
+        "$BOT_GIF_DIR/${files.random()}"
+    } catch (_: Exception) {
+        "gif/anime-bunny.gif"
     }
-    
+
+    var botGifAsset by remember { mutableStateOf(pickRandomGif()) }
+
     // Re-pick khi shuffle
     LaunchedEffect(gifShuffleKey) {
-        if (gifShuffleKey > 0) { // Chỉ chạy khi shuffle, không chạy lần đầu
-            botGifAsset = try {
-                val files = context.assets.list(BOT_GIF_DIR)
-                    ?.filter { it.endsWith(".gif") }
-                    ?.takeIf { it.isNotEmpty() }
-                    ?: listOf("anime-bunny.gif")
-                "$BOT_GIF_DIR/${files.random()}"
-            } catch (_: Exception) {
-                "gif/anime-bunny.gif"
-            }
+        if (gifShuffleKey > 0) {
+            val newGif = pickRandomGif()
+            println("🎲 Shuffle GIF: key=$gifShuffleKey, old=$botGifAsset, new=$newGif")
+            botGifAsset = newGif
         }
     }
 
