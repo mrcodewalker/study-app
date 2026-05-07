@@ -5,19 +5,30 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -106,50 +117,120 @@ fun KMAStudyApp(
         containerColor = ScBackground,
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar(
-                    containerColor = ScSurfaceContainerLowest,
-                    tonalElevation = 0.dp,
+                Box(
                     modifier = Modifier
-                        .shadow(elevation = 8.dp, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
+                    contentAlignment = Alignment.BottomCenter
                 ) {
-                    bottomItems.forEach { screen ->
-                        val isSelected = currentRoute == screen.route
-                        NavigationBarItem(
-                            selected = isSelected,
-                            onClick = {
-                                navController.navigate(screen.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = {
-                                BadgedBox(badge = {
-                                    if (screen == Screen.Todo && pendingCount > 0) {
-                                        Badge(containerColor = DangerRed) {
-                                            Text("$pendingCount", style = MaterialTheme.typography.labelSmall, color = Color.White)
+                    // Main Dock Surface
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(64.dp),
+                        shape = RoundedCornerShape(32.dp),
+                        color = ScSurfaceContainerLowest.copy(alpha = 0.95f),
+                        shadowElevation = 12.dp,
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            bottomItems.forEachIndexed { index, screen ->
+                                val isMiddle = index == 2 // Screen.Note
+                                val isSelected = currentRoute == screen.route
+                                
+                                if (isMiddle) {
+                                    // Placeholder for middle button space
+                                    Spacer(modifier = Modifier.width(72.dp))
+                                } else {
+                                    IconButton(
+                                        onClick = {
+                                            navController.navigate(screen.route) {
+                                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
+                                        },
+                                        modifier = Modifier.size(48.dp)
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            val iconScale by animateFloatAsState(
+                                                targetValue = if (isSelected) 1.2f else 1f,
+                                                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                                                label = "scale"
+                                            )
+                                            
+                                            BadgedBox(badge = {
+                                                if (screen == Screen.Todo && pendingCount > 0) {
+                                                    Badge(containerColor = DangerRed) {
+                                                        Text("$pendingCount", style = MaterialTheme.typography.labelSmall, color = Color.White)
+                                                    }
+                                                }
+                                            }) {
+                                                Icon(
+                                                    imageVector = if (isSelected) screen.selectedIcon else screen.unselectedIcon,
+                                                    contentDescription = screen.label,
+                                                    tint = if (isSelected) ScPrimary else ScOnSurfaceVariant.copy(alpha = 0.7f),
+                                                    modifier = Modifier.size(24.dp).graphicsLayer {
+                                                        scaleX = iconScale
+                                                        scaleY = iconScale
+                                                    }
+                                                )
+                                            }
+                                            if (isSelected) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .padding(top = 2.dp)
+                                                        .size(4.dp)
+                                                        .clip(CircleShape)
+                                                        .background(ScPrimary)
+                                                )
+                                            }
                                         }
                                     }
-                                }) {
-                                    Icon(
-                                        if (isSelected) screen.selectedIcon else screen.unselectedIcon,
-                                        contentDescription = screen.label
-                                    )
                                 }
-                            },
-                            label = {
-                                Text(screen.label,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal)
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = ScPrimary,
-                                selectedTextColor = ScPrimary,
-                                unselectedIconColor = ScOnSurfaceVariant,
-                                unselectedTextColor = ScOnSurfaceVariant,
-                                indicatorColor = ScPrimaryContainer
+                            }
+                        }
+                    }
+
+                    // Middle Button (Slightly elevated)
+                    val middleScreen = Screen.Note
+                    val isMiddleSelected = currentRoute == middleScreen.route
+                    val middleScale by animateFloatAsState(
+                        targetValue = if (isMiddleSelected) 1.1f else 1f,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                        label = "middleScale"
+                    )
+
+                    Surface(
+                        onClick = {
+                            navController.navigate(middleScreen.route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        modifier = Modifier
+                            .offset(y = (-10).dp)
+                            .size(56.dp)
+                            .scale(middleScale)
+                            .shadow(8.dp, CircleShape),
+                        shape = CircleShape,
+                        color = ScPrimary,
+                        tonalElevation = 4.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (isMiddleSelected) middleScreen.selectedIcon else middleScreen.unselectedIcon,
+                                contentDescription = middleScreen.label,
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
                             )
-                        )
+                        }
                     }
                 }
             }

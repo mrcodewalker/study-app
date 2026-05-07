@@ -1,4 +1,4 @@
-package com.example.studyapp.ui.screen
+﻿package com.example.studyapp.ui.screen
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -220,7 +220,7 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
                 ) {
                     Icon(Icons.Default.DynamicFeed, null, tint = ScPrimary, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Thêm hàng loạt", color = ScPrimary, style = MaterialTheme.typography.labelLarge)
+                    Text("Bulk insert", color = ScPrimary, style = MaterialTheme.typography.labelLarge)
                 }
             }
 

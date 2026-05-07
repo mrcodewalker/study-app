@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
@@ -391,8 +392,20 @@ fun CircularProgressChart(progress: Float, modifier: Modifier = Modifier) {
             val center = Offset(size.width / 2f, size.height / 2f)
             drawCircle(color = ScPrimaryContainer, radius = radius, center = center,
                 style = Stroke(width = stroke, cap = StrokeCap.Round))
-            drawArc(color = ScPrimary, startAngle = -90f, sweepAngle = sweepAngle,
-                useCenter = false, style = Stroke(width = stroke, cap = StrokeCap.Round))
+
+            val diameter = size.minDimension - stroke
+            val left = (size.width - diameter) / 2f
+            val top = (size.height - diameter) / 2f
+
+            drawArc(
+                color = ScPrimary,
+                startAngle = -90f,
+                sweepAngle = sweepAngle,
+                useCenter = false,
+                topLeft = Offset(left, top),
+                size = Size(diameter, diameter),
+                style = Stroke(width = stroke, cap = StrokeCap.Round)
+            )
         }
         Text("$pct%", style = MaterialTheme.typography.titleMedium,
             color = ScPrimary, fontWeight = FontWeight.Bold)

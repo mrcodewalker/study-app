@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -396,15 +397,15 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     HomeQuickAction(
-                        Modifier.weight(1f), "play-button.png",
+                        Modifier.weight(1f), "flash-card.png",
                         "Thẻ học", ScPrimary, ScPrimaryContainer, onNavigateToFlashcard
                     )
                     HomeQuickAction(
-                        Modifier.weight(1f), "sparkles.png",
+                        Modifier.weight(1f), "sticky-note.png",
                         "Ghi chú", ScSecondary, ScSecondaryContainer, onNavigateToNote
                     )
                     HomeQuickAction(
-                        Modifier.weight(1f), "clock.png",
+                        Modifier.weight(1f), "clipboard.png",
                         "Công việc", ScTertiary, ScTertiaryContainer, onNavigateToTodo
                     )
                 }
@@ -610,11 +611,18 @@ fun HomeCircularProgress(progress: Float, modifier: Modifier = Modifier) {
                 center = center,
                 style = Stroke(width = stroke, cap = StrokeCap.Round)
             )
+            
+            val diameter = size.minDimension - stroke
+            val left = (size.width - diameter) / 2f
+            val top = (size.height - diameter) / 2f
+            
             drawArc(
                 color = ScPrimary,
                 startAngle = -90f,
                 sweepAngle = animatedProgress * 360f,
                 useCenter = false,
+                topLeft = Offset(left, top),
+                size = Size(diameter, diameter),
                 style = Stroke(width = stroke, cap = StrokeCap.Round)
             )
         }
