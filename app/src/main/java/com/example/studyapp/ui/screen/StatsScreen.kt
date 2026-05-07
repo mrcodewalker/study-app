@@ -1,4 +1,4 @@
-package com.example.studyapp.ui.screen
+﻿package com.example.studyapp.ui.screen
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -385,7 +385,7 @@ fun CircularProgressChart(progress: Float, modifier: Modifier = Modifier) {
     val sweepAngle = animatedProgress * 360f
     val pct = (animatedProgress * 100).toInt()
 
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+    Box(modifier = modifier.aspectRatio(1f), contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val stroke = 10.dp.toPx()
             val radius = (size.minDimension - stroke) / 2f

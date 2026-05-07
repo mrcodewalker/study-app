@@ -1,4 +1,4 @@
-package com.example.studyapp.ui.screen
+﻿package com.example.studyapp.ui.screen
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
