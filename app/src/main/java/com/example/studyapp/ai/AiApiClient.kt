@@ -108,4 +108,52 @@ object AiApiClient {
                 durationMs = json.optInt("duration_ms", 0)
             )
         }
+
+    data class ChatResult(
+        val sessionId: String,
+        val reply: String,
+        val durationMs: Int,
+        val historyLength: Int
+    )
+
+    /** Send a chat message via POST /chat. Pass sessionId to continue a conversation. */
+    suspend fun chat(
+        message: String,
+        sessionId: String,
+        language: String = "Vietnamese"
+    ): ChatResult = withContext(Dispatchers.IO) {
+        val body = JSONObject().apply {
+            put("message", message)
+            put("session_id", sessionId)
+            put("language", language)
+        }.toString().toRequestBody("application/json".toMediaType())
+
+        val req = Request.Builder()
+            .url("$baseUrl/chat")
+            .post(body)
+            .build()
+
+        val resp = client.newCall(req).execute()
+        if (!resp.isSuccessful) {
+            val err = resp.body?.string() ?: "Unknown error"
+            throw Exception("Server error ${resp.code}: $err")
+        }
+
+        val json = JSONObject(resp.body!!.string())
+        ChatResult(
+            sessionId = json.getString("session_id"),
+            reply = json.getString("reply"),
+            durationMs = json.optInt("duration_ms", 0),
+            historyLength = json.optInt("history_length", 0)
+        )
+    }
+
+    /** Delete a chat session via DELETE /chat/{sessionId} */
+    suspend fun deleteChatSession(sessionId: String) = withContext(Dispatchers.IO) {
+        val req = Request.Builder()
+            .url("$baseUrl/chat/$sessionId")
+            .delete()
+            .build()
+        client.newCall(req).execute()
+    }
 }

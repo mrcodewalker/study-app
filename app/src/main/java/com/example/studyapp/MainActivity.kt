@@ -121,6 +121,7 @@ fun KMAStudyApp(
 
     val pendingCount by todoViewModel.pendingCount.collectAsState()
 
+    Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
         containerColor = ScBackground,
         bottomBar = {
@@ -329,4 +330,8 @@ fun KMAStudyApp(
             }
         }
     }
+
+    // Floating AI bubble — hiện trên mọi màn hình
+    AiChatBubble()
+    } // end Box
 }

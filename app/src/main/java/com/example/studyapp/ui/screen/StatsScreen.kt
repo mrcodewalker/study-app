@@ -160,7 +160,7 @@ fun StatsScreen(
                         Spacer(Modifier.height(10.dp))
                         Surface(shape = RoundedCornerShape(99.dp), color = ScPrimaryFixed) {
                             Text(
-                                if (todayProgress >= 1f) "Hoàn thành!" else "Đang tiến hành",
+                                if (todayProgress >= 1f) "Done!" else "In progress",
                                 color = ScOnPrimaryContainer,
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
