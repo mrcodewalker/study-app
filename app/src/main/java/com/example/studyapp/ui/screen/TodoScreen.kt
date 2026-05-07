@@ -899,7 +899,7 @@ fun TodoAddDialog(
                         ) {
                             Image(loadAssetImage("sparkles.png"), null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text("Tạo công việc", fontWeight = FontWeight.Bold)
+                            Text("Tạo task", fontWeight = FontWeight.Bold)
                         }
                     }
                 }

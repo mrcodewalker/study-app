@@ -8,5 +8,15 @@
       "role": "assistant",
       "content": "Big O notation là một phương pháp để mô tả sự tăng trưởng của thời gian thực hiện hoặc không gian nhớ cần thiết cho thuật toán khi kích thước đầu vào tăng lên. Nó giúp chúng ta đánh giá hiệu suất của thuật toán theo một cách độc lập với ngôn ngữ lập trình và chi tiết triển khai.\n\nĐiểm chính về Big O notation bao gồm:\n\n- **Sử dụng để mô tả độ phức tạp**: Big O notation tập trung vào cách thuật toán xử lý dữ liệu khi kích thước đầu vào trở nên rất lớn.\n  \n- **Tác giả tính chất tốt nhất, trung bình và xấu nhất**: Nó có thể được sử dụng để biểu diễn hiệu suất tốt nhất (Big O), trung bình (Big Θ) và xấu nhất (Big Ω).\n\n- **Chỉ quan trọng về mặt toán học**: Big O notation tập trung vào hành vi của thuật toán khi kích thước đầu vào tăng vô cùng, bỏ qua các chi tiết nhỏ.\n\nVí dụ về Big O notation:\n\n- `O(1)` - Thời gian thực hiện không phụ thuộc vào kích thước đầu vào (thông thường được gọi là \"constant time\").\n- `O(n)` - Thời gian thực hiện tăng trực tiếp theo số lượng đầu vào.\n- `O(log n)` - Thời gian thực hiện tăng logarithmically với kích thước đầu vào, thường gặp trong các thuật toán tìm kiếm nhị phân.\n\nBig O notation rất hữu ích cho việc so sánh và lựa chọn thuật toán phù hợp dựa trên hiệu suất."
     }
+  ],
+  "000f1742-b91c-48a3-ac72-332030f292d9": [
+    {
+      "role": "user",
+      "content": "Sự khác biệt TCP vs UDP"
+    },
+    {
+      "role": "assistant",
+      "content": "TCP (Transmission Control Protocol) và UDP (User Datagram Protocol) là hai giao thức mạng quan trọng được sử dụng phổ biến trong Internet. Dưới đây là sự khác biệt chính giữa chúng:\n\n- **TCP**:\n  - Đảm bảo độ tin cậy: TCP đảm bảo rằng tất cả các gói dữ liệu đều đến đúng nơi đúng lúc.\n  - Xác thực và xác nhận: Mỗi gói dữ liệu được xác thực và yêu cầu xác nhận từ phía máy chủ.\n  - Mô hình kết nối: TCP sử dụng mô hình kết nối, nghĩa là trước khi truyền dữ liệu, phải thiết lập một kết nối.\n  - Kiểm soát lưu lượng: Cung cấp kiểm soát lưu lượng để tránh quá tải hệ thống.\n\n- **UDP**:\n  - Giảm độ trễ: UDP không đảm bảo việc gửi hoặc nhận dữ liệu, do đó giảm đáng kể độ trễ so với TCP.\n  - Không có xác thực và xác nhận: Gửi gói dữ liệu mà không cần chờ phản hồi.\n  - Mô hình phi kết nối: Đơn giản hơn và không yêu cầu thiết lập kết nối trước khi truyền dữ liệu.\n\n- **Ứng dụng**:\n  - TCP thường được sử dụng cho các ứng dụng đòi hỏi độ tin cậy cao, như web, email.\n  - UDP phù hợp cho các ứng dụng cần tốc độ tối đa, như VoIP, streaming video."
+    }
   ]
 }

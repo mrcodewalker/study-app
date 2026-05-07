@@ -104,5 +104,51 @@
     ],
     "error_lines": [],
     "raw_output": "Flexible ~ Trái nghĩa: Rigid | Đồng nghĩa: Malleable\nActive ~ Trái nghĩa: Passive | Đồng nghĩa: Engaged\nPositive ~ Trái nghĩa: Negative | Đồng nghĩa: Optimistic\nInnovative ~ Trái nghĩa: Conventional | Đồng nghĩa: Creative\nEfficient ~ Trái nghĩa: Inefficient | Đồng nghĩa: Productive\nTransparent ~ Trái nghĩa: Opaque | Đồng nghĩa: Clear\nSecure ~ Trái nghĩa: Insecure | Đồng nghĩa: Safe\nDiverse ~ Trái nghĩa: Homogeneous | Đồng nghĩa: Varied\nDynamic ~ Trái nghĩa: Static | Đồng nghĩa: Vibrant\nCollaborative ~ Trái nghĩa: Competitive | Đồng nghĩa: Cooperative"
+  },
+  "2ad4b46a86ce0eb4c4d9afaeb5029e9a": {
+    "cards": [
+      {
+        "front": "Giao diện người dùng trong Android được thiết kế theo mô hình gì?",
+        "back": "Giao diện người dùng trong Android được thiết kế theo mô hình MVC (Model-View-Controller)."
+      },
+      {
+        "front": "Activity là gì trong Android?",
+        "back": "Activity là một ứng dụng đơn lẻ có thể chạy độc lập hoặc nằm trong cùng một package với các ứng dụng khác."
+      },
+      {
+        "front": "Service hoạt động như thế nào trong Android?",
+        "back": "Service trong Android là một component không giao diện người dùng chạy ở nền để thực hiện các tác vụ liên tục."
+      },
+      {
+        "front": "Broadcast Receiver có chức năng gì?",
+        "back": "Broadcast Receiver được sử dụng để nhận và phản hồi lại các sự kiện từ hệ thống hoặc ứng dụng khác."
+      },
+      {
+        "front": "Fragment có vai trò như thế nào trong Android?",
+        "back": "Fragment giúp chia nhỏ UI thành các bộ phận độc lập, dễ quản lý và tái sử dụng."
+      },
+      {
+        "front": "Intent dùng để làm gì trong Android?",
+        "back": "Intent được sử dụng để khởi chạy Activity, Service hay gửi dữ liệu giữa các component của ứng dụng."
+      },
+      {
+        "front": "Lưu trữ dữ liệu trong SQLiteOpenHelper có ưu điểm gì?",
+        "back": "SQLiteOpenHelper giúp tạo và quản lý cơ sở dữ liệu SQLite, tự động xử lý việc mở/closedatabase."
+      },
+      {
+        "front": "RecyclerView khác ListView như thế nào?",
+        "back": "RecyclerView hiệu quả hơn ListView vì nó tái sử dụng View đã tồn tại thay vì tạo mới mỗi lần hiển thị item."
+      },
+      {
+        "front": "Firebase Cloud Messaging (FCM) được dùng để làm gì?",
+        "back": "FCM giúp gửi thông báo từ server đến thiết bị Android, iOS hoặc web mà không cần ứng dụng chạy."
+      },
+      {
+        "front": "Lifecycle của Activity trong Android bao gồm những giai đoạn nào?",
+        "back": "Lifecycle của Activity bao gồm: onCreate(), onStart(), onResume(), onPause(), onStop(), onDestroy()."
+      }
+    ],
+    "error_lines": [],
+    "raw_output": "Giao diện người dùng trong Android được thiết kế theo mô hình gì? ~ Giao diện người dùng trong Android được thiết kế theo mô hình MVC (Model-View-Controller).\nActivity là gì trong Android? ~ Activity là một ứng dụng đơn lẻ có thể chạy độc lập hoặc nằm trong cùng một package với các ứng dụng khác.\nService hoạt động như thế nào trong Android? ~ Service trong Android là một component không giao diện người dùng chạy ở nền để thực hiện các tác vụ liên tục.\nBroadcast Receiver có chức năng gì? ~ Broadcast Receiver được sử dụng để nhận và phản hồi lại các sự kiện từ hệ thống hoặc ứng dụng khác.\nFragment có vai trò như thế nào trong Android? ~ Fragment giúp chia nhỏ UI thành các bộ phận độc lập, dễ quản lý và tái sử dụng.\nIntent dùng để làm gì trong Android? ~ Intent được sử dụng để khởi chạy Activity, Service hay gửi dữ liệu giữa các component của ứng dụng.\nLưu trữ dữ liệu trong SQLiteOpenHelper có ưu điểm gì? ~ SQLiteOpenHelper giúp tạo và quản lý cơ sở dữ liệu SQLite, tự động xử lý việc mở/closedatabase.\nRecyclerView khác ListView như thế nào? ~ RecyclerView hiệu quả hơn ListView vì nó tái sử dụng View đã tồn tại thay vì tạo mới mỗi lần hiển thị item.\nFirebase Cloud Messaging (FCM) được dùng để làm gì? ~ FCM giúp gửi thông báo từ server đến thiết bị Android, iOS hoặc web mà không cần ứng dụng chạy.\nLifecycle của Activity trong Android bao gồm những giai đoạn nào? ~ Lifecycle của Activity bao gồm: onCreate(), onStart(), onResume(), onPause(), onStop(), onDestroy()."
   }
 }

@@ -501,7 +501,7 @@ fun CreateDeckDialog(onDismiss: () -> Unit, onCreate: (String, String) -> Unit) 
                             Icon(Icons.Default.Add, null, 
                                 tint = ScOnPrimary, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Tạo bộ thẻ", color = ScOnPrimary, fontWeight = FontWeight.SemiBold)
+                            Text("Tạo thẻ", color = ScOnPrimary, fontWeight = FontWeight.SemiBold)
                         }
                     }
                     Spacer(Modifier.height(8.dp))
