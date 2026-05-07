@@ -18,5 +18,51 @@
       "role": "assistant",
       "content": "TCP (Transmission Control Protocol) và UDP (User Datagram Protocol) là hai giao thức mạng quan trọng được sử dụng phổ biến trong Internet. Dưới đây là sự khác biệt chính giữa chúng:\n\n- **TCP**:\n  - Đảm bảo độ tin cậy: TCP đảm bảo rằng tất cả các gói dữ liệu đều đến đúng nơi đúng lúc.\n  - Xác thực và xác nhận: Mỗi gói dữ liệu được xác thực và yêu cầu xác nhận từ phía máy chủ.\n  - Mô hình kết nối: TCP sử dụng mô hình kết nối, nghĩa là trước khi truyền dữ liệu, phải thiết lập một kết nối.\n  - Kiểm soát lưu lượng: Cung cấp kiểm soát lưu lượng để tránh quá tải hệ thống.\n\n- **UDP**:\n  - Giảm độ trễ: UDP không đảm bảo việc gửi hoặc nhận dữ liệu, do đó giảm đáng kể độ trễ so với TCP.\n  - Không có xác thực và xác nhận: Gửi gói dữ liệu mà không cần chờ phản hồi.\n  - Mô hình phi kết nối: Đơn giản hơn và không yêu cầu thiết lập kết nối trước khi truyền dữ liệu.\n\n- **Ứng dụng**:\n  - TCP thường được sử dụng cho các ứng dụng đòi hỏi độ tin cậy cao, như web, email.\n  - UDP phù hợp cho các ứng dụng cần tốc độ tối đa, như VoIP, streaming video."
     }
+  ],
+  "b9c1d627-5fa3-4d20-af6c-979fe8539394": [
+    {
+      "role": "user",
+      "content": "Mẹo học thuộc nhanh"
+    },
+    {
+      "role": "assistant",
+      "content": "Dưới đây là một số mẹo giúp bạn học thuộc nhanh hơn:\n\n- **Luyện tập định kỳ**: Học từng phần nhỏ trong thời gian dài thay vì cố gắng học toàn bộ cùng lúc.\n- **Sử dụng phương pháp PQ4R**: Preview, Question, Read, Recite, Write, Review.\n- **Tổ chức thông tin rõ ràng**: Sử dụng sơ đồ tư duy hoặc bảng khung để sắp xếp thông tin.\n- **Thực hành liên tục**: Lặp lại việc học thông qua kiểm tra nhanh, trắc nghiệm.\n- **Kiểm tra tự thân thường xuyên**: Đọc lại và thử nhớ lại thông tin đã học.\n- **Sử dụng phương pháp liên kết hình ảnh**: Tạo hình dung về kiến thức bằng cách liên kết chúng với các hình ảnh hoặc biểu đồ.\n- **Ngủ đủ giấc**: Giấc ngủ giúp não xử lý và lưu trữ thông tin hiệu quả hơn.\n\nHy vọng những mẹo này sẽ hữu ích cho bạn!"
+    },
+    {
+      "role": "user",
+      "content": "Toi nay toi se di xem phim Phi Phong, ban biet phim do khong"
+    },
+    {
+      "role": "assistant",
+      "content": "Dạ, tôi biết phim \"Phi Phong\". Đây là một bộ phim hành động phiêu lưu được phát hành năm 2019. Phim kể về cuộc phiêu lưu của nhân vật chính trên không trung với những màn bay lượn hấp dẫn. Phim thu hút khán giả với kỹ xảo特效字幕和高质量的画面，相信会给您带来很好的观影体验。希望您能享受这部电影！"
+    }
+  ],
+  "f6ce7a05-2835-4c0b-9168-fd7eb58669fa": [
+    {
+      "role": "user",
+      "content": "Ban co biet Hai Code Dao tiktok khong"
+    },
+    {
+      "role": "assistant",
+      "content": "Dĩ nhiên, tôi có thể giúp bạn hiểu về hai coder nổi tiếng trên TikTok. Dưới đây là thông tin về hai người:\n\n- **CodeWithHarry**: Harry is a popular coding instructor on platforms like YouTube and TikTok. Ông thường chia sẻ các video ngắn gọn và dễ hiểu về lập trình.\n  \n- **Coding Tech**: Đây là tên của một kênh TikTok nổi tiếng, tập trung vào việc giải thích các vấn đề kỹ thuật và mã nguồn thông qua các video ngắn.\n\nCả hai đều là nguồn học hỏi tốt cho những người mới bắt đầu hoặc muốn nâng cao kĩ năng lập trình. Bạn có muốn tôi gợi ý thêm về cách học từ họ không?"
+    },
+    {
+      "role": "user",
+      "content": "Ban co biet Hoc Vien Ky Thuat Mat Ma khong"
+    },
+    {
+      "role": "assistant",
+      "content": "Dĩ nhiên, Học viện Kỹ thuật Mã hóa (Học viện Kỳ thuật Mã hóa) là một cụm từ thường được dùng để mô tả các tổ chức hay cá nhân chuyên về mã hóa và an ninh thông tin. Tuy nhiên, không có một tổ chức chính thức nào được gọi là \"Học viện Kỹ thuật Mã hóa\" trên quy mô lớn.\n\nNếu bạn đang tìm kiếm nguồn học tập về mã hóa và an ninh thông tin, đây là một số gợi ý:\n\n- **Coursera**: Có các khóa học như \"Cryptography\" do Stanford University cung cấp.\n- **edX**: Cung cấp các khóa học từ các trường đại học hàng đầu trên thế giới về mã hóa.\n- **Khan Academy**: Có các bài giảng cơ bản về mã hóa và mật mã.\n- **YouTube**: Nhiều kênh chuyên về mã hóa như Coding Tech, CodeWithHarry, etc.\n\nBạn có muốn tôi tìm kiếm thêm thông tin về khóa học cụ thể nào không?"
+    }
+  ],
+  "bba1dffe-daa3-4549-9bb5-dba34905a062": [
+    {
+      "role": "user",
+      "content": "Phương pháp Pomodoro"
+    },
+    {
+      "role": "assistant",
+      "content": "Phương pháp Pomodoro là một kỹ thuật quản lý thời gian giúp tăng hiệu suất học tập và làm việc thông qua việc chia nhỏ công việc thành các khoảng thời gian cố định. Dưới đây là các bước đơn giản để sử dụng phương pháp này:\n\n- **Bước 1: Chọn công việc cần thực hiện**\n  - Xác định một nhiệm vụ cụ thể.\n\n- **Bước 2: Đặt đồng hồ báo thức (Pomodoro) cho khoảng thời gian 25 phút.**\n\n- **Bước 3: Tập trung vào công việc trong 25 phút** \n  - Tránh mọi sự gián đoạn, chỉ tập trung hoàn thành nhiệm vụ.\n\n- **Bước 4: Hạn chế sự thật đối khi kết thúc thời gian 25 phút**\n  - Khi báo thức reng, dừng lại ngay lập tức và đánh dấu một khoảng thời gian đã hoàn thành.\n\n- **Bước 5: Nghỉ 5 phút (tiếng trống) sau mỗi Pomodoro.**\n\n- **Bước 6: Hoàn thành chuỗi 4 Pomodoros**\n  - Sau khi làm 4 chu kỳ, dành ra 15-30 phút nghỉ ngơi nhẹ nhàng.\n\nPhương pháp này giúp bạn giữ được sự tập trung và tránh cảm giác mệt mỏi do làm việc liên tục."
+    }
   ]
 }

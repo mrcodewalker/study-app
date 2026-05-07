@@ -6,8 +6,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
-import androidx.compose.foundation.shape.*
+import androidx.compose.foundation.lazy.*import androidx.compose.foundation.shape.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -344,7 +343,10 @@ private fun AiChatBottomSheet(
         containerColor = ScBackground,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         dragHandle = null,
-        modifier = Modifier.fillMaxHeight(0.88f)
+        windowInsets = WindowInsets(0),
+        modifier = Modifier
+            .fillMaxHeight(0.88f)
+            .imePadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // ── Sheet header ─────────────────────────────────────────────────

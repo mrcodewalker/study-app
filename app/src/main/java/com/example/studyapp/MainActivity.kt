@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -58,6 +59,8 @@ class MainActivity : ComponentActivity() {
         // Install splash screen BEFORE super.onCreate
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        // Cho phép Compose tự quản lý insets — bàn phím sẽ không đẩy window lên
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         // Create notification channel
         com.example.studyapp.notification.NotificationHelper.createChannel(this)
