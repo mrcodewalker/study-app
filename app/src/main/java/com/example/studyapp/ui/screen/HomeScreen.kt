@@ -1,4 +1,4 @@
-﻿package com.example.studyapp.ui.screen
+package com.example.studyapp.ui.screen
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -37,6 +37,11 @@ import com.example.studyapp.ui.viewmodel.UserActivityViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import com.example.studyapp.ui.util.loadAssetImage
+import nl.dionsegijn.konfetti.compose.KonfettiView
+import nl.dionsegijn.konfetti.core.Party
+import nl.dionsegijn.konfetti.core.Position
+import nl.dionsegijn.konfetti.core.emitter.Emitter
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun HomeScreen(
@@ -47,7 +52,11 @@ fun HomeScreen(
     onNavigateToFlashcard: () -> Unit,
     onNavigateToNote: () -> Unit,
     onNavigateToTodo: () -> Unit,
-    onDeckClick: (Long) -> Unit
+    onDeckClick: (Long) -> Unit,
+    onOpenAiChat: () -> Unit = {},
+    aiChatEnabled: Boolean = true,
+    onToggleAiChat: (Boolean) -> Unit = {},
+    onShuffleGif: () -> Unit = {}
 ) {
     val decks by flashcardViewModel.allDecks.collectAsState()
     val notes by noteViewModel.allNotes.collectAsState()
@@ -58,7 +67,7 @@ fun HomeScreen(
     val greeting = remember {
         when (hour) {
             in 5..11 -> "Chào buổi sáng ☀️"
-            in 12..17 -> "Chào buổi chiều 🌤"
+            in 12..17 -> "Chào buổi chiều 🌤️"
             else -> "Chào buổi tối 🌙"
         }
     }
@@ -75,9 +84,9 @@ fun HomeScreen(
             .sortedBy { it.dueDate }.take(3)
     }
 
-    // ── Intro animation states ────────────────────────────────────────────────
     var visible by remember { mutableStateOf(false) }
     var iconLanded by remember { mutableStateOf(false) }
+    var showFireworks by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         visible = true
@@ -85,46 +94,13 @@ fun HomeScreen(
         iconLanded = true
     }
 
-    // Slide từ trái sang phải với bounce
-    val iconOffsetX by animateDpAsState(
-        targetValue = if (visible) 0.dp else (-100).dp,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "iconX"
-    )
-    // Nảy lên nhẹ sau khi đến nơi
-    val iconOffsetY by animateDpAsState(
-        targetValue = if (iconLanded) 0.dp else 4.dp,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioHighBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "iconY"
-    )
-    val iconAlpha by animateFloatAsState(
-        targetValue = if (visible) 1f else 0f,
-        animationSpec = tween(300),
-        label = "iconAlpha"
-    )
-    val iconScale by animateFloatAsState(
-        targetValue = if (visible) 1f else 0.5f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "iconScale"
-    )
-    // Rotation nhẹ khi slide vào
-    val iconRotation by animateFloatAsState(
-        targetValue = if (iconLanded) 0f else -12f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "iconRot"
-    )
+    // Fireworks effect
+    LaunchedEffect(showFireworks) {
+        if (showFireworks) {
+            kotlinx.coroutines.delay(3000)
+            showFireworks = false
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -151,7 +127,6 @@ fun HomeScreen(
                         )
                     )
             ) {
-                // Decorative circles
                 Canvas(modifier = Modifier.fillMaxWidth().height(180.dp)) {
                     drawCircle(
                         color = ScPrimary.copy(alpha = 0.08f),
@@ -178,51 +153,41 @@ fun HomeScreen(
                                 fontWeight = FontWeight.SemiBold
                             )
                             Spacer(Modifier.height(4.dp))
-
-                            // ── Icon + Title với slide-bounce animation ──
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                Text(
-                                    "KMAStudy",
-                                    style = MaterialTheme.typography.displaySmall,
-                                    color = ScOnSurface,
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = (-0.5).sp
-                                )
-                            }
-
+                            Text(
+                                "KMAStudy",
+                                style = MaterialTheme.typography.displaySmall,
+                                color = ScOnSurface,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.5).sp
+                            )
                             if (totalCount > 0) {
                                 Spacer(Modifier.height(6.dp))
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Surface(
-                                        shape = RoundedCornerShape(99.dp),
-                                        color = ScPrimaryContainer.copy(alpha = 0.6f)
+                                Surface(
+                                    shape = RoundedCornerShape(99.dp),
+                                    color = ScPrimaryContainer.copy(alpha = 0.6f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            Icon(
-                                                Icons.Default.CheckCircle, null,
-                                                tint = ScPrimary,
-                                                modifier = Modifier.size(14.dp)
-                                            )
-                                            Text(
-                                                "$completedCount/$totalCount nhiệm vụ",
-                                                style = MaterialTheme.typography.labelMedium,
-                                                color = ScPrimary,
-                                                fontWeight = FontWeight.SemiBold
-                                            )
-                                        }
+                                        Icon(
+                                            Icons.Default.CheckCircle, null,
+                                            tint = ScPrimary,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Text(
+                                            "$completedCount/$totalCount nhiệm vụ",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = ScPrimary,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
                                     }
                                 }
                             }
                         }
 
-                        // Floating reading icon (right side)
+                        // Floating reading icon + AI toggle button
                         val infiniteTransition = rememberInfiniteTransition(label = "float")
                         val floatY by infiniteTransition.animateFloat(
                             initialValue = 0f, targetValue = -8f,
@@ -231,17 +196,68 @@ fun HomeScreen(
                             ),
                             label = "float"
                         )
-                        Box(
-                            modifier = Modifier
-                                .size(72.dp)
-                                .graphicsLayer { translationY = floatY },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = loadAssetImage("reading.png"),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize()
-                            )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .graphicsLayer { translationY = floatY },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    painter = loadAssetImage("reading.png"),
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                            Spacer(Modifier.height(6.dp))
+                            // Nút bật/tắt AI chatbot + Shuffle GIF
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Surface(
+                                    shape = RoundedCornerShape(99.dp),
+                                    color = if (aiChatEnabled) ScPrimaryContainer else ScSurfaceContainerLow,
+                                    border = BorderStroke(1.dp, if (aiChatEnabled) ScPrimary.copy(alpha = 0.4f) else ScOutlineVariant),
+                                    modifier = Modifier.clickable { onToggleAiChat(!aiChatEnabled) }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.AutoAwesome,
+                                            contentDescription = "Bật/tắt AI",
+                                            tint = if (aiChatEnabled) ScPrimary else ScOnSurfaceVariant,
+                                            modifier = Modifier.size(12.dp)
+                                        )
+                                        Text(
+                                            if (aiChatEnabled) "Bật" else "Tắt",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = if (aiChatEnabled) ScPrimary else ScOnSurfaceVariant,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+                                }
+                                // Shuffle GIF button
+                                Surface(
+                                    shape = CircleShape,
+                                    color = ScSecondaryContainer,
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .clickable {
+                                            onShuffleGif()
+                                            showFireworks = true
+                                        }
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            Icons.Default.Shuffle,
+                                            contentDescription = "Đổi GIF",
+                                            tint = ScOnSecondaryContainer,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -492,6 +508,11 @@ fun HomeScreen(
 
         Spacer(Modifier.height(100.dp))
     }
+
+    // Fireworks overlay
+    if (showFireworks) {
+        FireworksOverlay()
+    }
 }
 
 // ── Circular progress ─────────────────────────────────────────────────────────
@@ -506,13 +527,20 @@ fun HomeCircularProgress(progress: Float, modifier: Modifier = Modifier) {
     val pct = (animatedProgress * 100).toInt()
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val stroke = 11.dp.toPx()
-            val radius = (size.minDimension - stroke) / 2f
-            val center = Offset(size.width / 2f, size.height / 2f)
-            drawCircle(color = ScPrimaryContainer, radius = radius, center = center, style = Stroke(width = stroke, cap = StrokeCap.Round))
-            drawArc(color = ScPrimary, startAngle = -90f, sweepAngle = animatedProgress * 360f, useCenter = false, style = Stroke(width = stroke, cap = StrokeCap.Round))
-        }
+        // Track (background circle)
+        CircularProgressIndicator(
+            progress = 1f,
+            modifier = Modifier.fillMaxSize(),
+            color = ScPrimaryContainer,
+            strokeWidth = 10.dp
+        )
+        // Actual progress
+        CircularProgressIndicator(
+            progress = animatedProgress,
+            modifier = Modifier.fillMaxSize(),
+            color = ScPrimary,
+            strokeWidth = 10.dp
+        )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text("$pct%", style = MaterialTheme.typography.headlineSmall, color = ScPrimary, fontWeight = FontWeight.Bold)
             Text("Hoàn thành", style = MaterialTheme.typography.labelSmall, color = ScOnSurfaceVariant)
@@ -697,7 +725,51 @@ fun HomeRecentNoteCard(note: com.example.studyapp.data.model.Note, onClick: () -
     }
 }
 
-// Keep legacy aliases
+// ── Fireworks overlay ─────────────────────────────────────────────────────────
+
+@Composable
+fun FireworksOverlay() {
+    val parties = remember {
+        val colors = listOf(0xFFFF6B6B, 0xFFFFD93D, 0xFF6BCB77, 0xFF4D96FF, 0xFFFF6FC8, 0xFFFFB347)
+            .map { it.toInt() }
+        val base = Party(
+            speed = 0f,
+            maxSpeed = 35f,
+            damping = 0.9f,
+            spread = 360,
+            colors = colors,
+            position = Position.Relative(0.5, 0.3),
+            emitter = Emitter(duration = 150, TimeUnit.MILLISECONDS).max(120)
+        )
+        listOf(
+            base,
+            base.copy(position = Position.Relative(0.2, 0.5)),
+            base.copy(position = Position.Relative(0.8, 0.5)),
+            base.copy(position = Position.Relative(0.5, 0.6))
+        )
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        KonfettiView(
+            modifier = Modifier.fillMaxSize(),
+            parties = parties
+        )
+        // Emoji 🎉 ở giữa
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            var shown by remember { mutableStateOf(false) }
+            LaunchedEffect(Unit) { shown = true }
+            val scale by animateFloatAsState(
+                targetValue = if (shown) 1f else 0f,
+                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+                label = "emoji"
+            )
+            Text("🎉", fontSize = (52f * scale).sp,
+                modifier = Modifier.graphicsLayer { scaleX = scale; scaleY = scale })
+        }
+    }
+}
+
+// ── Legacy aliases ────────────────────────────────────────────────────────────
 @Composable
 fun HomeStatCard(modifier: Modifier, value: String, label: String, iconPath: String, accent: Color, bg: Color, onClick: () -> Unit) =
     HomeQuickAction(modifier, iconPath, label, accent, bg, onClick)

@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.*
@@ -18,12 +19,18 @@ import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
+import coil.compose.SubcomposeAsyncImage
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
+import coil.request.ImageRequest
 import com.example.studyapp.ai.AiApiClient
 import com.example.studyapp.ui.theme.*
 import kotlinx.coroutines.launch
@@ -51,20 +58,87 @@ private val QUICK_PROMPTS = listOf(
     "Sự khác biệt TCP vs UDP",
 )
 
+// GIF anime từ assets/gif/ — thêm file vào app/src/main/assets/gif/ để tự động nhận
+private const val BOT_GIF_DIR = "gif"
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Helper: GIF avatar với fallback emoji
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun BotGifAvatar(assetPath: String, modifier: Modifier = Modifier, fallbackSize: TextUnit = 13.sp) {
+    val context = LocalContext.current
+    SubcomposeAsyncImage(
+        model = ImageRequest.Builder(context)
+            .data("file:///android_asset/$assetPath")
+            .memoryCacheKey("$assetPath-${assetPath.hashCode()}")
+            .diskCacheKey("$assetPath-${assetPath.hashCode()}")
+            .decoderFactory(
+                if (android.os.Build.VERSION.SDK_INT >= 28)
+                    ImageDecoderDecoder.Factory()
+                else
+                    GifDecoder.Factory()
+            )
+            .crossfade(false)
+            .build(),
+        contentDescription = "AI Bot",
+        modifier = modifier,
+        contentScale = ContentScale.Crop,
+        error = { Text("🤖", fontSize = fallbackSize) }
+    )
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 //  Floating AI Bubble  (đặt trong Box toàn màn hình)
 // ─────────────────────────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AiChatBubble() {
+fun AiChatBubble(
+    onShowSheetChange: ((Boolean) -> Unit)? = null,
+    forceShow: Boolean = false,
+    isEnabled: Boolean = true,
+    gifShuffleKey: Int = 0
+) {
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val config = LocalConfiguration.current
+    val context = LocalContext.current
 
     val screenWidthPx  = with(density) { config.screenWidthDp.dp.toPx() }
     val screenHeightPx = with(density) { config.screenHeightDp.dp.toPx() }
-    val bubbleSizePx   = with(density) { 60.dp.toPx() }
+    val bubbleSizePx   = with(density) { 70.dp.toPx() }
+
+    // Random 1 GIF từ assets/gif/ — random ngay khi khởi tạo, re-pick khi gifShuffleKey thay đổi
+    var botGifAsset by remember { mutableStateOf("gif/anime-bunny.gif") }
+    
+    // Random ngay lần đầu vào app
+    LaunchedEffect(Unit) {
+        botGifAsset = try {
+            val files = context.assets.list(BOT_GIF_DIR)
+                ?.filter { it.endsWith(".gif") }
+                ?.takeIf { it.isNotEmpty() }
+                ?: listOf("anime-bunny.gif")
+            "$BOT_GIF_DIR/${files.random()}"
+        } catch (_: Exception) {
+            "gif/anime-bunny.gif"
+        }
+    }
+    
+    // Re-pick khi shuffle
+    LaunchedEffect(gifShuffleKey) {
+        if (gifShuffleKey > 0) { // Chỉ chạy khi shuffle, không chạy lần đầu
+            botGifAsset = try {
+                val files = context.assets.list(BOT_GIF_DIR)
+                    ?.filter { it.endsWith(".gif") }
+                    ?.takeIf { it.isNotEmpty() }
+                    ?: listOf("anime-bunny.gif")
+                "$BOT_GIF_DIR/${files.random()}"
+            } catch (_: Exception) {
+                "gif/anime-bunny.gif"
+            }
+        }
+    }
 
     // Bubble position — start bottom-right
     var offsetX by remember { mutableFloatStateOf(screenWidthPx - bubbleSizePx - 24f) }
@@ -77,6 +151,14 @@ fun AiChatBubble() {
     // Chat state
     var showSheet by remember { mutableStateOf(false) }
     var messages by remember { mutableStateOf(listOf<AiChatMsg>()) }
+
+    // Mở từ bên ngoài (ví dụ button trên HomeScreen)
+    LaunchedEffect(forceShow) {
+        if (forceShow) {
+            showSheet = true
+            onShowSheetChange?.invoke(false) // reset để có thể trigger lại lần sau
+        }
+    }
     var inputText by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var sessionId by remember { mutableStateOf(UUID.randomUUID().toString()) }
@@ -132,13 +214,13 @@ fun AiChatBubble() {
     }
 
     // ── Bottom Sheet ──────────────────────────────────────────────────────────
-    if (showSheet) {
-        AiChatBottomSheet(
+    if (showSheet) {        AiChatBottomSheet(
             messages = messages,
             inputText = inputText,
             isLoading = isLoading,
             serverReady = serverReady,
             serverOnline = serverOnline,
+            botGifAsset = botGifAsset,
             onInputChange = { inputText = it },
             onSend = { sendMessage(inputText) },
             onQuickPrompt = { sendMessage(it) },
@@ -154,10 +236,12 @@ fun AiChatBubble() {
     }
 
     // ── Floating Bubble ───────────────────────────────────────────────────────
+    if (!isEnabled) return
+
     Box(
         modifier = Modifier
             .offset { IntOffset(offsetX.toInt(), offsetY.toInt()) }
-            .size(60.dp)
+            .size(80.dp)
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = {
@@ -169,17 +253,23 @@ fun AiChatBubble() {
                         dragDistance += kotlin.math.sqrt(
                             dragAmount.x * dragAmount.x + dragAmount.y * dragAmount.y
                         )
-                        isDragging = dragDistance > 10f
+                        isDragging = dragDistance > 8f
                         offsetX = (offsetX + dragAmount.x).coerceIn(0f, screenWidthPx - bubbleSizePx)
                         offsetY = (offsetY + dragAmount.y).coerceIn(0f, screenHeightPx - bubbleSizePx - 80f)
                     },
                     onDragEnd = {
-                        if (!isDragging) {
-                            showSheet = true
-                        }
+                        if (!isDragging) showSheet = true
                         isDragging = false
+                        dragDistance = 0f
+                    },
+                    onDragCancel = {
+                        isDragging = false
+                        dragDistance = 0f
                     }
                 )
+            }
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = { showSheet = true })
             }
     ) {
         // Glow ring
@@ -187,27 +277,17 @@ fun AiChatBubble() {
             modifier = Modifier
                 .fillMaxSize()
                 .scale(pulseScale)
-                .clip(CircleShape)
-                .background(ScPrimary.copy(alpha = glowAlpha * 0.25f))
+                .background(Color.Transparent)
         )
-        // Main bubble
-        Box(
-            modifier = Modifier
-                .size(54.dp)
-                .align(Alignment.Center)
-                .shadow(8.dp, CircleShape)
-                .clip(CircleShape)
-                .background(
-                    Brush.linearGradient(
-                        listOf(ScPrimary, Color(0xFF5e5b7a))
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("🤖", fontSize = 26.sp)
+        // GIF avatar — không clip, không viền, hiển thị nguyên bản
+        key(botGifAsset) {
+            BotGifAvatar(
+                assetPath = botGifAsset,
+                modifier = Modifier.fillMaxSize(),
+                fallbackSize = 32.sp
+            )
         }
-
-        // Unread dot when there are messages
+        // Unread dot
         if (messages.isNotEmpty() && !showSheet) {
             Box(
                 modifier = Modifier
@@ -233,6 +313,7 @@ private fun AiChatBottomSheet(
     isLoading: Boolean,
     serverReady: Boolean,
     serverOnline: Boolean?,
+    botGifAsset: String,
     onInputChange: (String) -> Unit,
     onSend: () -> Unit,
     onQuickPrompt: (String) -> Unit,
@@ -302,16 +383,15 @@ private fun AiChatBottomSheet(
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        val context = LocalContext.current
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(
-                                    Brush.linearGradient(listOf(ScPrimary, Color(0xFF5e5b7a)))
-                                ),
+                                .background(Brush.linearGradient(listOf(ScPrimary, Color(0xFF5e5b7a)))),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("🤖", fontSize = 20.sp)
+                            BotGifAvatar(assetPath = botGifAsset, modifier = Modifier.fillMaxSize(), fallbackSize = 20.sp)
                         }
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
@@ -383,10 +463,10 @@ private fun AiChatBottomSheet(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(messages, key = { it.id }) { msg ->
-                            AiChatBubbleItem(msg)
+                            AiChatBubbleItem(msg, botGifAsset)
                         }
                         if (isLoading) {
-                            item(key = "typing") { AiTypingIndicator() }
+                            item(key = "typing") { AiTypingIndicator(botGifAsset) }
                         }
                     }
                 }
@@ -559,11 +639,12 @@ private fun ChatEmptyView(
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun AiChatBubbleItem(msg: AiChatMsg) {
+private fun AiChatBubbleItem(msg: AiChatMsg, botGifAsset: String) {
     val isUser = msg.role == "user"
     val timeStr = remember(msg.timestamp) {
         SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(msg.timestamp))
     }
+    val context = LocalContext.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
@@ -576,7 +657,9 @@ private fun AiChatBubbleItem(msg: AiChatMsg) {
                     .clip(CircleShape)
                     .background(Brush.linearGradient(listOf(ScPrimary, Color(0xFF5e5b7a)))),
                 contentAlignment = Alignment.Center
-            ) { Text("🤖", fontSize = 13.sp) }
+            ) {
+                BotGifAvatar(assetPath = botGifAsset, modifier = Modifier.fillMaxSize())
+            }
             Spacer(Modifier.width(8.dp))
         }
         Column(
@@ -632,8 +715,9 @@ private fun AiChatBubbleItem(msg: AiChatMsg) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun AiTypingIndicator() {
+private fun AiTypingIndicator(botGifAsset: String) {
     val inf = rememberInfiniteTransition(label = "typing")
+    val context = LocalContext.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start,
@@ -645,7 +729,9 @@ private fun AiTypingIndicator() {
                 .clip(CircleShape)
                 .background(Brush.linearGradient(listOf(ScPrimary, Color(0xFF5e5b7a)))),
             contentAlignment = Alignment.Center
-        ) { Text("🤖", fontSize = 13.sp) }
+        ) {
+            BotGifAvatar(assetPath = botGifAsset, modifier = Modifier.fillMaxSize())
+        }
         Spacer(Modifier.width(8.dp))
         Surface(
             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 16.dp),

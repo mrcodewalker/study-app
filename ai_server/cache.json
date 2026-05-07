@@ -58,5 +58,51 @@
     ],
     "error_lines": [],
     "raw_output": "Một cấu trúc dữ liệu nào sử dụng phương pháp chia để trị trong quá trình tìm kiếm? ~ Cây nhị phân cân bằng sử dụng phương pháp chia để trị thông qua việc so sánh và chia mảng hoặc danh sách thành hai phần.\nGiải thuật gì được sử dụng phổ biến để sắp xếp một dãy số sao cho tăng dần? ~ Giải thuật Sắp xếp Đa cấp (Merge Sort) sử dụng phương pháp chia để trị bằng cách chia dãy thành các đoạn nhỏ hơn, sau đó sắp xếp và hợp nhất chúng lại."
+  },
+  "38fd121c6bf9ef0660f870c9e9bc2901": {
+    "cards": [
+      {
+        "front": "Flexible",
+        "back": "Trái nghĩa: Rigid | Đồng nghĩa: Malleable"
+      },
+      {
+        "front": "Active",
+        "back": "Trái nghĩa: Passive | Đồng nghĩa: Engaged"
+      },
+      {
+        "front": "Positive",
+        "back": "Trái nghĩa: Negative | Đồng nghĩa: Optimistic"
+      },
+      {
+        "front": "Innovative",
+        "back": "Trái nghĩa: Conventional | Đồng nghĩa: Creative"
+      },
+      {
+        "front": "Efficient",
+        "back": "Trái nghĩa: Inefficient | Đồng nghĩa: Productive"
+      },
+      {
+        "front": "Transparent",
+        "back": "Trái nghĩa: Opaque | Đồng nghĩa: Clear"
+      },
+      {
+        "front": "Secure",
+        "back": "Trái nghĩa: Insecure | Đồng nghĩa: Safe"
+      },
+      {
+        "front": "Diverse",
+        "back": "Trái nghĩa: Homogeneous | Đồng nghĩa: Varied"
+      },
+      {
+        "front": "Dynamic",
+        "back": "Trái nghĩa: Static | Đồng nghĩa: Vibrant"
+      },
+      {
+        "front": "Collaborative",
+        "back": "Trái nghĩa: Competitive | Đồng nghĩa: Cooperative"
+      }
+    ],
+    "error_lines": [],
+    "raw_output": "Flexible ~ Trái nghĩa: Rigid | Đồng nghĩa: Malleable\nActive ~ Trái nghĩa: Passive | Đồng nghĩa: Engaged\nPositive ~ Trái nghĩa: Negative | Đồng nghĩa: Optimistic\nInnovative ~ Trái nghĩa: Conventional | Đồng nghĩa: Creative\nEfficient ~ Trái nghĩa: Inefficient | Đồng nghĩa: Productive\nTransparent ~ Trái nghĩa: Opaque | Đồng nghĩa: Clear\nSecure ~ Trái nghĩa: Insecure | Đồng nghĩa: Safe\nDiverse ~ Trái nghĩa: Homogeneous | Đồng nghĩa: Varied\nDynamic ~ Trái nghĩa: Static | Đồng nghĩa: Vibrant\nCollaborative ~ Trái nghĩa: Competitive | Đồng nghĩa: Cooperative"
   }
 }

@@ -121,6 +121,10 @@ fun KMAStudyApp(
 
     val pendingCount by todoViewModel.pendingCount.collectAsState()
 
+    var showAiChat by remember { mutableStateOf(false) }
+    var aiChatEnabled by remember { mutableStateOf(true) }
+    var gifShuffleKey by remember { mutableStateOf(0) }
+
     Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
         containerColor = ScBackground,
@@ -280,7 +284,11 @@ fun KMAStudyApp(
                     onNavigateToFlashcard = { navController.navigate(Screen.Flashcard.route) },
                     onNavigateToNote = { navController.navigate(Screen.Note.route) },
                     onNavigateToTodo = { navController.navigate(Screen.Todo.route) },
-                    onDeckClick = { deckId -> navController.navigate("deck_detail/$deckId") }
+                    onDeckClick = { deckId -> navController.navigate("deck_detail/$deckId") },
+                    onOpenAiChat = { showAiChat = true },
+                    aiChatEnabled = aiChatEnabled,
+                    onToggleAiChat = { aiChatEnabled = it },
+                    onShuffleGif = { gifShuffleKey++ }
                 )
             }
             composable(Screen.Flashcard.route) {
@@ -332,6 +340,6 @@ fun KMAStudyApp(
     }
 
     // Floating AI bubble — hiện trên mọi màn hình
-    AiChatBubble()
+    AiChatBubble(forceShow = showAiChat, onShowSheetChange = { showAiChat = it }, isEnabled = aiChatEnabled, gifShuffleKey = gifShuffleKey)
     } // end Box
 }
