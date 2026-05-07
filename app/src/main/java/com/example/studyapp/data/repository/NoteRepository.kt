@@ -9,8 +9,14 @@ class NoteRepository(private val noteDao: NoteDao) {
 
     fun searchNotes(query: String): Flow<List<Note>> = noteDao.searchNotes(query)
 
-    suspend fun createNote(title: String, content: String, color: Int = 0): Long {
-        return noteDao.insertNote(Note(title = title, content = content, color = color))
+    suspend fun createNote(
+        title: String, content: String, color: Int = 0,
+        tags: String = "", imageUris: String = "", links: String = ""
+    ): Long {
+        return noteDao.insertNote(
+            Note(title = title, content = content, color = color,
+                tags = tags, imageUris = imageUris, links = links)
+        )
     }
 
     suspend fun updateNote(note: Note) = noteDao.updateNote(

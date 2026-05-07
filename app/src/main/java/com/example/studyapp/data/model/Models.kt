@@ -43,7 +43,12 @@ data class Note(
     val content: String,
     val color: Int = 0,
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    // Rich note fields
+    val isPinned: Boolean = false,
+    val tags: String = "",          // comma-separated tags
+    val imageUris: String = "",     // comma-separated URIs
+    val links: String = ""          // comma-separated URLs
 )
 
 @Entity(tableName = "todo_items")
