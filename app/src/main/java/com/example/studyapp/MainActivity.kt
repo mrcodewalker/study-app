@@ -296,6 +296,20 @@ fun KMAStudyApp(
                 DeckDetailScreen(
                     deckId = deckId,
                     viewModel = flashcardViewModel,
+                    onBack = { navController.popBackStack() },
+                    onAiGenerate = { navController.navigate("ai_generate/$deckId") }
+                )
+            }
+            composable(
+                route = "ai_generate/{deckId}",
+                arguments = listOf(navArgument("deckId") { type = NavType.LongType })
+            ) { backStack ->
+                val deckId = backStack.arguments?.getLong("deckId") ?: return@composable
+                val deck by flashcardViewModel.selectedDeck.collectAsState()
+                AiGenerateScreen(
+                    deckId = deckId,
+                    deckName = deck?.name ?: "",
+                    viewModel = flashcardViewModel,
                     onBack = { navController.popBackStack() }
                 )
             }

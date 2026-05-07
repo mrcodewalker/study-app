@@ -19,6 +19,15 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+        // Only include ARM ABIs — reduces APK size, covers all modern Android phones
+        ndk {
+            abiFilters "arm64-v8a", "armeabi-v7a"
+        }
+    }
+
+    // Allow large heap for LLM model loading
+    dexOptions {
+        javaMaxHeapSize "4g"
     }
 
     buildTypes {
@@ -98,6 +107,9 @@ dependencies {
 
     // Coil for image loading
     implementation "io.coil-kt:coil-compose:2.4.0"
+
+    // MediaPipe LLM Inference (local on-device AI)
+    implementation 'com.google.mediapipe:tasks-genai:0.10.14'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

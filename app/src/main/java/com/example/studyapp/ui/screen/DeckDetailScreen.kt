@@ -47,7 +47,7 @@ import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> Unit) {
+fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> Unit, onAiGenerate: () -> Unit = {}) {
     LaunchedEffect(deckId) { viewModel.selectDeck(deckId) }
 
     val deck by viewModel.selectedDeck.collectAsState()
@@ -210,7 +210,7 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
                 ) {
                     Icon(Icons.Default.Add, null, tint = ScPrimary, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Thêm thẻ", color = ScPrimary, style = MaterialTheme.typography.labelLarge)
+                    Text("Add", color = ScPrimary, style = MaterialTheme.typography.labelLarge)
                 }
                 Button(
                     onClick = { showAddBulk = true },
@@ -220,7 +220,20 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
                 ) {
                     Icon(Icons.Default.DynamicFeed, null, tint = ScPrimary, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Bulk insert", color = ScPrimary, style = MaterialTheme.typography.labelLarge)
+                    Text("Bulk", color = ScPrimary, style = MaterialTheme.typography.labelLarge)
+                }
+                // AI Generate button
+                Button(
+                    onClick = onAiGenerate,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ScTertiaryContainer
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.AutoAwesome, null, tint = ScTertiary, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("AI", color = ScTertiary, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 }
             }
 

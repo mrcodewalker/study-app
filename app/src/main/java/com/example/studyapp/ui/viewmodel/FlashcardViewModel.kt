@@ -1,8 +1,14 @@
 package com.example.studyapp.ui.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.studyapp.ai.AiFlashcardParser
+import com.example.studyapp.ai.AiGenerateState
+import com.example.studyapp.ai.FlashcardPromptBuilder
+import com.example.studyapp.ai.LlmInferenceManager
+import com.example.studyapp.ai.ModelNotFoundException
 import com.example.studyapp.data.model.Flashcard
 import com.example.studyapp.data.model.FlashcardDeck
 import com.example.studyapp.data.repository.FlashcardRepository
@@ -118,6 +124,65 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
         viewModelScope.launch {
             repository.updateCardMastery(cardId, isLearned)
         }
+    }
+
+    // ── AI Generation ─────────────────────────────────────────────────────────
+
+    private val _aiState = MutableStateFlow<AiGenerateState>(AiGenerateState.Idle)
+    val aiState: StateFlow<AiGenerateState> = _aiState.asStateFlow()
+
+    /**
+     * Generate flashcards using the local LLM.
+     * Streams tokens into [AiGenerateState.Generating], then transitions to [AiGenerateState.Preview].
+     */
+    fun generateFlashcards(
+        context: Context,
+        topic: String,
+        count: Int,
+        language: String,
+        modelFileName: String = LlmInferenceManager.DEFAULT_MODEL_FILE
+    ) {
+        viewModelScope.launch {
+            _aiState.value = AiGenerateState.LoadingModel
+            try {
+                LlmInferenceManager.initialize(context, modelFileName)
+            } catch (e: ModelNotFoundException) {
+                _aiState.value = AiGenerateState.Error(e.message ?: "Model not found", isModelMissing = true)
+                return@launch
+            } catch (e: Exception) {
+                _aiState.value = AiGenerateState.Error("Failed to load model: ${e.message}")
+                return@launch
+            }
+
+            val prompt = FlashcardPromptBuilder.build(topic, count, language)
+            _aiState.value = AiGenerateState.Generating()
+
+            try {
+                val fullOutput = StringBuilder()
+                LlmInferenceManager.generateStream(context, prompt).collect { token ->
+                    fullOutput.append(token)
+                    _aiState.value = AiGenerateState.Generating(fullOutput.toString())
+                }
+                val result = AiFlashcardParser.parse(fullOutput.toString())
+                _aiState.value = AiGenerateState.Preview(result.cards, result.errorLines)
+            } catch (e: Exception) {
+                _aiState.value = AiGenerateState.Error("Generation failed: ${e.message}")
+            }
+        }
+    }
+
+    /** Insert AI-generated cards into the deck and transition to [AiGenerateState.Success]. */
+    fun confirmAiInsert(deckId: Long) {
+        val preview = _aiState.value as? AiGenerateState.Preview ?: return
+        viewModelScope.launch {
+            repository.insertBulkCards(deckId, preview.cards)
+            _aiState.value = AiGenerateState.Success(preview.cards.size)
+        }
+    }
+
+    /** Reset AI state back to Idle. */
+    fun resetAiState() {
+        _aiState.value = AiGenerateState.Idle
     }
 }
 
