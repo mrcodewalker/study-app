@@ -1,0 +1,89 @@
+[
+  {
+    "time": "2026-05-07 13:17:12",
+    "topic": "tao cho toi 2 cau hoi hay duoc hoi ve cau truc du lieu va giai thuat",
+    "count": 2,
+    "language": "Vietnamese",
+    "card_type": "qa",
+    "cards_count": 2,
+    "duration_ms": 21797,
+    "from_cache": false,
+    "client_ip": "unknown"
+  },
+  {
+    "time": "2026-05-07 13:08:46",
+    "topic": "TAo cho toi 10 khai niem dinh nghia ve Cau truc du lieu va giai thuat",
+    "count": 10,
+    "language": "Vietnamese",
+    "card_type": "term_def",
+    "cards_count": 10,
+    "duration_ms": 43518,
+    "from_cache": false,
+    "client_ip": "unknown"
+  },
+  {
+    "time": "2026-05-07 12:50:14",
+    "topic": "Bạn cần tìm hiểu 10 câu về cấu trúc dữ liệu và giải thuật.",
+    "count": 10,
+    "language": "Vietnamese",
+    "card_type": "qa",
+    "cards_count": 12,
+    "duration_ms": 6043,
+    "from_cache": false,
+    "client_ip": "unknown"
+  },
+  {
+    "time": "2026-05-07 12:48:40",
+    "topic": "tao cho toi 10 cau ve mon cau truc du lieu va giai thuat",
+    "count": 10,
+    "language": "Vietnamese",
+    "card_type": "qa",
+    "cards_count": 3,
+    "duration_ms": 6277,
+    "from_cache": false,
+    "client_ip": "unknown"
+  },
+  {
+    "time": "2026-05-07 12:47:38",
+    "topic": "tao cho toi 10 cau ve mon cau truc du lieu va giai thuat",
+    "count": 10,
+    "language": "Vietnamese",
+    "card_type": "term_def",
+    "cards_count": 10,
+    "duration_ms": 13261,
+    "from_cache": false,
+    "client_ip": "unknown"
+  },
+  {
+    "time": "2026-05-07 12:04:00",
+    "topic": "10 tu tieng anh thong dung co ban giao tiep",
+    "count": 10,
+    "language": "Vietnamese",
+    "card_type": "en_vi",
+    "cards_count": 2,
+    "duration_ms": 2890,
+    "from_cache": false,
+    "client_ip": "unknown"
+  },
+  {
+    "time": "2026-05-07 12:02:21",
+    "topic": "Cau truc du lieu",
+    "count": 10,
+    "language": "Vietnamese",
+    "card_type": "term_def",
+    "cards_count": 10,
+    "duration_ms": 27321,
+    "from_cache": false,
+    "client_ip": "unknown"
+  },
+  {
+    "time": "2026-05-07 11:52:27",
+    "topic": "Tao cho toi mon Lap trinh nhan Linux",
+    "count": 20,
+    "language": "Vietnamese",
+    "cards_count": 1,
+    "duration_ms": 16453,
+    "from_cache": false,
+    "client_ip": "unknown"
+  }
+]

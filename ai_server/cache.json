@@ -1,0 +1,62 @@
+{
+  "d9a7c05b2786986502e9e26849008698": {
+    "cards": [
+      {
+        "front": "Graph",
+        "back": "Đồ thị là cấu trúc dữ liệu biểu diễn mối quan hệ giữa các đối tượng thông qua các đỉnh và cạnh."
+      },
+      {
+        "front": "Heap",
+        "back": "Cấu trúc dữ liệu cây giúp tối ưu hóa quá trình truy xuất, thêm hoặc xóa phần tử."
+      },
+      {
+        "front": "Linked List",
+        "back": "Dãy liên kết là cấu trúc dữ liệu chứa chuỗi các nút, mỗi nút chứa dữ liệu và một liên kết đến nút tiếp theo."
+      },
+      {
+        "front": "Binary Tree",
+        "back": "Cây nhị phân là cấu trúc dữ liệu cây trong đó mỗi nút có tối đa hai con."
+      },
+      {
+        "front": "Hash Table",
+        "back": "Bảng散列是数据结构，用于实现快速的键值对存储和检索。"
+      },
+      {
+        "front": "Priority Queue",
+        "back": "Đống ưu tiên là cấu trúc dữ liệu FIFO với mức độ ưu tiên của các phần tử được sắp xếp theo thứ tự nhất định."
+      },
+      {
+        "front": "Depth-First Search",
+        "back": "Tìm kiếm độ sâu là thuật toán duyệt cây hoặc đồ thị theo chiều sâu từ đỉnh gốc."
+      },
+      {
+        "front": "Breadth-First Search",
+        "back": "Tìm kiếm độ rộng là thuật toán duyệt cây hoặc đồ thị theo chiều rộng, thăm các nút lân cận trước."
+      },
+      {
+        "front": "Sorting Algorithm",
+        "back": "Thuật toán sắp xếp là quy trình tổ chức một dãy dữ liệu sao cho chúng được sắp xếp theo thứ tự nhất định."
+      },
+      {
+        "front": "Binary Search Tree",
+        "back": "Cây nhị phân tìm kiếm là cấu trúc dữ liệu cây trong đó mỗi nút có giá trị lớn hơn tất cả các giá trị con trái và nhỏ hơn tất cả các giá trị con phải."
+      }
+    ],
+    "error_lines": [],
+    "raw_output": "Graph ~ Đồ thị là cấu trúc dữ liệu biểu diễn mối quan hệ giữa các đối tượng thông qua các đỉnh và cạnh.\nHeap ~ Cấu trúc dữ liệu cây giúp tối ưu hóa quá trình truy xuất, thêm hoặc xóa phần tử.\nLinked List ~ Dãy liên kết là cấu trúc dữ liệu chứa chuỗi các nút, mỗi nút chứa dữ liệu và một liên kết đến nút tiếp theo.\nBinary Tree ~ Cây nhị phân là cấu trúc dữ liệu cây trong đó mỗi nút có tối đa hai con.\nHash Table ~ Bảng散列是数据结构，用于实现快速的键值对存储和检索。\nPriority Queue ~ Đống ưu tiên là cấu trúc dữ liệu FIFO với mức độ ưu tiên của các phần tử được sắp xếp theo thứ tự nhất định.\nDepth-First Search ~ Tìm kiếm độ sâu là thuật toán duyệt cây hoặc đồ thị theo chiều sâu từ đỉnh gốc.\nBreadth-First Search ~ Tìm kiếm độ rộng là thuật toán duyệt cây hoặc đồ thị theo chiều rộng, thăm các nút lân cận trước.\nSorting Algorithm ~ Thuật toán sắp xếp là quy trình tổ chức một dãy dữ liệu sao cho chúng được sắp xếp theo thứ tự nhất định.\nBinary Search Tree ~ Cây nhị phân tìm kiếm là cấu trúc dữ liệu cây trong đó mỗi nút có giá trị lớn hơn tất cả các giá trị con trái và nhỏ hơn tất cả các giá trị con phải."
+  },
+  "0593366fd22143d087559064c1efa7d0": {
+    "cards": [
+      {
+        "front": "Một cấu trúc dữ liệu nào sử dụng phương pháp chia để trị trong quá trình tìm kiếm?",
+        "back": "Cây nhị phân cân bằng sử dụng phương pháp chia để trị thông qua việc so sánh và chia mảng hoặc danh sách thành hai phần."
+      },
+      {
+        "front": "Giải thuật gì được sử dụng phổ biến để sắp xếp một dãy số sao cho tăng dần?",
+        "back": "Giải thuật Sắp xếp Đa cấp (Merge Sort) sử dụng phương pháp chia để trị bằng cách chia dãy thành các đoạn nhỏ hơn, sau đó sắp xếp và hợp nhất chúng lại."
+      }
+    ],
+    "error_lines": [],
+    "raw_output": "Một cấu trúc dữ liệu nào sử dụng phương pháp chia để trị trong quá trình tìm kiếm? ~ Cây nhị phân cân bằng sử dụng phương pháp chia để trị thông qua việc so sánh và chia mảng hoặc danh sách thành hai phần.\nGiải thuật gì được sử dụng phổ biến để sắp xếp một dãy số sao cho tăng dần? ~ Giải thuật Sắp xếp Đa cấp (Merge Sort) sử dụng phương pháp chia để trị bằng cách chia dãy thành các đoạn nhỏ hơn, sau đó sắp xếp và hợp nhất chúng lại."
+  }
+}

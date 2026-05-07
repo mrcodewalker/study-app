@@ -137,11 +137,20 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
                     )
                     val studiedCount = deck?.studiedCount ?: 0
                     val lastIdx = deck?.lastStudiedIndex ?: 0
+                    val lastStudiedAt = deck?.lastStudiedAt ?: 0L
+                    // Số thẻ đã được học qua (tạo trước lần học cuối)
+                    val studiedSetSize = if (lastStudiedAt > 0L)
+                        cards.count { it.createdAt <= lastStudiedAt }
+                    else 0
                     val totalCount = cards.size
-                    val progressPct = if (totalCount > 0) (lastIdx * 100 / totalCount) else 0
+                    val newCards = totalCount - studiedSetSize
+                    val progressPct = if (studiedSetSize > 0) (lastIdx * 100 / studiedSetSize) else 0
                     Text(
-                        if (lastIdx > 0) "$lastIdx/$totalCount thẻ đã xem ($studiedCount thuộc) · $progressPct%"
-                        else "${cards.size} thẻ",
+                        when {
+                            studiedSetSize == 0 -> "${cards.size} thẻ"
+                            newCards > 0 -> "$lastIdx/$studiedSetSize đã xem · $newCards thẻ mới · $studiedCount thuộc"
+                            else -> "$lastIdx/$studiedSetSize thẻ đã xem · $studiedCount thuộc · $progressPct%"
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = if (lastIdx > 0) ScPrimary else ScOnSurfaceVariant
                     )
@@ -290,18 +299,44 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
     if (showStudyOptions) {
         val studiedSoFar = deck?.studiedCount ?: 0
         val lastIdx = deck?.lastStudiedIndex ?: 0
-        // "Tiếp tục" chỉ khi đang dở giữa chừng: đã có lastIndex > 0 và chưa đến thẻ cuối
-        val canContinue = lastIdx > 0 && lastIdx < cards.size - 1
-        val notLearnedCount = (cards.size - studiedSoFar).coerceAtLeast(0)
+        val lastStudiedAt = deck?.lastStudiedAt ?: 0L
+
+        // "Tiếp tục" chỉ khi đang học dở: lastIndex > 0 và còn thẻ chưa xem trong phiên hiện tại
+        // Dùng lastStudiedAt để xác định thẻ nào đã được học qua
+        val studiedCards = if (lastStudiedAt > 0L)
+            cards.filter { it.createdAt <= lastStudiedAt }
+        else
+            emptyList()
+
+        val canContinue = lastIdx > 0 && lastIdx < studiedCards.size
+
+        // "Ôn lại chưa thuộc" chỉ đếm thẻ đã học qua (createdAt <= lastStudiedAt) mà isLearned=false
+        val notLearnedCards = studiedCards.filter { !it.isLearned }
+        val notLearnedCount = notLearnedCards.size
+
+        // Thẻ mới = thẻ tạo sau lần học cuối (chưa học lần nào)
+        val newCards = if (lastStudiedAt > 0L)
+            cards.filter { it.createdAt > lastStudiedAt }
+        else
+            cards  // chưa học lần nào thì tất cả đều là mới
+
         StudyOptionsDialog(
             totalCards = cards.size,
-            notLearnedCount = cards.size - studiedSoFar,
+            notLearnedCount = notLearnedCount,
+            newCardsCount = newCards.size,
             hasProgress = canContinue,
             onDismiss = { showStudyOptions = false },
             onContinue = {
                 showStudyOptions = false
                 studySubset = null
                 overrideInitialStudied = null
+                studySessionKey++
+                studyMode = true
+            },
+            onStudyNew = {
+                showStudyOptions = false
+                studySubset = newCards
+                overrideInitialStudied = 0
                 studySessionKey++
                 studyMode = true
             },
@@ -315,8 +350,7 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
             },
             onRestartNotLearned = {
                 showStudyOptions = false
-                val unlearned = cards.filter { !it.isLearned }
-                studySubset = if (unlearned.isNotEmpty()) unlearned else cards
+                studySubset = if (notLearnedCards.isNotEmpty()) notLearnedCards else studiedCards
                 overrideInitialStudied = 0
                 studySessionKey++
                 studyMode = true
@@ -1323,9 +1357,11 @@ private fun CardFaceLabel(
 fun StudyOptionsDialog(
     totalCards: Int,
     notLearnedCount: Int,
+    newCardsCount: Int = 0,
     hasProgress: Boolean,
     onDismiss: () -> Unit,
     onContinue: () -> Unit,
+    onStudyNew: () -> Unit = {},
     onRestartAll: () -> Unit,
     onRestartNotLearned: () -> Unit
 ) {
@@ -1384,6 +1420,18 @@ fun StudyOptionsDialog(
                             title = "Tiếp tục học",
                             subtitle = "Tiếp tục từ chỗ đã dừng",
                             onClick = onContinue
+                        )
+                    }
+
+                    // Option 1b: Học thẻ mới (khi có thẻ chưa học)
+                    if (newCardsCount > 0) {
+                        StudyOptionItem(
+                            icon = Icons.Default.FiberNew,
+                            iconBg = ScTertiaryContainer,
+                            iconTint = ScTertiary,
+                            title = "Học thẻ mới",
+                            subtitle = "$newCardsCount thẻ chưa học lần nào",
+                            onClick = onStudyNew
                         )
                     }
 

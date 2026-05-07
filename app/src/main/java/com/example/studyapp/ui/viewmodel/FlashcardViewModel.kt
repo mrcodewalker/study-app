@@ -4,11 +4,8 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.studyapp.ai.AiFlashcardParser
+import com.example.studyapp.ai.AiApiClient
 import com.example.studyapp.ai.AiGenerateState
-import com.example.studyapp.ai.FlashcardPromptBuilder
-import com.example.studyapp.ai.LlmInferenceManager
-import com.example.studyapp.ai.ModelNotFoundException
 import com.example.studyapp.data.model.Flashcard
 import com.example.studyapp.data.model.FlashcardDeck
 import com.example.studyapp.data.repository.FlashcardRepository
@@ -140,33 +137,40 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
         topic: String,
         count: Int,
         language: String,
-        modelFileName: String = LlmInferenceManager.DEFAULT_MODEL_FILE
+        cardType: String = "term_def",
+        modelFileName: String = ""
     ) {
-        viewModelScope.launch {
-            _aiState.value = AiGenerateState.LoadingModel
-            try {
-                LlmInferenceManager.initialize(context, modelFileName)
-            } catch (e: ModelNotFoundException) {
-                _aiState.value = AiGenerateState.Error(e.message ?: "Model not found", isModelMissing = true)
+        val handler = kotlinx.coroutines.CoroutineExceptionHandler { _, t ->
+            _aiState.value = AiGenerateState.Error("Lỗi: ${t.message}")
+        }
+        viewModelScope.launch(handler) {
+            _aiState.value = AiGenerateState.CheckingServer
+            val status = AiApiClient.checkStatus()
+            if (!status.isOnline) {
+                _aiState.value = AiGenerateState.Error(
+                    "Không kết nối được server AI.\n\nChạy server trên máy tính:\n  cd ai_server\n  python server.py",
+                    isServerOffline = true
+                )
                 return@launch
-            } catch (e: Exception) {
-                _aiState.value = AiGenerateState.Error("Failed to load model: ${e.message}")
+            }
+            if (!status.isReady) {
+                _aiState.value = AiGenerateState.Error(
+                    "Server online nhưng chưa load model.\n${status.message}",
+                    isServerOffline = false
+                )
                 return@launch
             }
 
-            val prompt = FlashcardPromptBuilder.build(topic, count, language)
-            _aiState.value = AiGenerateState.Generating()
-
+            _aiState.value = AiGenerateState.Generating
             try {
-                val fullOutput = StringBuilder()
-                LlmInferenceManager.generateStream(context, prompt).collect { token ->
-                    fullOutput.append(token)
-                    _aiState.value = AiGenerateState.Generating(fullOutput.toString())
-                }
-                val result = AiFlashcardParser.parse(fullOutput.toString())
-                _aiState.value = AiGenerateState.Preview(result.cards, result.errorLines)
-            } catch (e: Exception) {
-                _aiState.value = AiGenerateState.Error("Generation failed: ${e.message}")
+                val result = AiApiClient.generate(topic, count, language, cardType)
+                _aiState.value = AiGenerateState.Preview(
+                    cards = result.cards,
+                    errorLines = result.errorLines,
+                    durationMs = result.durationMs
+                )
+            } catch (t: Throwable) {
+                _aiState.value = AiGenerateState.Error("Generate thất bại: ${t.message}")
             }
         }
     }

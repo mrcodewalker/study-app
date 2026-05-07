@@ -14,20 +14,8 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0"
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary true
-        }
-        // Only include ARM ABIs — reduces APK size, covers all modern Android phones
-        ndk {
-            abiFilters "arm64-v8a", "armeabi-v7a"
-        }
-    }
-
-    // Allow large heap for LLM model loading
-    dexOptions {
-        javaMaxHeapSize "4g"
+        vectorDrawables { useSupportLibrary true }
     }
 
     buildTypes {
@@ -56,7 +44,6 @@ android {
     }
 }
 
-// Force all kotlin-stdlib variants to the same version to avoid duplicate class errors
 configurations.all {
     resolutionStrategy {
         force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.10'
@@ -70,14 +57,12 @@ dependencies {
     def nav_version = "2.7.0"
     def room_version = "2.5.0"
 
-    // WorkManager for notifications
     implementation "androidx.work:work-runtime-ktx:2.8.1"
     implementation 'androidx.core:core-ktx:1.9.0'
     implementation "androidx.core:core-splashscreen:1.0.1"
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.0'
     implementation 'androidx.activity:activity-compose:1.6.1'
 
-    // Compose BOM
     implementation "androidx.compose.ui:ui:$compose_version"
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
     implementation "androidx.compose.material3:material3:1.1.2"
@@ -85,31 +70,21 @@ dependencies {
     implementation "androidx.compose.animation:animation:$compose_version"
     implementation "androidx.compose.foundation:foundation:$compose_version"
 
-    // Navigation
     implementation "androidx.navigation:navigation-compose:$nav_version"
-
-    // Lifecycle ViewModel
     implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.6.0"
 
-    // Room
     implementation "androidx.room:room-runtime:$room_version"
     implementation "androidx.room:room-ktx:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
 
-    // Coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
 
-    // Konfetti for fireworks
     implementation "nl.dionsegijn:konfetti-compose:2.0.4"
-    
-    // Lottie for complex animations
     implementation "com.airbnb.android:lottie-compose:6.1.0"
-
-    // Coil for image loading
     implementation "io.coil-kt:coil-compose:2.4.0"
 
-    // MediaPipe LLM Inference (local on-device AI)
-    implementation 'com.google.mediapipe:tasks-genai:0.10.14'
+    // HTTP client cho AI server
+    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
