@@ -82,12 +82,19 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
                 initialStudiedCount = initStudied,
                 onExit = { lastIdx, studiedCnt ->
                     if (isSubset) {
-                        // Ôn lại chưa thuộc: chỉ cộng thêm số câu mới thuộc vào tổng, giữ nguyên vị trí cũ của bộ chính
-                        val prevTotal = deck?.studiedCount ?: 0
-                        val mainTotalSize = cards.size
-                        val newTotal = (prevTotal + studiedCnt).coerceAtMost(mainTotalSize)
-                        val currentMainIdx = deck?.lastStudiedIndex ?: 0
-                        viewModel.saveStudyProgress(deckId, currentMainIdx, newTotal)
+                        val prevStudied = deck?.studiedCount ?: 0
+                        val prevIdx = deck?.lastStudiedIndex ?: 0
+                        val newTotal = (prevStudied + studiedCnt).coerceAtMost(cards.size)
+
+                        // Nếu học hết subset mới (lastIdx == studyCards.size), cập nhật index
+                        // thành tổng số thẻ hiện tại để progress bar phản ánh đúng
+                        val newIdx = if (lastIdx >= studyCards.size) {
+                            // Học xong subset → index = tổng thẻ đã học (cũ + mới)
+                            (prevIdx + studyCards.size).coerceAtMost(cards.size)
+                        } else {
+                            prevIdx // Học dở subset → giữ nguyên index cũ
+                        }
+                        viewModel.saveStudyProgress(deckId, newIdx, newTotal)
                     } else {
                         // Học bình thường: lưu vị trí thực tế và tổng số câu thuộc
                         viewModel.saveStudyProgress(deckId, lastIdx, studiedCnt)
