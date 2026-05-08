@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,7 +65,12 @@ private fun MusicGifAvatar(modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MusicPlayerBubble(isEnabled: Boolean = true) {
+fun MusicPlayerBubble(
+    isEnabled: Boolean = true,
+    isVisible: Boolean = true
+) {
+    // Luôn giữ state trong composition kể cả khi bị ẩn tạm thời (isVisible=false)
+    // Chỉ return hoàn toàn nếu bị disable từ settings (isEnabled=false)
     if (!isEnabled) return
 
     val context = LocalContext.current
@@ -73,10 +79,13 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
 
     val screenWidthPx  = with(density) { config.screenWidthDp.dp.toPx() }
     val screenHeightPx = with(density) { config.screenHeightDp.dp.toPx() }
-    val bubbleSizePx   = with(density) { 60.dp.toPx() }
-
-    var offsetX by remember { mutableFloatStateOf(with(density) { 16.dp.toPx() }) }
-    var offsetY by remember { mutableFloatStateOf(screenHeightPx - bubbleSizePx - with(density) { 100.dp.toPx() }) }
+    
+    val bubbleSizeTotal = with(density) { 70.dp.toPx() }
+    
+    // Sử dụng rememberSaveable để giữ vị trí khi xoay màn hình hoặc đóng app
+    var offsetX by rememberSaveable { mutableFloatStateOf(with(density) { 32.dp.toPx() }) }
+    var offsetY by rememberSaveable { mutableFloatStateOf(screenHeightPx - bubbleSizeTotal - with(density) { 100.dp.toPx() }) }
+    
     var isDragging  by remember { mutableStateOf(false) }
     var dragDistance by remember { mutableFloatStateOf(0f) }
     var showSheet   by remember { mutableStateOf(false) }
@@ -86,7 +95,6 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
     val isAutoNext   by MusicService.isAutoNext.collectAsState()
     val currentTrack by MusicService.currentTrack.collectAsState()
 
-    // Load playlist trực tiếp từ assets — không phụ thuộc Service đã start chưa
     val playlist = remember {
         try {
             context.assets.list("music")
@@ -96,7 +104,6 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
         } catch (e: Exception) { emptyList() }
     }
 
-    // Helper: gửi intent tới service
     fun svcIntent(action: String, track: String? = null) =
         Intent(context, MusicService::class.java).apply {
             this.action = action
@@ -106,7 +113,6 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
     fun play(track: String)  = context.startForegroundService(svcIntent(MusicService.ACTION_PLAY, track))
     fun pause()              = context.startService(svcIntent(MusicService.ACTION_PAUSE))
     fun resume()             = context.startService(svcIntent(MusicService.ACTION_RESUME))
-    fun stop()               = context.startService(svcIntent(MusicService.ACTION_STOP))
     fun next()               = context.startService(svcIntent(MusicService.ACTION_NEXT))
     fun prev()               = context.startService(svcIntent(MusicService.ACTION_PREV))
     fun toggleAutoNext()     = context.startService(svcIntent(MusicService.ACTION_TOGGLE_AUTO_NEXT))
@@ -125,7 +131,7 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
             modifier = Modifier.fillMaxHeight(0.75f)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // Header
+                // Header (đã có trong file cũ)
                 Surface(
                     color = ScSurfaceContainerLowest,
                     shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
@@ -163,7 +169,6 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
                                     color = ScOnSurfaceVariant
                                 )
                             }
-                            // Nút Auto-play
                             IconButton(onClick = { toggleAutoNext() }) {
                                 Icon(
                                     if (isAutoNext) Icons.Default.RepeatOne else Icons.Default.RepeatOneOn,
@@ -228,7 +233,6 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
                                     }
                                 }
                             }
-                            // Prev / Play-Pause / Next
                             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 IconButton(onClick = { prev() }, modifier = Modifier.size(36.dp)) {
                                     Icon(Icons.Default.SkipPrevious, null, tint = ScOnSurfaceVariant, modifier = Modifier.size(20.dp))
@@ -249,7 +253,7 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
                     }
                 }
 
-                // Playlist label
+                // Playlist
                 Text("DANH SÁCH PHÁT",
                     style = MaterialTheme.typography.labelSmall,
                     color = ScOnSurfaceVariant, fontWeight = FontWeight.Bold,
@@ -263,7 +267,6 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
                             Icon(Icons.Default.MusicOff, null, tint = ScOnSurfaceVariant, modifier = Modifier.size(40.dp))
                             Spacer(Modifier.height(8.dp))
                             Text("Chưa có file nhạc", style = MaterialTheme.typography.bodyMedium, color = ScOnSurfaceVariant)
-                            Text("Thêm .mp3 vào assets/music/", style = MaterialTheme.typography.labelSmall, color = ScOutline)
                         }
                     }
                 } else {
@@ -302,10 +305,6 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
                                         fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
                                         maxLines = 1, overflow = TextOverflow.Ellipsis,
                                         modifier = Modifier.weight(1f))
-                                    if (isActive) {
-                                        Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                            null, tint = ScPrimary, modifier = Modifier.size(18.dp))
-                                    }
                                 }
                             }
                         }
@@ -316,45 +315,58 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
         }
     }
 
-    // ── Floating GIF Bubble ───────────────────────────────────────────────────
+    // ── Floating GIF Bubble (Vị trí được bao bọc bên ngoài AnimatedVisibility để giữ state) ──
     Box(
         modifier = Modifier
             .offset { IntOffset(offsetX.toInt(), offsetY.toInt()) }
             .size(70.dp)
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = { isDragging = false; dragDistance = 0f },
-                    onDrag = { change, dragAmount ->
-                        change.consume()
-                        dragDistance += kotlin.math.sqrt(
-                            dragAmount.x * dragAmount.x + dragAmount.y * dragAmount.y)
-                        isDragging = dragDistance > 10f
-                        offsetX = (offsetX + dragAmount.x).coerceIn(0f, screenWidthPx - bubbleSizePx)
-                        offsetY = (offsetY + dragAmount.y).coerceIn(0f, screenHeightPx - bubbleSizePx - 80f)
-                    },
-                    onDragEnd = {
-                        if (!isDragging) showSheet = true
-                        isDragging = false; dragDistance = 0f
-                    },
-                    onDragCancel = { isDragging = false; dragDistance = 0f }
-                )
-            }
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = { showSheet = true })
-            }
     ) {
-        MusicGifAvatar(modifier = Modifier.fillMaxSize())
-
-        // Dot khi đang phát
-        if (isPlaying) {
+        AnimatedVisibility(
+            visible = isVisible && !showSheet,
+            enter = fadeIn(tween(400)) + 
+                    scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)) +
+                    slideInVertically(spring(dampingRatio = Spring.DampingRatioMediumBouncy)) { it / 2 },
+            exit = fadeOut(tween(300)) + scaleOut(spring(stiffness = Spring.StiffnessMedium)) +
+                   slideOutVertically(tween(300)) { it / 2 }
+        ) {
             Box(
                 modifier = Modifier
-                    .size(14.dp)
-                    .align(Alignment.TopEnd)
-                    .clip(CircleShape)
-                    .background(ScPrimary)
-                    .border(2.dp, Color.White, CircleShape)
-            )
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectDragGestures(
+                            onDragStart = { isDragging = false; dragDistance = 0f },
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                dragDistance += kotlin.math.sqrt(dragAmount.x * dragAmount.x + dragAmount.y * dragAmount.y)
+                                isDragging = dragDistance > 10f
+                                offsetX = (offsetX + dragAmount.x).coerceIn(0f, screenWidthPx - bubbleSizeTotal)
+                                offsetY = (offsetY + dragAmount.y).coerceIn(0f, screenHeightPx - bubbleSizeTotal - 80f)
+                            },
+                            onDragEnd = {
+                                if (!isDragging) showSheet = true
+                                isDragging = false; dragDistance = 0f
+                            },
+                            onDragCancel = { isDragging = false; dragDistance = 0f }
+                        )
+                    }
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = { showSheet = true })
+                    }
+            ) {
+                MusicGifAvatar(modifier = Modifier.fillMaxSize())
+
+                if (isPlaying) {
+                    Box(
+                        modifier = Modifier
+                            .size(14.dp)
+                            .align(Alignment.TopEnd)
+                            .clip(CircleShape)
+                            .background(ScPrimary)
+                            .border(2.dp, Color.White, CircleShape)
+                    )
+                }
+            }
         }
     }
 }
+

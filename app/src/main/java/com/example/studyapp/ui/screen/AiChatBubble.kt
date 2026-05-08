@@ -1,18 +1,23 @@
 package com.example.studyapp.ui.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*import androidx.compose.foundation.shape.*
+import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.shape.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.Brush
@@ -91,7 +96,7 @@ private fun BotGifAvatar(assetPath: String, modifier: Modifier = Modifier, fallb
 //  Floating AI Bubble  (đặt trong Box toàn màn hình)
 // ─────────────────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun AiChatBubble(
     onShowSheetChange: ((Boolean) -> Unit)? = null,
@@ -104,11 +109,10 @@ fun AiChatBubble(
     val config = LocalConfiguration.current
     val context = LocalContext.current
 
-    val screenWidthPx  = with(density) { config.screenWidthDp.dp.toPx() }
+    val screenWidthPx = with(density) { config.screenWidthDp.dp.toPx() }
     val screenHeightPx = with(density) { config.screenHeightDp.dp.toPx() }
-    val bubbleSizePx   = with(density) { 60.dp.toPx() }
+    val bubbleSizePx = with(density) { 60.dp.toPx() }
 
-    // Random 1 GIF từ assets/gif/ — random ngay từ lần render đầu tiên
     fun pickRandomGif(): String = try {
         val files = context.assets.list(BOT_GIF_DIR)
             ?.filter { it.endsWith(".gif") }
@@ -121,54 +125,43 @@ fun AiChatBubble(
 
     var botGifAsset by remember { mutableStateOf(pickRandomGif()) }
 
-    // Re-pick khi shuffle
     LaunchedEffect(gifShuffleKey) {
         if (gifShuffleKey > 0) {
-            val newGif = pickRandomGif()
-            println("🎲 Shuffle GIF: key=$gifShuffleKey, old=$botGifAsset, new=$newGif")
-            botGifAsset = newGif
+            botGifAsset = pickRandomGif()
         }
     }
 
-    // Bubble position — dưới phải, cách nav bottom ~100dp, cách phải 16dp
-    var offsetX by remember { mutableFloatStateOf(screenWidthPx - bubbleSizePx - with(density) { 16.dp.toPx() }) }
-    var offsetY by remember { mutableFloatStateOf(screenHeightPx - bubbleSizePx - with(density) { 100.dp.toPx() }) }
+    // Bubble position — dưới phải, cách nav bottom ~100dp, cách phải 32dp
+    val bubbleSizeTotal = with(density) { 70.dp.toPx() }
+    var offsetX by rememberSaveable { mutableFloatStateOf(screenWidthPx - bubbleSizeTotal - with(density) { 32.dp.toPx() }) }
+    var offsetY by rememberSaveable { mutableFloatStateOf(screenHeightPx - bubbleSizeTotal - with(density) { 100.dp.toPx() }) }
 
-    // Drag state — distinguish tap vs drag
     var isDragging by remember { mutableStateOf(false) }
     var dragDistance by remember { mutableFloatStateOf(0f) }
 
-    // Chat state
     var showSheet by remember { mutableStateOf(false) }
     var messages by remember { mutableStateOf(listOf<AiChatMsg>()) }
 
-    // Mở từ bên ngoài (ví dụ button trên HomeScreen)
     LaunchedEffect(forceShow) {
         if (forceShow) {
             showSheet = true
-            onShowSheetChange?.invoke(false) // reset để có thể trigger lại lần sau
+            onShowSheetChange?.invoke(true)
         }
     }
+
     var inputText by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var sessionId by remember { mutableStateOf(UUID.randomUUID().toString()) }
     var serverReady by remember { mutableStateOf(false) }
     var serverOnline by remember { mutableStateOf<Boolean?>(null) }
 
-    // Pulse animation on bubble
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 1f, targetValue = 1.08f,
         animationSpec = infiniteRepeatable(tween(1800, easing = EaseInOutSine), RepeatMode.Reverse),
         label = "pulse"
     )
-    val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f, targetValue = 0.7f,
-        animationSpec = infiniteRepeatable(tween(1800, easing = EaseInOutSine), RepeatMode.Reverse),
-        label = "glow"
-    )
 
-    // Check server on first open
     LaunchedEffect(showSheet) {
         if (showSheet) {
             val s = AiApiClient.checkStatus()
@@ -203,90 +196,144 @@ fun AiChatBubble(
         }
     }
 
-    // ── Bottom Sheet ──────────────────────────────────────────────────────────
-    if (showSheet) {        AiChatBottomSheet(
-            messages = messages,
-            inputText = inputText,
-            isLoading = isLoading,
-            serverReady = serverReady,
-            serverOnline = serverOnline,
-            botGifAsset = botGifAsset,
-            onInputChange = { inputText = it },
-            onSend = { sendMessage(inputText) },
-            onQuickPrompt = { sendMessage(it) },
-            onClear = {
-                scope.launch {
-                    try { AiApiClient.deleteChatSession(sessionId) } catch (_: Exception) {}
-                    sessionId = UUID.randomUUID().toString()
-                    messages = emptyList()
-                }
-            },
-            onDismiss = { showSheet = false }
-        )
-    }
-
-    // ── Floating Bubble ───────────────────────────────────────────────────────
-    if (!isEnabled) return
-
-    Box(
-        modifier = Modifier
-            .offset { IntOffset(offsetX.toInt(), offsetY.toInt()) }
-            .size(70.dp)
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = {
-                        isDragging = false
-                        dragDistance = 0f
-                    },
-                    onDrag = { change, dragAmount ->
-                        change.consume()
-                        dragDistance += kotlin.math.sqrt(
-                            dragAmount.x * dragAmount.x + dragAmount.y * dragAmount.y
-                        )
-                        isDragging = dragDistance > 8f
-                        offsetX = (offsetX + dragAmount.x).coerceIn(0f, screenWidthPx - bubbleSizePx)
-                        offsetY = (offsetY + dragAmount.y).coerceIn(0f, screenHeightPx - bubbleSizePx - 80f)
-                    },
-                    onDragEnd = {
-                        if (!isDragging) showSheet = true
-                        isDragging = false
-                        dragDistance = 0f
-                    },
-                    onDragCancel = {
-                        isDragging = false
-                        dragDistance = 0f
-                    }
-                )
-            }
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = { showSheet = true })
-            }
+    AnimatedVisibility(
+        visible = showSheet,
+        enter = fadeIn(tween(180)),
+        exit = fadeOut(tween(180))
     ) {
-        // Glow ring
+        BackHandler {
+            showSheet = false
+            onShowSheetChange?.invoke(false)
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .scale(pulseScale)
-                .background(Color.Transparent)
-        )
-        // GIF avatar — không clip, không viền, hiển thị nguyên bản
-        key(botGifAsset) {
-            BotGifAvatar(
-                assetPath = botGifAsset,
-                modifier = Modifier.fillMaxSize(),
-                fallbackSize = 32.sp
-            )
-        }
-        // Unread dot
-        if (messages.isNotEmpty() && !showSheet) {
+                .imePadding()
+        ) {
             Box(
                 modifier = Modifier
-                    .size(14.dp)
-                    .align(Alignment.TopEnd)
-                    .clip(CircleShape)
-                    .background(Color(0xFFef4444))
-                    .border(2.dp, Color.White, CircleShape)
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.45f))
+                    .pointerInput(Unit) {
+                        detectTapGestures {
+                            showSheet = false
+                            onShowSheetChange?.invoke(false)
+                        }
+                    }
             )
+            AiChatBottomSheet(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.88f)
+                    .align(Alignment.BottomCenter)
+                    .animateEnterExit(
+                        enter = slideInVertically(tween(320, easing = EaseOutCubic)) { it },
+                        exit = slideOutVertically(tween(220)) { it }
+                    ),
+                messages = messages,
+                inputText = inputText,
+                isLoading = isLoading,
+                serverReady = serverReady,
+                serverOnline = serverOnline,
+                botGifAsset = botGifAsset,
+                onInputChange = { inputText = it },
+                onSend = { sendMessage(inputText) },
+                onQuickPrompt = { sendMessage(it) },
+                onClear = {
+                    scope.launch {
+                        try {
+                            AiApiClient.deleteChatSession(sessionId)
+                        } catch (_: Exception) {
+                        }
+                        sessionId = UUID.randomUUID().toString()
+                        messages = emptyList()
+                    }
+                },
+                onDismiss = {
+                    showSheet = false
+                    onShowSheetChange?.invoke(false)
+                }
+            )
+        }
+    }
+
+    if (isEnabled) {
+        // Box ngoài giữ vị trí — KHÔNG nằm trong AnimatedVisibility để offset không bị reset
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(offsetX.toInt(), offsetY.toInt()) }
+                .size(70.dp)
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = {
+                            isDragging = false
+                            dragDistance = 0f
+                        },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            dragDistance += kotlin.math.sqrt(
+                                dragAmount.x * dragAmount.x + dragAmount.y * dragAmount.y
+                            )
+                            isDragging = dragDistance > 8f
+                            offsetX = (offsetX + dragAmount.x).coerceIn(0f, screenWidthPx - bubbleSizePx)
+                            offsetY = (offsetY + dragAmount.y).coerceIn(0f, screenHeightPx - bubbleSizePx - 80f)
+                        },
+                        onDragEnd = {
+                            if (!isDragging) {
+                                showSheet = true
+                                onShowSheetChange?.invoke(true)
+                            }
+                            isDragging = false
+                            dragDistance = 0f
+                        },
+                        onDragCancel = {
+                            isDragging = false
+                            dragDistance = 0f
+                        }
+                    )
+                }
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        showSheet = true
+                        onShowSheetChange?.invoke(true)
+                    })
+                }
+        ) {
+            // AnimatedVisibility chỉ bao nội dung hiển thị, không bao offset
+            AnimatedVisibility(
+                visible = !showSheet,
+                enter = fadeIn(tween(400)) + 
+                        scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)) +
+                        slideInVertically(spring(dampingRatio = Spring.DampingRatioMediumBouncy)) { it / 2 },
+                exit = fadeOut(tween(300)) + scaleOut(spring(stiffness = Spring.StiffnessMedium)) +
+                       slideOutVertically(tween(300)) { it / 2 }
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .scale(pulseScale)
+                            .background(Color.Transparent)
+                    )
+                    key(botGifAsset) {
+                        BotGifAvatar(
+                            assetPath = botGifAsset,
+                            modifier = Modifier.fillMaxSize(),
+                            fallbackSize = 32.sp
+                        )
+                    }
+                    if (messages.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .size(14.dp)
+                                .align(Alignment.TopEnd)
+                                .clip(CircleShape)
+                                .background(Color(0xFFef4444))
+                                .border(2.dp, Color.White, CircleShape)
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -295,238 +342,267 @@ fun AiChatBubble(
 //  Bottom Sheet Chat UI
 // ─────────────────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AiChatBottomSheet(
+    modifier: Modifier = Modifier,
     messages: List<AiChatMsg>,
     inputText: String,
-    isLoading: Boolean,
-    serverReady: Boolean,
-    serverOnline: Boolean?,
-    botGifAsset: String,
-    onInputChange: (String) -> Unit,
-    onSend: () -> Unit,
-    onQuickPrompt: (String) -> Unit,
-    onClear: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    val listState = rememberLazyListState()
-    var showClearDialog by remember { mutableStateOf(false) }
+            isLoading: Boolean,
+            serverReady: Boolean,
+            serverOnline: Boolean?,
+            botGifAsset: String,
+            onInputChange: (String) -> Unit,
+            onSend: () -> Unit,
+            onQuickPrompt: (String) -> Unit,
+            onClear: () -> Unit,
+            onDismiss: () -> Unit
+        ) {
+            val listState = rememberLazyListState()
+            var showClearDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(messages.size, isLoading) {
-        if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.size - 1)
-        }
-    }
-
-    if (showClearDialog) {
-        AlertDialog(
-            onDismissRequest = { showClearDialog = false },
-            title = { Text("Xóa cuộc trò chuyện?") },
-            text = { Text("Toàn bộ lịch sử chat sẽ bị xóa.") },
-            confirmButton = {
-                TextButton(onClick = { showClearDialog = false; onClear() }) {
-                    Text("Xóa", color = ScError, fontWeight = FontWeight.Bold)
+            LaunchedEffect(messages.size, isLoading) {
+                if (messages.isNotEmpty()) {
+                    listState.animateScrollToItem(messages.size - 1)
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { showClearDialog = false }) { Text("Hủy") }
-            },
-            containerColor = ScSurfaceContainerLowest,
-            shape = RoundedCornerShape(20.dp)
-        )
-    }
+            }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = ScBackground,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        dragHandle = null,
-        windowInsets = WindowInsets(0),
-        modifier = Modifier
-            .fillMaxHeight(0.88f)
-            .imePadding()
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // ── Sheet header ─────────────────────────────────────────────────
-            Surface(
-                color = ScSurfaceContainerLowest,
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+            if (showClearDialog) {
+                AlertDialog(
+                    onDismissRequest = { showClearDialog = false },
+                    title = { Text("Xóa cuộc trò chuyện?") },
+                    text = { Text("Toàn bộ lịch sử chat sẽ bị xóa.") },
+                    confirmButton = {
+                        TextButton(onClick = { showClearDialog = false; onClear() }) {
+                            Text("Xóa", color = ScError, fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showClearDialog = false }) { Text("Hủy") }
+                    },
+                    containerColor = ScSurfaceContainerLowest,
+                    shape = RoundedCornerShape(20.dp)
+                )
+            }
+
+            val swipeOffset = remember { Animatable(0f) }
+            val scope = rememberCoroutineScope()
+
+            Column(
+                modifier = modifier
+                    .offset { IntOffset(0, swipeOffset.value.toInt().coerceAtLeast(0)) }
+                    .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                    .background(ScBackground)
             ) {
-                Column {
-                    // Drag handle
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 12.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .width(40.dp)
-                                .height(4.dp)
-                                .clip(RoundedCornerShape(99.dp))
-                                .background(ScOutlineVariant)
+                // ── Sheet header ─────────────────────────────────────────────────
+                Surface(
+                    color = ScSurfaceContainerLowest,
+                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                    modifier = Modifier.pointerInput(Unit) {
+                        detectVerticalDragGestures(
+                            onVerticalDrag = { change, dragAmount ->
+                                change.consume()
+                                scope.launch {
+                                    swipeOffset.snapTo(swipeOffset.value + dragAmount)
+                                }
+                            },
+                            onDragEnd = {
+                                scope.launch {
+                                    if (swipeOffset.value > 300f) {
+                                        onDismiss()
+                                    } else {
+                                        swipeOffset.animateTo(
+                                            0f,
+                                            spring(stiffness = Spring.StiffnessLow)
+                                        )
+                                    }
+                                }
+                            }
                         )
                     }
+                ) {
+                    Column {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .width(40.dp)
+                                    .height(4.dp)
+                                    .clip(RoundedCornerShape(99.dp))
+                                    .background(ScOutlineVariant)
+                            )
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.linearGradient(
+                                            listOf(
+                                                ScPrimary,
+                                                Color(0xFF5e5b7a)
+                                            )
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                BotGifAvatar(
+                                    assetPath = botGifAsset,
+                                    modifier = Modifier.fillMaxSize(),
+                                    fallbackSize = 20.sp
+                                )
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "KMAStudy AI",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ScOnSurface
+                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(7.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                when {
+                                                    serverOnline == null -> ScOutline
+                                                    serverReady -> Color(0xFF22c55e)
+                                                    else -> ScWarning
+                                                }
+                                            )
+                                    )
+                                    Spacer(Modifier.width(5.dp))
+                                    Text(
+                                        when {
+                                            serverOnline == null -> "Đang kết nối..."
+                                            serverReady -> "Sẵn sàng trả lời"
+                                            serverOnline == false -> "Server offline"
+                                            else -> "Model chưa load"
+                                        },
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = ScOnSurfaceVariant
+                                    )
+                                }
+                            }
+                            if (messages.isNotEmpty()) {
+                                IconButton(onClick = { showClearDialog = true }) {
+                                    Icon(
+                                        Icons.Default.DeleteOutline,
+                                        null,
+                                        tint = ScOnSurfaceVariant,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            IconButton(onClick = onDismiss) {
+                                Icon(
+                                    Icons.Default.KeyboardArrowDown,
+                                    null,
+                                    tint = ScOnSurfaceVariant
+                                )
+                            }
+                        }
+                        Divider(color = ScOutlineVariant.copy(0.5f))
+                    }
+                }
+
+                // ── Messages ─────────────────────────────────────────────────────
+                Box(modifier = Modifier.weight(1f)) {
+                    if (messages.isEmpty()) {
+                        ChatEmptyView(
+                            serverReady = serverReady,
+                            serverOnline = serverOnline,
+                            onQuickPrompt = onQuickPrompt
+                        )
+                    } else {
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            items(messages, key = { it.id }) { msg ->
+                                AiChatBubbleItem(msg, botGifAsset)
+                            }
+                            if (isLoading) {
+                                item(key = "typing") { AiTypingIndicator(botGifAsset) }
+                            }
+                        }
+                    }
+                }
+
+                // ── Input bar ─────────────────────────────────────────────────────
+                Surface(
+                    color = ScSurfaceContainerLowest,
+                    border = BorderStroke(1.dp, ScOutlineVariant.copy(0.5f))
+                ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .navigationBarsPadding()
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        val context = LocalContext.current
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Brush.linearGradient(listOf(ScPrimary, Color(0xFF5e5b7a)))),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            BotGifAvatar(assetPath = botGifAsset, modifier = Modifier.fillMaxSize(), fallbackSize = 20.sp)
-                        }
-                        Spacer(Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                "KMAStudy AI",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = ScOnSurface
-                            )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(7.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            when {
-                                                serverOnline == null -> ScOutline
-                                                serverReady -> Color(0xFF22c55e)
-                                                else -> ScWarning
-                                            }
-                                        )
-                                )
-                                Spacer(Modifier.width(5.dp))
+                        OutlinedTextField(
+                            value = inputText,
+                            onValueChange = onInputChange,
+                            modifier = Modifier.weight(1f),
+                            placeholder = {
                                 Text(
-                                    when {
-                                        serverOnline == null -> "Đang kết nối..."
-                                        serverReady -> "Sẵn sàng trả lời"
-                                        serverOnline == false -> "Server offline"
-                                        else -> "Model chưa load"
-                                    },
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = ScOnSurfaceVariant
+                                    if (serverReady) "Hỏi bất cứ điều gì..." else "Server chưa sẵn sàng",
+                                    color = ScOutline,
+                                    style = MaterialTheme.typography.bodyMedium
                                 )
-                            }
-                        }
-                        if (messages.isNotEmpty()) {
-                            IconButton(onClick = { showClearDialog = true }) {
-                                Icon(
-                                    Icons.Default.DeleteOutline, null,
-                                    tint = ScOnSurfaceVariant,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                        IconButton(onClick = onDismiss) {
+                            },
+                            shape = RoundedCornerShape(24.dp),
+                            maxLines = 4,
+                            enabled = serverReady && !isLoading,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                            keyboardActions = KeyboardActions(onSend = { onSend() }),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = ScPrimary,
+                                unfocusedBorderColor = ScOutlineVariant,
+                                focusedContainerColor = ScSurfaceContainerLow,
+                                unfocusedContainerColor = ScSurfaceContainerLow,
+                                focusedTextColor = ScOnSurface,
+                                unfocusedTextColor = ScOnSurface,
+                                cursorColor = ScPrimary
+                            )
+                        )
+                        val canSend = inputText.isNotBlank() && serverReady && !isLoading
+                        FilledIconButton(
+                            onClick = onSend,
+                            enabled = canSend,
+                            modifier = Modifier.size(52.dp),
+                            shape = CircleShape,
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = ScPrimary,
+                                disabledContainerColor = ScPrimaryContainer
+                            )
+                        ) {
                             Icon(
-                                Icons.Default.KeyboardArrowDown, null,
-                                tint = ScOnSurfaceVariant
+                                if (isLoading) Icons.Default.HourglassEmpty else Icons.Default.Send,
+                                null,
+                                tint = if (canSend) ScOnPrimary else ScOnSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
-                    }
-                    Divider(color = ScOutlineVariant.copy(0.5f))
-                }
-            }
-
-            // ── Messages ─────────────────────────────────────────────────────
-            Box(modifier = Modifier.weight(1f)) {
-                if (messages.isEmpty()) {
-                    ChatEmptyView(
-                        serverReady = serverReady,
-                        serverOnline = serverOnline,
-                        onQuickPrompt = onQuickPrompt
-                    )
-                } else {
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        items(messages, key = { it.id }) { msg ->
-                            AiChatBubbleItem(msg, botGifAsset)
-                        }
-                        if (isLoading) {
-                            item(key = "typing") { AiTypingIndicator(botGifAsset) }
-                        }
-                    }
-                }
-            }
-
-            // ── Input bar ─────────────────────────────────────────────────────
-            Surface(
-                color = ScSurfaceContainerLowest,
-                border = BorderStroke(1.dp, ScOutlineVariant.copy(0.5f))
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.Bottom,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = inputText,
-                        onValueChange = onInputChange,
-                        modifier = Modifier.weight(1f),
-                        placeholder = {
-                            Text(
-                                if (serverReady) "Hỏi bất cứ điều gì..." else "Server chưa sẵn sàng",
-                                color = ScOutline,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        },
-                        shape = RoundedCornerShape(24.dp),
-                        maxLines = 4,
-                        enabled = serverReady && !isLoading,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                        keyboardActions = KeyboardActions(onSend = { onSend() }),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = ScPrimary,
-                            unfocusedBorderColor = ScOutlineVariant,
-                            focusedContainerColor = ScSurfaceContainerLow,
-                            unfocusedContainerColor = ScSurfaceContainerLow,
-                            focusedTextColor = ScOnSurface,
-                            unfocusedTextColor = ScOnSurface,
-                            cursorColor = ScPrimary
-                        )
-                    )
-                    val canSend = inputText.isNotBlank() && serverReady && !isLoading
-                    FilledIconButton(
-                        onClick = onSend,
-                        enabled = canSend,
-                        modifier = Modifier.size(52.dp),
-                        shape = CircleShape,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = ScPrimary,
-                            disabledContainerColor = ScPrimaryContainer
-                        )
-                    ) {
-                        Icon(
-                            if (isLoading) Icons.Default.HourglassEmpty else Icons.Default.Send,
-                            null,
-                            tint = if (canSend) ScOnPrimary else ScOnSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
                     }
                 }
             }
         }
-    }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Empty / welcome view
@@ -534,98 +610,103 @@ private fun AiChatBottomSheet(
 
 @Composable
 private fun ChatEmptyView(
-    serverReady: Boolean,
-    serverOnline: Boolean?,
-    onQuickPrompt: (String) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "Xin chào! Tôi có thể giúp gì cho bạn?",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = ScOnSurface,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            "Hỏi về bất kỳ chủ đề học tập nào",
-            style = MaterialTheme.typography.bodySmall,
-            color = ScOnSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 4.dp)
-        )
-
-        if (serverOnline == false) {
-            Spacer(Modifier.height(16.dp))
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = ScErrorContainer.copy(0.3f),
-                border = BorderStroke(1.dp, ScErrorContainer)
+            serverReady: Boolean,
+            serverOnline: Boolean?,
+            onQuickPrompt: (String) -> Unit
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.WifiOff, null, tint = ScError, modifier = Modifier.size(16.dp))
-                    Text(
-                        "Server offline. Chạy: python ai_server/server.py",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = ScOnSurface
-                    )
-                }
-            }
-        }
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Xin chào! Tôi có thể giúp gì cho bạn?",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = ScOnSurface,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    "Hỏi về bất kỳ chủ đề học tập nào",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = ScOnSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
 
-        if (serverReady) {
-            Spacer(Modifier.height(20.dp))
-            Text(
-                "GỢI Ý NHANH",
-                style = MaterialTheme.typography.labelSmall,
-                color = ScOnSurfaceVariant,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
-            )
-            Spacer(Modifier.height(10.dp))
-            QUICK_PROMPTS.chunked(2).forEach { row ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    row.forEach { prompt ->
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { onQuickPrompt(prompt) },
-                            shape = RoundedCornerShape(12.dp),
-                            color = ScSurfaceContainerLowest,
-                            border = BorderStroke(1.dp, ScOutlineVariant),
-                            shadowElevation = 1.dp
+                if (serverOnline == false) {
+                    Spacer(Modifier.height(16.dp))
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = ScErrorContainer.copy(0.3f),
+                        border = BorderStroke(1.dp, ScErrorContainer)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Icon(
+                                Icons.Default.WifiOff,
+                                null,
+                                tint = ScError,
+                                modifier = Modifier.size(16.dp)
+                            )
                             Text(
-                                prompt,
-                                modifier = Modifier.padding(10.dp),
+                                "Server offline. Chạy: python ai_server/server.py",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = ScOnSurface,
-                                fontWeight = FontWeight.Medium
+                                color = ScOnSurface
                             )
                         }
                     }
-                    if (row.size == 1) Spacer(Modifier.weight(1f))
                 }
+
+                if (serverReady) {
+                    Spacer(Modifier.height(20.dp))
+                    Text(
+                        "GỢI Ý NHANH",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ScOnSurfaceVariant,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    QUICK_PROMPTS.chunked(2).forEach { row ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            row.forEach { prompt ->
+                                Surface(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable { onQuickPrompt(prompt) },
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = ScSurfaceContainerLowest,
+                                    border = BorderStroke(1.dp, ScOutlineVariant),
+                                    shadowElevation = 1.dp
+                                ) {
+                                    Text(
+                                        prompt,
+                                        modifier = Modifier.padding(10.dp),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = ScOnSurface,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                            if (row.size == 1) Spacer(Modifier.weight(1f))
+                        }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
             }
         }
-        Spacer(Modifier.height(16.dp))
-    }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Chat bubble item
@@ -633,75 +714,88 @@ private fun ChatEmptyView(
 
 @Composable
 private fun AiChatBubbleItem(msg: AiChatMsg, botGifAsset: String) {
-    val isUser = msg.role == "user"
-    val timeStr = remember(msg.timestamp) {
-        SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(msg.timestamp))
-    }
-    val context = LocalContext.current
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
-        verticalAlignment = Alignment.Bottom
-    ) {
-        if (!isUser) {
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(CircleShape)
-                    .background(Brush.linearGradient(listOf(ScPrimary, Color(0xFF5e5b7a)))),
-                contentAlignment = Alignment.Center
-            ) {
-                BotGifAvatar(assetPath = botGifAsset, modifier = Modifier.fillMaxSize())
+            val isUser = msg.role == "user"
+            val timeStr = remember(msg.timestamp) {
+                SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(msg.timestamp))
             }
-            Spacer(Modifier.width(8.dp))
-        }
-        Column(
-            horizontalAlignment = if (isUser) Alignment.End else Alignment.Start,
-            modifier = Modifier.widthIn(max = 280.dp)
-        ) {
-            Surface(
-                shape = RoundedCornerShape(
-                    topStart = 16.dp, topEnd = 16.dp,
-                    bottomStart = if (isUser) 16.dp else 4.dp,
-                    bottomEnd = if (isUser) 4.dp else 16.dp
-                ),
-                color = when {
-                    msg.isError -> ScErrorContainer.copy(0.4f)
-                    isUser -> ScPrimary
-                    else -> ScSurfaceContainerLowest
-                },
-                border = if (!isUser && !msg.isError) BorderStroke(1.dp, ScOutlineVariant) else null,
-                shadowElevation = if (isUser) 2.dp else 1.dp
+            val context = LocalContext.current
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
+                verticalAlignment = Alignment.Bottom
             ) {
-                Text(
-                    text = msg.content,
-                    modifier = Modifier.padding(horizontal = 13.dp, vertical = 9.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = when {
-                        msg.isError -> ScError
-                        isUser -> ScOnPrimary
-                        else -> ScOnSurface
-                    },
-                    lineHeight = 20.sp
-                )
+                if (!isUser) {
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(Brush.linearGradient(listOf(ScPrimary, Color(0xFF5e5b7a)))),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        BotGifAvatar(assetPath = botGifAsset, modifier = Modifier.fillMaxSize())
+                    }
+                    Spacer(Modifier.width(8.dp))
+                }
+                Column(
+                    horizontalAlignment = if (isUser) Alignment.End else Alignment.Start,
+                    modifier = Modifier.widthIn(max = 280.dp)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(
+                            topStart = 16.dp, topEnd = 16.dp,
+                            bottomStart = if (isUser) 16.dp else 4.dp,
+                            bottomEnd = if (isUser) 4.dp else 16.dp
+                        ),
+                        color = when {
+                            msg.isError -> ScErrorContainer.copy(0.4f)
+                            isUser -> ScPrimary
+                            else -> ScSurfaceContainerLowest
+                        },
+                        border = if (!isUser && !msg.isError) BorderStroke(
+                            1.dp,
+                            ScOutlineVariant
+                        ) else null,
+                        shadowElevation = if (isUser) 2.dp else 1.dp
+                    ) {
+                        Text(
+                            text = msg.content,
+                            modifier = Modifier.padding(horizontal = 13.dp, vertical = 9.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = when {
+                                msg.isError -> ScError
+                                isUser -> ScOnPrimary
+                                else -> ScOnSurface
+                            },
+                            lineHeight = 20.sp
+                        )
+                    }
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        timeStr,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ScOutline,
+                        fontSize = 10.sp
+                    )
+                }
+                if (isUser) {
+                    Spacer(Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(ScPrimaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Person,
+                            null,
+                            tint = ScPrimary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
             }
-            Spacer(Modifier.height(2.dp))
-            Text(timeStr, style = MaterialTheme.typography.labelSmall, color = ScOutline, fontSize = 10.sp)
         }
-        if (isUser) {
-            Spacer(Modifier.width(8.dp))
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(CircleShape)
-                    .background(ScPrimaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.Person, null, tint = ScPrimary, modifier = Modifier.size(16.dp))
-            }
-        }
-    }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Typing indicator
@@ -709,48 +803,53 @@ private fun AiChatBubbleItem(msg: AiChatMsg, botGifAsset: String) {
 
 @Composable
 private fun AiTypingIndicator(botGifAsset: String) {
-    val inf = rememberInfiniteTransition(label = "typing")
-    val context = LocalContext.current
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Start,
-        verticalAlignment = Alignment.Bottom
-    ) {
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .clip(CircleShape)
-                .background(Brush.linearGradient(listOf(ScPrimary, Color(0xFF5e5b7a)))),
-            contentAlignment = Alignment.Center
-        ) {
-            BotGifAvatar(assetPath = botGifAsset, modifier = Modifier.fillMaxSize())
-        }
-        Spacer(Modifier.width(8.dp))
-        Surface(
-            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 16.dp),
-            color = ScSurfaceContainerLowest,
-            border = BorderStroke(1.dp, ScOutlineVariant)
-        ) {
+            val inf = rememberInfiniteTransition(label = "typing")
+            val context = LocalContext.current
             Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.Bottom
             ) {
-                repeat(3) { i ->
-                    val alpha by inf.animateFloat(
-                        initialValue = 0.3f, targetValue = 1f,
-                        animationSpec = infiniteRepeatable(
-                            tween(500, delayMillis = i * 150, easing = EaseInOutSine),
-                            RepeatMode.Reverse
-                        ),
-                        label = "dot$i"
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(7.dp)
-                            .clip(CircleShape)
-                            .background(ScPrimary.copy(alpha = alpha))
-                    )
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(Brush.linearGradient(listOf(ScPrimary, Color(0xFF5e5b7a)))),
+                    contentAlignment = Alignment.Center
+                ) {
+                    BotGifAvatar(assetPath = botGifAsset, modifier = Modifier.fillMaxSize())
+                }
+                Spacer(Modifier.width(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(
+                        topStart = 16.dp,
+                        topEnd = 16.dp,
+                        bottomStart = 4.dp,
+                        bottomEnd = 16.dp
+                    ),
+                    color = ScSurfaceContainerLowest,
+                    border = BorderStroke(1.dp, ScOutlineVariant)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        repeat(3) { i ->
+                            val alpha by inf.animateFloat(
+                                initialValue = 0.3f, targetValue = 1f,
+                                animationSpec = infiniteRepeatable(
+                                    tween(500, delayMillis = i * 150, easing = EaseInOutSine),
+                                    RepeatMode.Reverse
+                                ),
+                                label = "dot$i"
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(7.dp)
+                                    .clip(CircleShape)
+                                    .background(ScPrimary.copy(alpha = alpha))
+                            )
                 }
             }
         }

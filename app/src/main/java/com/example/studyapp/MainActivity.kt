@@ -358,9 +358,19 @@ fun KMAStudyApp(
         }
     }
 
-    // Floating AI bubble — hiện trên mọi màn hình
-    AiChatBubble(forceShow = showAiChat, onShowSheetChange = { showAiChat = it }, isEnabled = aiChatEnabled, gifShuffleKey = gifShuffleKey)
-    // Floating Music bubble — hiện trên mọi màn hình
-    MusicPlayerBubble(isEnabled = musicEnabled)
+    // Floating AI bubble
+    AiChatBubble(
+        forceShow = showAiChat,
+        onShowSheetChange = { showAiChat = it },
+        isEnabled = aiChatEnabled,
+        gifShuffleKey = gifShuffleKey
+    )
+    
+    // Floating Music bubble
+    // Sử dụng isVisible để ẩn tạm thời khi mở chat, giúp giữ nguyên tọa độ (state)
+    MusicPlayerBubble(
+        isEnabled = musicEnabled,
+        isVisible = !showAiChat
+    )
     } // end Box
 }
