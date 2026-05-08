@@ -1,4 +1,4 @@
-﻿package com.example.studyapp.ui.screen
+package com.example.studyapp.ui.screen
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -82,6 +82,8 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
                 cards = studyCards,
                 initialIndex = if (shuffleMode || isSubset || (overrideInitialStudied == 0)) 0 else startIndex,
                 initialStudiedCount = initStudied,
+                globalTotalCount = cards.size,
+                initialLearnedOutside = cards.filter { c -> studyCards.none { it.id == c.id } }.count { it.isLearned },
                 onExit = { lastIdx, studiedCnt ->
                     if (isSubset) {
                         val prevStudied = deck?.studiedCount ?: 0
@@ -153,15 +155,14 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
                     else 0
                     val totalCount = cards.size
                     val newCards = totalCount - studiedSetSize
-                    val progressPct = if (studiedSetSize > 0) (lastIdx * 100 / studiedSetSize) else 0
+                    val progressPct = if (studiedSetSize > 0) (studiedCount * 100 / studiedSetSize) else 0
                     Text(
-                        when {
-                            studiedSetSize == 0 -> "${cards.size} thẻ"
-                            newCards > 0 -> "$lastIdx/$studiedSetSize đã xem · $newCards thẻ mới · $studiedCount thuộc"
-                            else -> "$lastIdx/$studiedSetSize thẻ đã xem · $studiedCount thuộc · $progressPct%"
+                        text = when {
+                            newCards > 0 -> "$studiedCount/$studiedSetSize đã thuộc · $newCards thẻ mới"
+                            else -> "$studiedCount/$studiedSetSize đã thuộc · $progressPct%"
                         },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (lastIdx > 0) ScPrimary else ScOnSurfaceVariant
+                        style = MaterialTheme.typography.labelMedium,
+                        color = ScOnSurfaceVariant
                     )
                 }
                 if (cards.isNotEmpty()) {
@@ -187,7 +188,7 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
             val totalCount = cards.size
             if (studiedCount > 0 && totalCount > 0) {
                 val progress by animateFloatAsState(
-                    targetValue = (deck?.lastStudiedIndex?.toFloat() ?: 0f) / totalCount,
+                    targetValue = (deck?.studiedCount?.toFloat() ?: 0f) / totalCount,
                     animationSpec = tween(800, easing = EaseOutCubic),
                     label = "progress"
                 )
@@ -529,6 +530,8 @@ fun StudyModeScreen(
     cards: List<Flashcard>,
     initialIndex: Int,
     initialStudiedCount: Int,
+    globalTotalCount: Int = 0,
+    initialLearnedOutside: Int = 0,
     onExit: (Int, Int) -> Unit,
     onRestart: () -> Unit,
     onRestartNotLearned: (List<Flashcard>) -> Unit = {},
@@ -630,9 +633,11 @@ fun StudyModeScreen(
 
     if (showComplete) {
         val actualNotLearnedCards = cards.filter { !sessionStudiedIds.contains(it.id) }
+        val globalStudied = if (globalTotalCount > 0) (initialLearnedOutside + sessionStudiedIds.size) else studiedCount
+        
         StudyCompleteScreen(
-            totalCards = cards.size,
-            studiedCount = studiedCount,
+            totalCards = if (globalTotalCount > 0) globalTotalCount else cards.size,
+            studiedCount = globalStudied,
             notLearnedCount = actualNotLearnedCards.size,
             onRestartAll = {
                 currentIndex = 0
@@ -675,7 +680,10 @@ fun StudyModeScreen(
                     .padding(horizontal = 8.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { onExit(currentIndex, studiedCount) }) {
+                IconButton(onClick = { 
+                    val finalIdx = if (showComplete) cards.size else currentIndex
+                    onExit(finalIdx, studiedCount) 
+                }) {
                     Icon(Icons.Default.Close, null, tint = ScOnSurface)
                 }
                 Box(

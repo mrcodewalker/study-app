@@ -150,5 +150,51 @@
     ],
     "error_lines": [],
     "raw_output": "Giao diện người dùng trong Android được thiết kế theo mô hình gì? ~ Giao diện người dùng trong Android được thiết kế theo mô hình MVC (Model-View-Controller).\nActivity là gì trong Android? ~ Activity là một ứng dụng đơn lẻ có thể chạy độc lập hoặc nằm trong cùng một package với các ứng dụng khác.\nService hoạt động như thế nào trong Android? ~ Service trong Android là một component không giao diện người dùng chạy ở nền để thực hiện các tác vụ liên tục.\nBroadcast Receiver có chức năng gì? ~ Broadcast Receiver được sử dụng để nhận và phản hồi lại các sự kiện từ hệ thống hoặc ứng dụng khác.\nFragment có vai trò như thế nào trong Android? ~ Fragment giúp chia nhỏ UI thành các bộ phận độc lập, dễ quản lý và tái sử dụng.\nIntent dùng để làm gì trong Android? ~ Intent được sử dụng để khởi chạy Activity, Service hay gửi dữ liệu giữa các component của ứng dụng.\nLưu trữ dữ liệu trong SQLiteOpenHelper có ưu điểm gì? ~ SQLiteOpenHelper giúp tạo và quản lý cơ sở dữ liệu SQLite, tự động xử lý việc mở/closedatabase.\nRecyclerView khác ListView như thế nào? ~ RecyclerView hiệu quả hơn ListView vì nó tái sử dụng View đã tồn tại thay vì tạo mới mỗi lần hiển thị item.\nFirebase Cloud Messaging (FCM) được dùng để làm gì? ~ FCM giúp gửi thông báo từ server đến thiết bị Android, iOS hoặc web mà không cần ứng dụng chạy.\nLifecycle của Activity trong Android bao gồm những giai đoạn nào? ~ Lifecycle của Activity bao gồm: onCreate(), onStart(), onResume(), onPause(), onStop(), onDestroy()."
+  },
+  "fe3402206575b6beedc89b59e7a23a8b": {
+    "cards": [
+      {
+        "front": "Kiểm thử phần mềm có mục đích chính là gì?",
+        "back": "Kiểm thử phần mềm nhằm phát hiện và xác định lỗi trong hệ thống."
+      },
+      {
+        "front": "Kiểm thử phân cấp có bao nhiêu lớp?",
+        "back": "Kiểm thử phân cấp có 3 lớp: kiểm thử đơn vị, kiểm thử tích hợp, kiểm thử hệ thống."
+      },
+      {
+        "front": "Phương pháp kiểm thử động được sử dụng khi nào?",
+        "back": "Phương pháp kiểm thử động được sử dụng khi phần mềm đã có code và có thể chạy."
+      },
+      {
+        "front": "Kiểm thử nào đảm bảo rằng các thành phần của hệ thống hoạt động đúng với nhau?",
+        "back": "Kiểm thử tích hợp đảm bảo rằng các thành phần của hệ thống hoạt động đúng với nhau."
+      },
+      {
+        "front": "Kiểm thử nào tập trung vào việc kiểm tra giao diện người dùng?",
+        "back": "Kiểm thử giao diện người dùng (UI) tập trung vào việc kiểm tra giao diện người dùng."
+      },
+      {
+        "front": "Phương pháp kiểm thử nào dựa trên mẫu và dữ liệu đã biết?",
+        "back": "Phương pháp kiểm thử hướng dẫn dựa trên mẫu và dữ liệu đã biết."
+      },
+      {
+        "front": "Kiểm thử nào được thực hiện để đảm bảo rằng hệ thống đáp ứng đúng yêu cầu đề ra?",
+        "back": "Kiểm thử nghiệm thu đảm bảo rằng hệ thống đáp ứng đúng yêu cầu đề ra."
+      },
+      {
+        "front": "Phương pháp quản lý rủi ro trong quá trình kiểm thử phần mềm là gì?",
+        "back": "Phương pháp quản lý rủi ro trong quá trình kiểm thử phần mềm bao gồm việc xác định, đánh giá và giảm thiểu các rủi ro có thể xảy ra."
+      },
+      {
+        "front": "Kiểm thử nào đảm bảo rằng hệ thống hoạt động đúng theo yêu cầu đã được thiết kế?",
+        "back": "Kiểm thử đơn vị đảm bảo rằng hệ thống hoạt động đúng theo yêu cầu đã được thiết kế."
+      },
+      {
+        "front": "Mô hình kiểm thử nào sử dụng để xác định các trường hợp kiểm thử cho một chức năng cụ thể?",
+        "back": "Mô hình đen hộp sử dụng để xác định các trường hợp kiểm thử cho một chức năng cụ thể."
+      }
+    ],
+    "error_lines": [],
+    "raw_output": "Kiểm thử phần mềm có mục đích chính là gì? ~ Kiểm thử phần mềm nhằm phát hiện và xác định lỗi trong hệ thống.\nKiểm thử phân cấp có bao nhiêu lớp? ~ Kiểm thử phân cấp có 3 lớp: kiểm thử đơn vị, kiểm thử tích hợp, kiểm thử hệ thống.\nPhương pháp kiểm thử động được sử dụng khi nào? ~ Phương pháp kiểm thử động được sử dụng khi phần mềm đã có code và có thể chạy.\nKiểm thử nào đảm bảo rằng các thành phần của hệ thống hoạt động đúng với nhau? ~ Kiểm thử tích hợp đảm bảo rằng các thành phần của hệ thống hoạt động đúng với nhau.\nKiểm thử nào tập trung vào việc kiểm tra giao diện người dùng? ~ Kiểm thử giao diện người dùng (UI) tập trung vào việc kiểm tra giao diện người dùng.\nPhương pháp kiểm thử nào dựa trên mẫu và dữ liệu đã biết? ~ Phương pháp kiểm thử hướng dẫn dựa trên mẫu và dữ liệu đã biết.\nKiểm thử nào được thực hiện để đảm bảo rằng hệ thống đáp ứng đúng yêu cầu đề ra? ~ Kiểm thử nghiệm thu đảm bảo rằng hệ thống đáp ứng đúng yêu cầu đề ra.\nPhương pháp quản lý rủi ro trong quá trình kiểm thử phần mềm là gì? ~ Phương pháp quản lý rủi ro trong quá trình kiểm thử phần mềm bao gồm việc xác định, đánh giá và giảm thiểu các rủi ro có thể xảy ra.\nKiểm thử nào đảm bảo rằng hệ thống hoạt động đúng theo yêu cầu đã được thiết kế? ~ Kiểm thử đơn vị đảm bảo rằng hệ thống hoạt động đúng theo yêu cầu đã được thiết kế.\nMô hình kiểm thử nào sử dụng để xác định các trường hợp kiểm thử cho một chức năng cụ thể? ~ Mô hình đen hộp sử dụng để xác định các trường hợp kiểm thử cho một chức năng cụ thể."
   }
 }

@@ -64,5 +64,15 @@
       "role": "assistant",
       "content": "Phương pháp Pomodoro là một kỹ thuật quản lý thời gian giúp tăng hiệu suất học tập và làm việc thông qua việc chia nhỏ công việc thành các khoảng thời gian cố định. Dưới đây là các bước đơn giản để sử dụng phương pháp này:\n\n- **Bước 1: Chọn công việc cần thực hiện**\n  - Xác định một nhiệm vụ cụ thể.\n\n- **Bước 2: Đặt đồng hồ báo thức (Pomodoro) cho khoảng thời gian 25 phút.**\n\n- **Bước 3: Tập trung vào công việc trong 25 phút** \n  - Tránh mọi sự gián đoạn, chỉ tập trung hoàn thành nhiệm vụ.\n\n- **Bước 4: Hạn chế sự thật đối khi kết thúc thời gian 25 phút**\n  - Khi báo thức reng, dừng lại ngay lập tức và đánh dấu một khoảng thời gian đã hoàn thành.\n\n- **Bước 5: Nghỉ 5 phút (tiếng trống) sau mỗi Pomodoro.**\n\n- **Bước 6: Hoàn thành chuỗi 4 Pomodoros**\n  - Sau khi làm 4 chu kỳ, dành ra 15-30 phút nghỉ ngơi nhẹ nhàng.\n\nPhương pháp này giúp bạn giữ được sự tập trung và tránh cảm giác mệt mỏi do làm việc liên tục."
     }
+  ],
+  "7d9e6483-5720-4be3-b28c-4d2f2bf73a0a": [
+    {
+      "role": "user",
+      "content": "Giải thích OOP đơn giản"
+    },
+    {
+      "role": "assistant",
+      "content": "OOP (Object-Oriented Programming) là một phương pháp lập trình giúp quản lý và tổ chức mã nguồn một cách hiệu quả hơn. Dưới đây là các điểm chính về OOP:\n\n- **Đối tượng**: Mỗi đối tượng đại diện cho một thực thể cụ thể, ví dụ như người dùng trong ứng dụng quản lý người dùng.\n\n- **Tính chất**: Có ba tính chất cơ bản của OOP:\n  - Encapsulation (Bọc bọc): Đảm bảo rằng thông tin bên trong đối tượng không bị thay đổi từ bên ngoài trừ khi được phép.\n  - Inheritance (Nhịp kế thừa): Cho phép tạo ra các lớp con từ một lớp cha, chia sẻ thuộc tính và hành vi.\n  - Polymorphism (Phù hợp nhiều hình thức): Cho phép cùng một phương thức hoặc biến có thể hoạt động theo cách khác nhau dựa trên ngữ cảnh.\n\n- **Lợi ích**:\n  - Tối ưu hóa mã: Giúp giảm thiểu sự lặp lại trong mã bằng cách sử dụng kế thừa.\n  - Tăng cường bảo mật: Bọc bọc giúp bảo vệ dữ liệu khỏi thay đổi không mong muốn.\n  - Linh hoạt và dễ mở rộng: Polymorphism cho phép ứng dụng dễ dàng thêm hoặc thay thế các phần tử.\n\nOOP giúp lập trình viên viết code một cách tổ chức, rõ ràng và hiệu quả hơn."
+    }
   ]
 }

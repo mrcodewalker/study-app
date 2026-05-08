@@ -1,5 +1,16 @@
 [
   {
+    "time": "2026-05-08 16:12:40",
+    "topic": "Tao cho toi 10 cau hoi dap kinh dien ve mon Kiem thu phan mem",
+    "count": 10,
+    "language": "Vietnamese",
+    "card_type": "qa",
+    "cards_count": 10,
+    "duration_ms": 17723,
+    "from_cache": false,
+    "client_ip": "127.0.0.1"
+  },
+  {
     "time": "2026-05-07 17:20:11",
     "topic": "Tao cho toi 10 cau hoi kinh dien voi mon hoc lap trinh android co ban",
     "count": 10,

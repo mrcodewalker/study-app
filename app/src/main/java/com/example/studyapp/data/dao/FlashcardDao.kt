@@ -8,7 +8,9 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface FlashcardDeckDao {
     @Query("""
-        SELECT d.*, COUNT(c.id) as cardCount 
+        SELECT d.id, d.name, d.description, d.createdAt, d.lastStudiedIndex, d.lastStudiedAt,
+               COUNT(c.id) as cardCount,
+               COALESCE(SUM(CASE WHEN c.isLearned = 1 THEN 1 ELSE 0 END), 0) as studiedCount
         FROM flashcard_decks d 
         LEFT JOIN flashcards c ON c.deckId = d.id 
         GROUP BY d.id 
@@ -17,7 +19,9 @@ interface FlashcardDeckDao {
     fun getAllDecks(): Flow<List<FlashcardDeck>>
 
     @Query("""
-        SELECT d.*, COUNT(c.id) as cardCount 
+        SELECT d.id, d.name, d.description, d.createdAt, d.lastStudiedIndex, d.lastStudiedAt,
+               COUNT(c.id) as cardCount,
+               COALESCE(SUM(CASE WHEN c.isLearned = 1 THEN 1 ELSE 0 END), 0) as studiedCount
         FROM flashcard_decks d 
         LEFT JOIN flashcards c ON c.deckId = d.id 
         WHERE d.id = :deckId
