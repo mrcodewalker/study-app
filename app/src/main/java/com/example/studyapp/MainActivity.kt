@@ -44,6 +44,7 @@ import com.example.studyapp.data.repository.TodoRepository
 import com.example.studyapp.data.repository.UserActivityRepository
 import com.example.studyapp.ui.screen.*
 import com.example.studyapp.ui.theme.*
+import com.example.studyapp.ui.util.SoundManager
 import com.example.studyapp.ui.viewmodel.*
 
 sealed class Screen(val route: String, val label: String, val selectedIcon: ImageVector, val unselectedIcon: ImageVector) {
@@ -69,6 +70,9 @@ class MainActivity : ComponentActivity() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1001)
         }
+
+        // Init sound effects
+        SoundManager.init(this)
 
         val db = KMAStudyDatabase.getDatabase(this)
         val flashcardRepo = FlashcardRepository(db.flashcardDeckDao(), db.flashcardDao())
@@ -126,6 +130,7 @@ fun KMAStudyApp(
 
     var showAiChat by remember { mutableStateOf(false) }
     var aiChatEnabled by remember { mutableStateOf(true) }
+    var musicEnabled by remember { mutableStateOf(true) }
     var gifShuffleKey by remember { mutableStateOf(0) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -180,6 +185,7 @@ fun KMAStudyApp(
                                                     launchSingleTop = true
                                                     restoreState = true
                                                 }
+                                                SoundManager.play("click")
                                             },
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -246,6 +252,7 @@ fun KMAStudyApp(
                                 launchSingleTop = true
                                 restoreState = true
                             }
+                            SoundManager.play("click")
                         },
                         modifier = Modifier
                             .offset(y = (-10).dp)
@@ -291,6 +298,8 @@ fun KMAStudyApp(
                     onOpenAiChat = { showAiChat = true },
                     aiChatEnabled = aiChatEnabled,
                     onToggleAiChat = { aiChatEnabled = it },
+                    musicEnabled = musicEnabled,
+                    onToggleMusic = { musicEnabled = it },
                     onShuffleGif = { gifShuffleKey++ }
                 )
             }
@@ -344,5 +353,7 @@ fun KMAStudyApp(
 
     // Floating AI bubble — hiện trên mọi màn hình
     AiChatBubble(forceShow = showAiChat, onShowSheetChange = { showAiChat = it }, isEnabled = aiChatEnabled, gifShuffleKey = gifShuffleKey)
+    // Floating Music bubble — hiện trên mọi màn hình
+    MusicPlayerBubble(isEnabled = musicEnabled)
     } // end Box
 }

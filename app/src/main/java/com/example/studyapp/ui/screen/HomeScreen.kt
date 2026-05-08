@@ -37,6 +37,7 @@ import com.example.studyapp.ui.viewmodel.UserActivityViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import com.example.studyapp.ui.util.loadAssetImage
+import com.example.studyapp.ui.util.SoundManager
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.Position
@@ -56,6 +57,8 @@ fun HomeScreen(
     onOpenAiChat: () -> Unit = {},
     aiChatEnabled: Boolean = true,
     onToggleAiChat: (Boolean) -> Unit = {},
+    musicEnabled: Boolean = true,
+    onToggleMusic: (Boolean) -> Unit = {},
     onShuffleGif: () -> Unit = {}
 ) {
     val decks by flashcardViewModel.allDecks.collectAsState()
@@ -87,6 +90,7 @@ fun HomeScreen(
     var visible by remember { mutableStateOf(false) }
     var iconLanded by remember { mutableStateOf(false) }
     var showFireworks by remember { mutableStateOf(false) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         visible = true
@@ -230,9 +234,35 @@ fun HomeScreen(
                                             modifier = Modifier.size(12.dp)
                                         )
                                         Text(
-                                            if (aiChatEnabled) "Bật" else "Tắt",
+                                            if (aiChatEnabled) "AI" else "AI",
                                             style = MaterialTheme.typography.labelSmall,
                                             color = if (aiChatEnabled) ScPrimary else ScOnSurfaceVariant,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+                                }
+                                // Nút bật/tắt Music bubble
+                                Surface(
+                                    shape = RoundedCornerShape(99.dp),
+                                    color = if (musicEnabled) ScSecondaryContainer else ScSurfaceContainerLow,
+                                    border = BorderStroke(1.dp, if (musicEnabled) ScSecondary.copy(alpha = 0.4f) else ScOutlineVariant),
+                                    modifier = Modifier.clickable { onToggleMusic(!musicEnabled) }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.MusicNote,
+                                            contentDescription = "Bật/tắt nhạc",
+                                            tint = if (musicEnabled) ScSecondary else ScOnSurfaceVariant,
+                                            modifier = Modifier.size(12.dp)
+                                        )
+                                        Text(
+                                            "♪",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = if (musicEnabled) ScSecondary else ScOnSurfaceVariant,
                                             fontWeight = FontWeight.SemiBold
                                         )
                                     }
@@ -246,6 +276,7 @@ fun HomeScreen(
                                         .clickable {
                                             onShuffleGif()
                                             showFireworks = true
+                                            SoundManager.playConfettiThenCong(scope)
                                         }
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
@@ -566,7 +597,7 @@ fun HomeQuickAction(modifier: Modifier, iconPath: String, label: String, accent:
     )
 
     Surface(
-        modifier = modifier.scale(scale).clickable { pressed = true; onClick() },
+        modifier = modifier.scale(scale).clickable { pressed = true; SoundManager.play("click"); onClick() },
         shape = RoundedCornerShape(16.dp), color = ScSurfaceContainerLowest, shadowElevation = 2.dp
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {

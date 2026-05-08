@@ -106,7 +106,7 @@ fun AiChatBubble(
 
     val screenWidthPx  = with(density) { config.screenWidthDp.dp.toPx() }
     val screenHeightPx = with(density) { config.screenHeightDp.dp.toPx() }
-    val bubbleSizePx   = with(density) { 70.dp.toPx() }
+    val bubbleSizePx   = with(density) { 60.dp.toPx() }
 
     // Random 1 GIF từ assets/gif/ — random ngay từ lần render đầu tiên
     fun pickRandomGif(): String = try {
@@ -130,9 +130,9 @@ fun AiChatBubble(
         }
     }
 
-    // Bubble position — start bottom-right
-    var offsetX by remember { mutableFloatStateOf(screenWidthPx - bubbleSizePx - 24f) }
-    var offsetY by remember { mutableFloatStateOf(screenHeightPx - bubbleSizePx - 160f) }
+    // Bubble position — dưới phải, cách nav bottom ~100dp, cách phải 16dp
+    var offsetX by remember { mutableFloatStateOf(screenWidthPx - bubbleSizePx - with(density) { 16.dp.toPx() }) }
+    var offsetY by remember { mutableFloatStateOf(screenHeightPx - bubbleSizePx - with(density) { 100.dp.toPx() }) }
 
     // Drag state — distinguish tap vs drag
     var isDragging by remember { mutableStateOf(false) }
@@ -231,7 +231,7 @@ fun AiChatBubble(
     Box(
         modifier = Modifier
             .offset { IntOffset(offsetX.toInt(), offsetY.toInt()) }
-            .size(80.dp)
+            .size(70.dp)
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = {

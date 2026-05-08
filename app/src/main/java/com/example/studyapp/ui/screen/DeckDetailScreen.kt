@@ -38,6 +38,7 @@ import com.example.studyapp.ui.theme.*
 import com.example.studyapp.ui.viewmodel.FlashcardViewModel
 import com.example.studyapp.ui.util.loadAssetImage
 import com.example.studyapp.ui.util.ConfirmDialog
+import com.example.studyapp.ui.util.SoundManager
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.Position
@@ -68,6 +69,7 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
     var overrideInitialStudied by remember { mutableStateOf<Int?>(null) }
     var showShuffleConfirm by remember { mutableStateOf(false) }
     var cardToDelete by remember { mutableStateOf<Flashcard?>(null) }
+    val deckScope = androidx.compose.runtime.rememberCoroutineScope()
 
     if (studyMode && cards.isNotEmpty()) {
         val startIndex = deck?.lastStudiedIndex?.coerceIn(0, cards.size - 1) ?: 0
@@ -164,7 +166,7 @@ fun DeckDetailScreen(deckId: Long, viewModel: FlashcardViewModel, onBack: () -> 
                 }
                 if (cards.isNotEmpty()) {
                     IconButton(onClick = { 
-                        if (!shuffleMode) showShuffleConfirm = true 
+                        if (!shuffleMode) { showShuffleConfirm = true; SoundManager.playConfettiThenCong(deckScope) }
                         else shuffleMode = false 
                     }) {
                         Icon(
@@ -548,6 +550,7 @@ fun StudyModeScreen(
     var dragOffsetX by remember { mutableStateOf(0f) }
     var isAnimatingOut by remember { mutableStateOf(false) }
     var swipeDirection by remember { mutableStateOf(0) } // -1=left, 1=right
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
 
     // Ngưỡng swipe: phải kéo >320dp mới trigger
     val SWIPE_THRESHOLD = 320f
@@ -568,10 +571,12 @@ fun StudyModeScreen(
                     // Đã thuộc
                     sessionStudiedIds.add(cardId)
                     onUpdateMastery(cardId, true)
+                    SoundManager.play("success")
                 } else {
                     // Chưa thuộc
                     sessionStudiedIds.remove(cardId)
                     onUpdateMastery(cardId, false)
+                    SoundManager.play("error")
                 }
                 
                 // Update studiedCount based on unique learned cards in this view
@@ -581,6 +586,7 @@ fun StudyModeScreen(
                     currentIndex++
                 } else {
                     showComplete = true
+                    SoundManager.playConfettiThenCong(scope)
                 }
                 dragOffsetX = 0f
                 isAnimatingOut = false
@@ -737,11 +743,13 @@ fun StudyModeScreen(
                                                 swipeDirection = 1
                                                 isAnimatingOut = true
                                                 dragOffsetX = 1100f
+                                                SoundManager.play("swipe")
                                             }
                                             dragOffsetX < -SWIPE_THRESHOLD -> {
                                                 swipeDirection = -1
                                                 isAnimatingOut = true
                                                 dragOffsetX = -1100f
+                                                SoundManager.play("swipe")
                                             }
                                             else -> {
                                                 // Snap back với spring
@@ -759,7 +767,7 @@ fun StudyModeScreen(
                             enabled = !isAnimatingOut,
                             indication = null,
                             interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-                        ) { isFlipped = !isFlipped },
+                        ) { isFlipped = !isFlipped; SoundManager.play("flip-card") },
                     contentAlignment = Alignment.Center
                 ) {
                     // Success mini fireworks
@@ -1057,6 +1065,7 @@ fun StudyModeScreen(
                         if (canGoBack && !isAnimatingOut) {
                             currentIndex--
                             isFlipped = false
+                            SoundManager.play("swipe")
                         }
                     },
                     enabled = canGoBack,
@@ -1079,6 +1088,7 @@ fun StudyModeScreen(
                             swipeDirection = -1
                             isAnimatingOut = true
                             dragOffsetX = -1100f
+                            SoundManager.play("swipe")
                         }
                     },
                     modifier = Modifier.weight(1f).height(56.dp),
@@ -1097,6 +1107,7 @@ fun StudyModeScreen(
                             swipeDirection = 1
                             isAnimatingOut = true
                             dragOffsetX = 1100f
+                            SoundManager.play("swipe")
                         }
                     },
                     modifier = Modifier.weight(1f).height(56.dp),
