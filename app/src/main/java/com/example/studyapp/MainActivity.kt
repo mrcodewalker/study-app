@@ -63,8 +63,11 @@ class MainActivity : ComponentActivity() {
         // Cho phép Compose tự quản lý insets — bàn phím sẽ không đẩy window lên
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        // Create notification channel
+        // Create notification channels
         com.example.studyapp.notification.NotificationHelper.createChannel(this)
+
+        // Schedule daily "pending tasks" reminder (fires at 08:00 each morning)
+        com.example.studyapp.notification.PendingTasksNotificationWorker.scheduleDaily(this)
 
         // Request notification permission on Android 13+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
@@ -79,6 +82,7 @@ class MainActivity : ComponentActivity() {
         val noteRepo = NoteRepository(db.noteDao())
         val todoRepo = TodoRepository(db.todoDao())
         val userActivityRepo = UserActivityRepository(db.userActivityDao())
+        val studySessionRepo = com.example.studyapp.data.repository.StudySessionRepository(db.studySessionDao())
 
         setContent {
             StudyAppTheme {
@@ -86,7 +90,7 @@ class MainActivity : ComponentActivity() {
                 if (!splashDone) {
                     SplashScreen(onFinished = { splashDone = true })
                 } else {
-                    KMAStudyApp(this, flashcardRepo, noteRepo, todoRepo, userActivityRepo)
+                    KMAStudyApp(this, flashcardRepo, noteRepo, todoRepo, userActivityRepo, studySessionRepo)
                 }
             }
         }
@@ -100,13 +104,15 @@ fun KMAStudyApp(
     flashcardRepo: FlashcardRepository,
     noteRepo: NoteRepository,
     todoRepo: TodoRepository,
-    userActivityRepo: UserActivityRepository
+    userActivityRepo: UserActivityRepository,
+    studySessionRepo: com.example.studyapp.data.repository.StudySessionRepository
 ) {
     val navController = rememberNavController()
     val flashcardViewModel: FlashcardViewModel = viewModel(factory = FlashcardViewModelFactory(flashcardRepo))
     val noteViewModel: NoteViewModel = viewModel(factory = NoteViewModelFactory(noteRepo))
     val todoViewModel: TodoViewModel = viewModel(factory = TodoViewModelFactory(todoRepo))
     val userActivityViewModel: UserActivityViewModel = viewModel(factory = UserActivityViewModelFactory(userActivityRepo))
+    val studySessionViewModel: com.example.studyapp.ui.viewmodel.StudySessionViewModel = viewModel(factory = com.example.studyapp.ui.viewmodel.StudySessionViewModelFactory(studySessionRepo))
 
     // Track usage time (attendance + duration)
     LaunchedEffect(Unit) {
@@ -345,7 +351,8 @@ fun KMAStudyApp(
                     flashcardViewModel = flashcardViewModel,
                     noteViewModel = noteViewModel,
                     todoViewModel = todoViewModel,
-                    userActivityViewModel = userActivityViewModel
+                    userActivityViewModel = userActivityViewModel,
+                    studySessionViewModel = studySessionViewModel
                 )
             }
         }

@@ -1,4 +1,4 @@
-﻿package com.example.studyapp.ui.screen
+package com.example.studyapp.ui.screen
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -8,8 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.interaction.MutableInteractionSource
+
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -44,7 +43,8 @@ fun StatsScreen(
     flashcardViewModel: FlashcardViewModel,
     noteViewModel: NoteViewModel,
     todoViewModel: TodoViewModel,
-    userActivityViewModel: UserActivityViewModel
+    userActivityViewModel: UserActivityViewModel,
+    studySessionViewModel: com.example.studyapp.ui.viewmodel.StudySessionViewModel? = null
 ) {
     val decks by flashcardViewModel.allDecks.collectAsState()
     val notes by noteViewModel.allNotes.collectAsState()
@@ -96,7 +96,43 @@ fun StatsScreen(
             Spacer(Modifier.height(4.dp))
 
             // ── Study Timer ──
-            StudyTimerCard()
+            StudyTimerCard(
+                userActivityViewModel = userActivityViewModel,
+                studySessionViewModel = studySessionViewModel
+            )
+
+            // ── Nút xem lịch sử ──
+            if (studySessionViewModel != null) {
+                val sessions by studySessionViewModel.allSessions.collectAsState()
+                var showHistory by remember { mutableStateOf(false) }
+
+                if (sessions.isNotEmpty()) {
+                    OutlinedButton(
+                        onClick = { showHistory = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, ScTertiary.copy(alpha = 0.5f))
+                    ) {
+                        Icon(Icons.Default.History, null, tint = ScTertiary, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Xem lịch sử học tập (${sessions.size} phiên)", color = ScTertiary)
+                    }
+                }
+
+                if (showHistory) {
+                    androidx.compose.ui.window.Dialog(
+                        onDismissRequest = { showHistory = false },
+                        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+                    ) {
+                        Surface(modifier = Modifier.fillMaxSize(), color = ScBackground) {
+                            StudySessionsScreen(
+                                viewModel = studySessionViewModel,
+                                onBack = { showHistory = false }
+                            )
+                        }
+                    }
+                }
+            }
 
             // ── Stats summary grid ──
             Row(
@@ -317,6 +353,29 @@ fun StatsScreen(
                     }
                     Spacer(Modifier.height(16.dp))
                     UsageChart(recentActivity)
+                }
+            }
+
+            // ── Timer Chart ──
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                color = ScSurfaceContainerLowest,
+                shadowElevation = 2.dp
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Timer, null, tint = ScTertiary, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Thời gian bấm giờ học (7 ngày)",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = ScOnSurface, fontWeight = FontWeight.SemiBold)
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text("Tổng: ${formatDurationShort(recentActivity.sumOf { it.timerMillis })}",
+                        style = MaterialTheme.typography.labelSmall, color = ScOnSurfaceVariant)
+                    Spacer(Modifier.height(16.dp))
+                    TimerSessionChart(recentActivity)
                 }
             }
 
@@ -596,7 +655,7 @@ fun FocusLineChart(focusData: List<Float>, modifier: Modifier = Modifier) {
 @Composable
 fun UsageChart(activities: List<com.example.studyapp.data.model.UserActivity>) {
     val maxDuration = remember(activities) {
-        (activities.maxOfOrNull { it.durationMillis } ?: 1L).coerceAtLeast(900000L) // Min 15 mins scale
+        (activities.maxOfOrNull { it.durationMillis } ?: 1L).coerceAtLeast(900000L)
     }
     val days = remember {
         (0..6).reversed().map { d ->
@@ -604,12 +663,14 @@ fun UsageChart(activities: List<com.example.studyapp.data.model.UserActivity>) {
         }
     }
     val dayFormatter = SimpleDateFormat("EE", Locale("vi"))
-    var selectedDayIndex by remember { mutableStateOf(-1) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.padding(top = 8.dp, bottom = 12.dp).height(120.dp).fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .padding(top = 8.dp, bottom = 12.dp)
+                .height(180.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.Bottom
         ) {
             days.forEachIndexed { index, day ->
@@ -617,129 +678,86 @@ fun UsageChart(activities: List<com.example.studyapp.data.model.UserActivity>) {
                     set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
                     set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
                 }.timeInMillis
-                
+
                 val activity = activities.find { it.date == dayStart }
                 val duration = activity?.durationMillis ?: 0L
                 val isToday = index == 6
-                val isSelected = selectedDayIndex == index
-                
-                // Animated height
+
                 val targetHeight = (duration.toFloat() / maxDuration).coerceIn(0.08f, 1f)
                 val animatedHeight by animateFloatAsState(
                     targetValue = targetHeight,
                     animationSpec = tween(1000, easing = EaseOutBack),
                     label = "height"
                 )
-                
-                // Animated color
                 val barColor by animateColorAsState(
                     targetValue = when {
-                        isSelected -> ScSecondary
                         isToday -> ScPrimary
-                        duration > 0 -> ScPrimary.copy(alpha = 0.8f)
+                        duration > 0 -> ScPrimary.copy(alpha = 0.75f)
                         else -> ScOutlineVariant.copy(alpha = 0.2f)
                     },
-                    animationSpec = tween(400),
-                    label = "color"
-                )
-
-                val barScale by animateFloatAsState(
-                    targetValue = if (isSelected) 1.05f else 1f,
-                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
-                    label = "barScale"
-                )
-                
-                val infiniteTransition = rememberInfiniteTransition(label = "sparkle")
-                val sparkleAlpha by infiniteTransition.animateFloat(
-                    initialValue = 0.3f, targetValue = 1f,
-                    animationSpec = infiniteRepeatable(tween(800, easing = EaseInOutSine), RepeatMode.Reverse),
-                    label = "sparkleAlpha"
-                )
-
-                val animatedWidth by animateDpAsState(
-                    targetValue = if (isSelected) 24.dp else 12.dp,
-                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
-                    label = "width"
+                    animationSpec = tween(400), label = "color"
                 )
 
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally, 
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) {
-                            selectedDayIndex = if (selectedDayIndex == index) -1 else index
-                        }
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.weight(1f).fillMaxHeight()
                 ) {
-                    // Bar area — weight(1f) để chiếm phần còn lại, label cố định bên dưới
                     Box(
                         contentAlignment = Alignment.BottomCenter,
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
+                        modifier = Modifier.weight(1f).fillMaxWidth()
                     ) {
-                        // Track (full height background)
+                        // Track
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(0.6f)
+                                .fillMaxWidth()
                                 .fillMaxHeight()
-                                .clip(RoundedCornerShape(99.dp))
+                                .clip(RoundedCornerShape(10.dp))
                                 .background(
-                                    if (isSelected || isToday) ScPrimaryContainer.copy(alpha = 0.4f)
+                                    if (isToday) ScPrimaryContainer.copy(alpha = 0.4f)
                                     else ScOutlineVariant.copy(alpha = 0.15f)
                                 )
                         )
-                        // Fill bar
+                        // Fill bar — full width, always show label inside
                         Box(
                             modifier = Modifier
-                                .width(animatedWidth)
+                                .fillMaxWidth()
                                 .fillMaxHeight(animatedHeight)
-                                .clip(RoundedCornerShape(99.dp))
-                                .background(barColor)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(
+                                    if (isToday)
+                                        Brush.verticalGradient(listOf(ScPrimary.copy(alpha = 0.9f), ScPrimary))
+                                    else if (duration > 0)
+                                        Brush.verticalGradient(listOf(ScPrimary.copy(alpha = 0.6f), ScPrimary.copy(alpha = 0.75f)))
+                                    else
+                                        Brush.verticalGradient(listOf(ScOutlineVariant.copy(alpha = 0.1f), ScOutlineVariant.copy(alpha = 0.2f)))
+                                )
                                 .then(
-                                    if (isSelected) {
-                                        Modifier.border(
-                                            BorderStroke(2.dp, Brush.sweepGradient(listOf(
-                                                ScPrimary.copy(alpha = sparkleAlpha),
-                                                ScSecondary.copy(alpha = sparkleAlpha),
-                                                ScTertiary.copy(alpha = sparkleAlpha),
-                                                ScPrimary.copy(alpha = sparkleAlpha)
-                                            ))),
-                                            RoundedCornerShape(99.dp)
-                                        )
-                                    } else if (isToday && duration == 0L) {
-                                        Modifier.border(1.dp, ScPrimary.copy(alpha = 0.5f), RoundedCornerShape(99.dp))
-                                    } else Modifier
+                                    if (isToday && duration == 0L)
+                                        Modifier.border(1.dp, ScPrimary.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
+                                    else Modifier
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
-                            val textAlpha by animateFloatAsState(
-                                targetValue = if (isSelected && duration > 0) 1f else 0f,
-                                animationSpec = tween(300),
-                                label = "textAlpha"
-                            )
-                            if (textAlpha > 0.01f) {
+                            if (duration > 0) {
                                 Text(
-                                    text = "${duration / 60000}m",
+                                    text = formatDurationTiny(duration),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color.White.copy(alpha = textAlpha),
+                                    color = Color.White,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 9.sp
+                                    fontSize = 9.sp,
+                                    textAlign = TextAlign.Center,
+                                    lineHeight = 11.sp
                                 )
                             }
                         }
                     }
-                    // Label — luôn hiện, height cố định
                     Spacer(Modifier.height(6.dp))
                     Text(
                         text = if (isToday) "Hnay" else dayFormatter.format(day.time).replace("Th ", "T"),
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (isSelected || isToday) ScPrimary else ScOnSurfaceVariant,
+                        color = if (isToday) ScPrimary else ScOnSurfaceVariant,
                         fontSize = 10.sp,
-                        fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal
+                        fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
                     )
                 }
             }
@@ -920,4 +938,142 @@ private fun formatDurationShort(millis: Long): String {
     } else {
         "${mins}m"
     }
+}
+
+// ── Timer Session Chart ───────────────────────────────────────────────────────
+
+@Composable
+fun TimerSessionChart(activities: List<com.example.studyapp.data.model.UserActivity>) {
+    val maxMs = remember(activities) {
+        (activities.maxOfOrNull { it.timerMillis } ?: 1L).coerceAtLeast(60_000L)
+    }
+    val days = remember {
+        (0..6).reversed().map { d ->
+            java.util.Calendar.getInstance().apply { add(java.util.Calendar.DAY_OF_YEAR, -d) }
+        }
+    }
+    val dayFormatter = java.text.SimpleDateFormat("EE", java.util.Locale("vi"))
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .height(160.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            days.forEachIndexed { index, day ->
+                val dayStart = (day.clone() as java.util.Calendar).apply {
+                    set(java.util.Calendar.HOUR_OF_DAY, 0)
+                    set(java.util.Calendar.MINUTE, 0)
+                    set(java.util.Calendar.SECOND, 0)
+                    set(java.util.Calendar.MILLISECOND, 0)
+                }.timeInMillis
+
+                val activity = activities.find { it.date == dayStart }
+                val timerMs = activity?.timerMillis ?: 0L
+                val isToday = index == 6
+
+                val targetH = (timerMs.toFloat() / maxMs).coerceIn(0.05f, 1f)
+                val animH by animateFloatAsState(
+                    targetValue = targetH,
+                    animationSpec = tween(900, easing = EaseOutBack),
+                    label = "h"
+                )
+                val barColor by animateColorAsState(
+                    targetValue = when {
+                        isToday    -> ScTertiary
+                        timerMs > 0 -> ScTertiary.copy(alpha = 0.75f)
+                        else       -> ScOutlineVariant.copy(alpha = 0.2f)
+                    },
+                    animationSpec = tween(300), label = "c"
+                )
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                ) {
+                    Box(
+                        contentAlignment = Alignment.BottomCenter,
+                        modifier = Modifier.weight(1f).fillMaxWidth()
+                    ) {
+                        // Track
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(
+                                    if (isToday) ScTertiaryContainer.copy(alpha = 0.4f)
+                                    else ScOutlineVariant.copy(alpha = 0.12f)
+                                )
+                        )
+                        // Fill — always visible, no click needed
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight(animH)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(
+                                    if (isToday)
+                                        Brush.verticalGradient(listOf(ScTertiary.copy(alpha = 0.9f), ScTertiary))
+                                    else if (timerMs > 0)
+                                        Brush.verticalGradient(listOf(ScTertiary.copy(alpha = 0.6f), ScTertiary.copy(alpha = 0.75f)))
+                                    else
+                                        Brush.verticalGradient(listOf(ScOutlineVariant.copy(alpha = 0.1f), ScOutlineVariant.copy(alpha = 0.2f)))
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (timerMs > 0) {
+                                Text(
+                                    formatDurationTiny(timerMs),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 9.sp,
+                                    textAlign = TextAlign.Center,
+                                    lineHeight = 11.sp
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        if (isToday) "Hnay" else dayFormatter.format(day.time).replace("Th ", "T"),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isToday) ScTertiary else ScOnSurfaceVariant,
+                        fontSize = 10.sp,
+                        fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
+                    )
+                }
+            }
+        }
+
+        // Legend
+        Spacer(Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(modifier = Modifier.size(8.dp).clip(RoundedCornerShape(2.dp)).background(ScTertiary))
+            Spacer(Modifier.width(4.dp))
+            Text("Thời gian bấm giờ", style = MaterialTheme.typography.labelSmall, color = ScOnSurfaceVariant, fontSize = 10.sp)
+        }
+    }
+}
+
+// ── Duration format helpers ───────────────────────────────────────────────────
+
+/**
+ * Compact format: 9h30m (no space). For large values like 535 mins → 8h55m.
+ * If < 60 mins, shows just Xm.
+ */
+private fun formatDurationTiny(millis: Long): String {
+    val totalMins = millis / 60_000L
+    val hours = totalMins / 60
+    val mins = totalMins % 60
+    return if (hours > 0) "${hours}h${mins}m" else "${totalMins}m"
 }

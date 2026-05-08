@@ -32,7 +32,10 @@ private val PRESETS = listOf(15, 25, 30, 45, 60, 90)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StudyTimerCard() {
+fun StudyTimerCard(
+    userActivityViewModel: com.example.studyapp.ui.viewmodel.UserActivityViewModel? = null,
+    studySessionViewModel: com.example.studyapp.ui.viewmodel.StudySessionViewModel? = null
+) {
     val context = LocalContext.current
 
     val elapsedMs   by StudyTimerService.elapsedMs.collectAsState()
@@ -43,10 +46,19 @@ fun StudyTimerCard() {
 
     // Trạng thái local
     var selectedPreset by remember { mutableStateOf<Int?>(null) }  // phút, null = stopwatch
+    var subject by remember { mutableStateOf("") }
     val isActive = isRunning || elapsedMs > 0L
 
     // Hiển thị dialog khi hết giờ
     if (finished) {
+        // Ghi nhận timer session khi hết giờ
+        LaunchedEffect(Unit) {
+            userActivityViewModel?.recordTimerSession(targetMs)
+            studySessionViewModel?.addSession(
+                subject = subject.ifBlank { "Tự học" },
+                durationMillis = targetMs
+            )
+        }
         AlertDialog(
             onDismissRequest = { StudyTimerService.resetFinished() },
             icon = { Text("⏰", fontSize = 32.sp) },
@@ -117,6 +129,26 @@ fun StudyTimerCard() {
                     }
                 }
             }
+
+            Spacer(Modifier.height(16.dp))
+
+            // ── Nhập môn học ──────────────────────────────────────────────
+            OutlinedTextField(
+                value = subject,
+                onValueChange = { subject = it },
+                label = { Text("Bạn đang học môn gì?", fontSize = 12.sp) },
+                placeholder = { Text("VD: Toán cao cấp, Tiếng Anh...", fontSize = 13.sp) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                textStyle = MaterialTheme.typography.bodyMedium,
+                singleLine = true,
+                enabled = !isActive,
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = ScPrimary,
+                    unfocusedBorderColor = ScOutlineVariant
+                ),
+                leadingIcon = { Icon(Icons.Default.Book, null, modifier = Modifier.size(18.dp), tint = ScPrimary) }
+            )
 
             Spacer(Modifier.height(20.dp))
 
@@ -258,7 +290,17 @@ fun StudyTimerCard() {
                     }
                     // Dừng
                     OutlinedButton(
-                        onClick = { stopTimer(context) },
+                        onClick = {
+                            // Ghi nhận thời gian đã học trước khi dừng
+                            if (elapsedMs > 0L) {
+                                userActivityViewModel?.recordTimerSession(elapsedMs)
+                                studySessionViewModel?.addSession(
+                                    subject = subject.ifBlank { "Tự học" },
+                                    durationMillis = elapsedMs
+                                )
+                            }
+                            stopTimer(context)
+                        },
                         modifier = Modifier.weight(1f).height(52.dp),
                         shape = RoundedCornerShape(14.dp),
                         border = BorderStroke(1.dp, ScError.copy(alpha = 0.5f))

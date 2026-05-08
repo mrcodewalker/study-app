@@ -64,6 +64,17 @@ data class TodoItem(
 @Entity(tableName = "user_activity")
 data class UserActivity(
     @PrimaryKey val date: Long, // Midnight of the day in millis
-    val durationMillis: Long = 0,
+    val durationMillis: Long = 0,       // thời gian dùng app
+    val timerMillis: Long = 0,          // thời gian bấm giờ học
     val lastActiveTime: Long = System.currentTimeMillis()
+)
+
+/** Mỗi phiên bấm giờ học riêng lẻ */
+@Entity(tableName = "study_sessions")
+data class StudySession(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val subject: String = "",           // môn học / chủ đề
+    val durationMillis: Long,           // thời gian học (ms)
+    val startedAt: Long = System.currentTimeMillis(), // epoch ms
+    val note: String = ""               // ghi chú tuỳ chọn
 )

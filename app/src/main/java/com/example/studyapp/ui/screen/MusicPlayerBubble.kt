@@ -82,9 +82,19 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
     var showSheet   by remember { mutableStateOf(false) }
 
     // ── Observe service state ─────────────────────────────────────────────────
-    val currentTrack by MusicService.currentTrack.collectAsState()
     val isPlaying    by MusicService.isPlaying.collectAsState()
-    val playlist     by MusicService.playlist.collectAsState()
+    val isAutoNext   by MusicService.isAutoNext.collectAsState()
+    val currentTrack by MusicService.currentTrack.collectAsState()
+
+    // Load playlist trực tiếp từ assets — không phụ thuộc Service đã start chưa
+    val playlist = remember {
+        try {
+            context.assets.list("music")
+                ?.filter { it.endsWith(".mp3") }
+                ?.sorted()
+                ?: emptyList()
+        } catch (e: Exception) { emptyList() }
+    }
 
     // Helper: gửi intent tới service
     fun svcIntent(action: String, track: String? = null) =
@@ -99,8 +109,9 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
     fun stop()               = context.startService(svcIntent(MusicService.ACTION_STOP))
     fun next()               = context.startService(svcIntent(MusicService.ACTION_NEXT))
     fun prev()               = context.startService(svcIntent(MusicService.ACTION_PREV))
+    fun toggleAutoNext()     = context.startService(svcIntent(MusicService.ACTION_TOGGLE_AUTO_NEXT))
     fun togglePlayPause()    = if (isPlaying) pause() else if (currentTrack != null) resume()
-                               else playlist.firstOrNull()?.let { play(it) }
+                                else playlist.firstOrNull()?.let { play(it) }
 
     // ── Bottom Sheet ──────────────────────────────────────────────────────────
     if (showSheet) {
@@ -150,6 +161,14 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
                                     else "Chưa phát",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = ScOnSurfaceVariant
+                                )
+                            }
+                            // Nút Auto-play
+                            IconButton(onClick = { toggleAutoNext() }) {
+                                Icon(
+                                    if (isAutoNext) Icons.Default.RepeatOne else Icons.Default.RepeatOneOn,
+                                    contentDescription = if (isAutoNext) "Tắt tự động phát" else "Bật tự động phát",
+                                    tint = if (isAutoNext) ScPrimary else ScOnSurfaceVariant
                                 )
                             }
                             IconButton(onClick = { showSheet = false }) {

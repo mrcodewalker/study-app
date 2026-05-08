@@ -27,16 +27,21 @@ class MusicService : Service() {
         const val ACTION_STOP   = "STOP"
         const val ACTION_NEXT   = "NEXT"
         const val ACTION_PREV   = "PREV"
+        const val ACTION_TOGGLE_AUTO_NEXT = "TOGGLE_AUTO_NEXT"
+        const val ACTION_SET_AUTO_NEXT    = "SET_AUTO_NEXT"
         const val EXTRA_TRACK   = "TRACK"   // filename trong assets/music/
+        const val EXTRA_AUTO_NEXT = "AUTO_NEXT"
 
         // ── Shared state ──────────────────────────────────────────────────
         private val _currentTrack = MutableStateFlow<String?>(null)
         private val _isPlaying    = MutableStateFlow(false)
         private val _playlist     = MutableStateFlow<List<String>>(emptyList())
+        private val _isAutoNext   = MutableStateFlow(true) // Mặc định là bật
 
         val currentTrack: StateFlow<String?> = _currentTrack
         val isPlaying:    StateFlow<Boolean> = _isPlaying
         val playlist:     StateFlow<List<String>> = _playlist
+        val isAutoNext:   StateFlow<Boolean> = _isAutoNext
     }
 
     private var mediaPlayer: MediaPlayer? = null
@@ -63,6 +68,12 @@ class MusicService : Service() {
             }
             ACTION_NEXT -> skipTo(+1)
             ACTION_PREV -> skipTo(-1)
+            ACTION_TOGGLE_AUTO_NEXT -> {
+                _isAutoNext.value = !_isAutoNext.value
+            }
+            ACTION_SET_AUTO_NEXT -> {
+                _isAutoNext.value = intent.getBooleanExtra(EXTRA_AUTO_NEXT, true)
+            }
         }
         return START_STICKY
     }
@@ -74,7 +85,14 @@ class MusicService : Service() {
             setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
             afd.close()
             isLooping = false
-            setOnCompletionListener { skipTo(+1) }
+            setOnCompletionListener {
+                if (_isAutoNext.value) {
+                    skipTo(+1)
+                } else {
+                    _isPlaying.value = false
+                    _currentTrack.value?.let { updateNotification(it, false) }
+                }
+            }
             prepare()
             start()
         }

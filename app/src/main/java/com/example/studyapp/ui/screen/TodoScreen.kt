@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.studyapp.data.model.TodoItem
-import com.example.studyapp.notification.NotificationHelper
 import com.example.studyapp.notification.TodoReminderWorker
 import com.example.studyapp.ui.theme.*
 import com.example.studyapp.ui.util.*
@@ -91,10 +90,45 @@ fun TodoScreen(viewModel: TodoViewModel, context: Context) {
                         Text("$pendingCount việc đang chờ",
                             style = MaterialTheme.typography.bodySmall, color = ScOnSurfaceVariant)
                     }
-                    // Test notification button
-                    IconButton(onClick = { NotificationHelper.sendTestNotification(context) }) {
-                        Icon(Icons.Default.NotificationsActive, null,
-                            tint = ScPrimary, modifier = Modifier.size(22.dp))
+                    // Push-pending-tasks notification button
+                    if (pendingCount > 0) {
+                        var pushed by remember { mutableStateOf(false) }
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (pushed) ScPrimaryContainer else ScSurfaceContainerLow,
+                            border = BorderStroke(1.dp, if (pushed) ScPrimary.copy(0.4f) else ScOutlineVariant),
+                            modifier = Modifier.clickable(enabled = !pushed) {
+                                com.example.studyapp.notification.PendingTasksNotificationWorker
+                                    .scheduleImmediate(context)
+                                pushed = true
+                            }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                Icon(
+                                    if (pushed) Icons.Default.NotificationsActive else Icons.Default.Notifications,
+                                    contentDescription = "Đẩy thông báo tồn đọng",
+                                    tint = if (pushed) ScPrimary else ScOnSurfaceVariant,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    if (pushed) "Đã gửi!" else "Nhắc nhở",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (pushed) ScPrimary else ScOnSurfaceVariant,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                        // Reset "pushed" state after 3 seconds so it can be tapped again
+                        if (pushed) {
+                            LaunchedEffect(pushed) {
+                                kotlinx.coroutines.delay(3000)
+                                pushed = false
+                            }
+                        }
                     }
                     // Mode toggle
                     Surface(

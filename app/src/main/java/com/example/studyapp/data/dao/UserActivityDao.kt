@@ -17,4 +17,7 @@ interface UserActivityDao {
 
     @Query("UPDATE user_activity SET durationMillis = durationMillis + :additionalMillis, lastActiveTime = :now WHERE date = :date")
     suspend fun incrementDuration(date: Long, additionalMillis: Long, now: Long)
+
+    @Query("UPDATE user_activity SET timerMillis = timerMillis + :additionalMillis WHERE date = :date")
+    suspend fun incrementTimerDuration(date: Long, additionalMillis: Long)
 }

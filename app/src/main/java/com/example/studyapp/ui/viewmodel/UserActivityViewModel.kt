@@ -19,6 +19,12 @@ class UserActivityViewModel(private val repository: UserActivityRepository) : Vi
             repository.recordActivity(durationMillis)
         }
     }
+
+    fun recordTimerSession(durationMillis: Long) {
+        viewModelScope.launch {
+            repository.recordTimerSession(durationMillis)
+        }
+    }
 }
 
 class UserActivityViewModelFactory(private val repository: UserActivityRepository) : ViewModelProvider.Factory {

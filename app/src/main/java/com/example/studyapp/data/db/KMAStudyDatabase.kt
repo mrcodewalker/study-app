@@ -9,10 +9,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.studyapp.data.dao.FlashcardDao
 import com.example.studyapp.data.dao.FlashcardDeckDao
 import com.example.studyapp.data.dao.NoteDao
+import com.example.studyapp.data.dao.StudySessionDao
 import com.example.studyapp.data.dao.TodoDao
 import com.example.studyapp.data.model.Flashcard
 import com.example.studyapp.data.model.FlashcardDeck
 import com.example.studyapp.data.model.Note
+import com.example.studyapp.data.model.StudySession
 import com.example.studyapp.data.model.TodoItem
 import com.example.studyapp.data.model.UserActivity
 import com.example.studyapp.data.dao.UserActivityDao
@@ -57,9 +59,29 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
     }
 }
 
+val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("ALTER TABLE user_activity ADD COLUMN timerMillis INTEGER NOT NULL DEFAULT 0")
+    }
+}
+
+val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("""
+            CREATE TABLE IF NOT EXISTS `study_sessions` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `subject` TEXT NOT NULL DEFAULT '',
+                `durationMillis` INTEGER NOT NULL,
+                `startedAt` INTEGER NOT NULL,
+                `note` TEXT NOT NULL DEFAULT ''
+            )
+        """)
+    }
+}
+
 @Database(
-    entities = [FlashcardDeck::class, Flashcard::class, Note::class, TodoItem::class, UserActivity::class],
-    version = 7,
+    entities = [FlashcardDeck::class, Flashcard::class, Note::class, TodoItem::class, UserActivity::class, StudySession::class],
+    version = 9,
     exportSchema = false
 )
 abstract class KMAStudyDatabase : RoomDatabase() {
@@ -68,6 +90,7 @@ abstract class KMAStudyDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
     abstract fun todoDao(): TodoDao
     abstract fun userActivityDao(): UserActivityDao
+    abstract fun studySessionDao(): StudySessionDao
 
     companion object {
         @Volatile
@@ -80,7 +103,7 @@ abstract class KMAStudyDatabase : RoomDatabase() {
                     KMAStudyDatabase::class.java,
                     "kmastudy_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                     .build()
                 INSTANCE = instance
                 instance

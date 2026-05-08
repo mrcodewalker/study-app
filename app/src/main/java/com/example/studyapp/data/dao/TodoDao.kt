@@ -9,6 +9,10 @@ interface TodoDao {
     @Query("SELECT * FROM todo_items ORDER BY isCompleted ASC, priority DESC, createdAt DESC")
     fun getAllTodos(): Flow<List<TodoItem>>
 
+    /** Blocking query for use in background Workers (not coroutines) */
+    @Query("SELECT * FROM todo_items ORDER BY isCompleted ASC, priority DESC, createdAt DESC")
+    fun getAllTodosSync(): List<TodoItem>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTodo(todo: TodoItem): Long
 
