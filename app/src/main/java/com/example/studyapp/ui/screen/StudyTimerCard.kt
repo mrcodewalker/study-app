@@ -30,6 +30,7 @@ import com.example.studyapp.ui.theme.*
 // Preset thời gian hẹn giờ (phút)
 private val PRESETS = listOf(15, 25, 30, 45, 60, 90)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudyTimerCard() {
     val context = LocalContext.current
