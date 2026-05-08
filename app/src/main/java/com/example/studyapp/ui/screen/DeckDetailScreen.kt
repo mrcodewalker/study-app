@@ -645,7 +645,8 @@ fun StudyModeScreen(
                     onRestartNotLearned(actualNotLearnedCards)
                 }
             },
-            onContinue = { onExit(cards.size, studiedCount) } // Khi hoàn thành, vị trí cuối cùng là cards.size
+            // Khi hoàn thành: lastIndex = cards.size, studiedCount = số thẻ learned thực tế
+            onContinue = { onExit(cards.size, sessionStudiedIds.size) }
         )
         return
     }

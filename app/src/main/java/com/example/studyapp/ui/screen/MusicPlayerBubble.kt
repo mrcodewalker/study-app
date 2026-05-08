@@ -1,7 +1,6 @@
 package com.example.studyapp.ui.screen
 
-import android.content.Context
-import android.media.MediaPlayer
+import android.content.Intent
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -25,7 +24,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -34,6 +32,7 @@ import coil.compose.SubcomposeAsyncImage
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
+import com.example.studyapp.music.MusicService
 import com.example.studyapp.ui.theme.*
 
 @Composable
@@ -70,7 +69,7 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
 
     val context = LocalContext.current
     val density = LocalDensity.current
-    val config = LocalConfiguration.current
+    val config  = LocalConfiguration.current
 
     val screenWidthPx  = with(density) { config.screenWidthDp.dp.toPx() }
     val screenHeightPx = with(density) { config.screenHeightDp.dp.toPx() }
@@ -78,46 +77,30 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
 
     var offsetX by remember { mutableFloatStateOf(with(density) { 16.dp.toPx() }) }
     var offsetY by remember { mutableFloatStateOf(screenHeightPx - bubbleSizePx - with(density) { 100.dp.toPx() }) }
-
-    var isDragging by remember { mutableStateOf(false) }
+    var isDragging  by remember { mutableStateOf(false) }
     var dragDistance by remember { mutableFloatStateOf(0f) }
+    var showSheet   by remember { mutableStateOf(false) }
 
-    val tracks = remember { loadMusicTracks(context) }
-    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
-    var currentTrack by remember { mutableStateOf<String?>(null) }
-    var isPlaying by remember { mutableStateOf(false) }
-    var showSheet by remember { mutableStateOf(false) }
+    // ── Observe service state ─────────────────────────────────────────────────
+    val currentTrack by MusicService.currentTrack.collectAsState()
+    val isPlaying    by MusicService.isPlaying.collectAsState()
+    val playlist     by MusicService.playlist.collectAsState()
 
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val pulse by infiniteTransition.animateFloat(
-        initialValue = 1f, targetValue = 1.08f,
-        animationSpec = infiniteRepeatable(tween(1200, easing = EaseInOutSine), RepeatMode.Reverse),
-        label = "pulse"
-    )
-
-    DisposableEffect(Unit) {
-        onDispose { mediaPlayer?.release(); mediaPlayer = null }
-    }
-
-    fun playTrack(track: String) {
-        mediaPlayer?.release()
-        mediaPlayer = MediaPlayer().apply {
-            val afd = context.assets.openFd("music/$track")
-            setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-            afd.close()
-            isLooping = true
-            prepare()
-            start()
+    // Helper: gửi intent tới service
+    fun svcIntent(action: String, track: String? = null) =
+        Intent(context, MusicService::class.java).apply {
+            this.action = action
+            track?.let { putExtra(MusicService.EXTRA_TRACK, it) }
         }
-        currentTrack = track
-        isPlaying = true
-    }
 
-    fun togglePlayPause() {
-        val mp = mediaPlayer
-        if (mp == null) { tracks.firstOrNull()?.let { playTrack(it) } }
-        else { if (mp.isPlaying) { mp.pause(); isPlaying = false } else { mp.start(); isPlaying = true } }
-    }
+    fun play(track: String)  = context.startForegroundService(svcIntent(MusicService.ACTION_PLAY, track))
+    fun pause()              = context.startService(svcIntent(MusicService.ACTION_PAUSE))
+    fun resume()             = context.startService(svcIntent(MusicService.ACTION_RESUME))
+    fun stop()               = context.startService(svcIntent(MusicService.ACTION_STOP))
+    fun next()               = context.startService(svcIntent(MusicService.ACTION_NEXT))
+    fun prev()               = context.startService(svcIntent(MusicService.ACTION_PREV))
+    fun togglePlayPause()    = if (isPlaying) pause() else if (currentTrack != null) resume()
+                               else playlist.firstOrNull()?.let { play(it) }
 
     // ── Bottom Sheet ──────────────────────────────────────────────────────────
     if (showSheet) {
@@ -131,7 +114,7 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
             modifier = Modifier.fillMaxHeight(0.75f)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // ── Header ────────────────────────────────────────────────
+                // Header
                 Surface(
                     color = ScSurfaceContainerLowest,
                     shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
@@ -141,11 +124,8 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
                             modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Box(
-                                modifier = Modifier.width(40.dp).height(4.dp)
-                                    .clip(RoundedCornerShape(99.dp))
-                                    .background(ScOutlineVariant)
-                            )
+                            Box(modifier = Modifier.width(40.dp).height(4.dp)
+                                .clip(RoundedCornerShape(99.dp)).background(ScOutlineVariant))
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth()
@@ -161,14 +141,12 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
                             }
                             Spacer(Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    "Trình phát nhạc",
+                                Text("Trình phát nhạc",
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = ScOnSurface
-                                )
+                                    fontWeight = FontWeight.Bold, color = ScOnSurface)
                                 Text(
                                     if (isPlaying) "Đang phát: ${currentTrack?.removeSuffix(".mp3") ?: ""}"
+                                    else if (currentTrack != null) "Tạm dừng"
                                     else "Chưa phát",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = ScOnSurfaceVariant
@@ -182,11 +160,10 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
                     }
                 }
 
-                // ── Now playing card ──────────────────────────────────────
+                // Now playing card
                 if (currentTrack != null) {
                     Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                         shape = RoundedCornerShape(20.dp),
                         color = ScPrimaryContainer.copy(alpha = 0.4f),
@@ -197,11 +174,8 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
-                            // Album art placeholder với pulse
                             Box(
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .clip(RoundedCornerShape(14.dp))
+                                modifier = Modifier.size(56.dp).clip(RoundedCornerShape(14.dp))
                                     .background(Brush.radialGradient(listOf(ScPrimary, ScSecondary))),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -210,75 +184,62 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
                                     animationSpec = infiniteRepeatable(tween(600, easing = EaseInOutSine), RepeatMode.Reverse),
                                     label = "note"
                                 )
-                                Icon(
-                                    Icons.Default.MusicNote, null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size((24 * if (isPlaying) noteScale else 1f).dp)
-                                )
+                                Icon(Icons.Default.MusicNote, null, tint = Color.White,
+                                    modifier = Modifier.size((24 * if (isPlaying) noteScale else 1f).dp))
                             }
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     currentTrack!!.removeSuffix(".mp3"),
                                     style = MaterialTheme.typography.titleSmall,
-                                    color = ScOnSurface,
-                                    fontWeight = FontWeight.SemiBold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                    color = ScOnSurface, fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(Modifier.height(4.dp))
-                                Surface(
-                                    shape = RoundedCornerShape(99.dp),
-                                    color = if (isPlaying) ScPrimary.copy(alpha = 0.15f) else ScSurfaceContainerLow
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                Surface(shape = RoundedCornerShape(99.dp),
+                                    color = if (isPlaying) ScPrimary.copy(alpha = 0.15f) else ScSurfaceContainerLow) {
+                                    Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier.size(6.dp).clip(CircleShape)
-                                                .background(if (isPlaying) ScPrimary else ScOnSurfaceVariant)
-                                        )
-                                        Text(
-                                            if (isPlaying) "Đang phát" else "Tạm dừng",
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Box(modifier = Modifier.size(6.dp).clip(CircleShape)
+                                            .background(if (isPlaying) ScPrimary else ScOnSurfaceVariant))
+                                        Text(if (isPlaying) "Đang phát" else "Tạm dừng",
                                             style = MaterialTheme.typography.labelSmall,
                                             color = if (isPlaying) ScPrimary else ScOnSurfaceVariant,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
+                                            fontWeight = FontWeight.SemiBold)
                                     }
                                 }
                             }
-                            // Play/Pause button
-                            FilledIconButton(
-                                onClick = { togglePlayPause() },
-                                modifier = Modifier.size(44.dp),
-                                shape = CircleShape,
-                                colors = IconButtonDefaults.filledIconButtonColors(containerColor = ScPrimary)
-                            ) {
-                                Icon(
-                                    if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                    null, tint = ScOnPrimary, modifier = Modifier.size(22.dp)
-                                )
+                            // Prev / Play-Pause / Next
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                IconButton(onClick = { prev() }, modifier = Modifier.size(36.dp)) {
+                                    Icon(Icons.Default.SkipPrevious, null, tint = ScOnSurfaceVariant, modifier = Modifier.size(20.dp))
+                                }
+                                FilledIconButton(
+                                    onClick = { togglePlayPause() },
+                                    modifier = Modifier.size(44.dp), shape = CircleShape,
+                                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = ScPrimary)
+                                ) {
+                                    Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                        null, tint = ScOnPrimary, modifier = Modifier.size(22.dp))
+                                }
+                                IconButton(onClick = { next() }, modifier = Modifier.size(36.dp)) {
+                                    Icon(Icons.Default.SkipNext, null, tint = ScOnSurfaceVariant, modifier = Modifier.size(20.dp))
+                                }
                             }
                         }
                     }
                 }
 
-                // ── Playlist ──────────────────────────────────────────────
-                Text(
-                    "DANH SÁCH PHÁT",
+                // Playlist label
+                Text("DANH SÁCH PHÁT",
                     style = MaterialTheme.typography.labelSmall,
-                    color = ScOnSurfaceVariant,
-                    fontWeight = FontWeight.Bold,
+                    color = ScOnSurfaceVariant, fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
-                )
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp))
 
-                if (tracks.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
+                if (playlist.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(32.dp),
+                        contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(Icons.Default.MusicOff, null, tint = ScOnSurfaceVariant, modifier = Modifier.size(40.dp))
                             Spacer(Modifier.height(8.dp))
@@ -288,64 +249,43 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
                     }
                 } else {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth()
                             .verticalScroll(rememberScrollState())
                             .padding(horizontal = 12.dp, vertical = 4.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        tracks.forEachIndexed { idx, track ->
+                        playlist.forEachIndexed { idx, track ->
                             val isActive = track == currentTrack
                             Surface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        if (isActive) togglePlayPause() else playTrack(track)
-                                    },
+                                modifier = Modifier.fillMaxWidth().clickable {
+                                    if (isActive) togglePlayPause() else play(track)
+                                },
                                 shape = RoundedCornerShape(14.dp),
-                                color = if (isActive) ScPrimaryContainer.copy(alpha = 0.5f)
-                                        else ScSurfaceContainerLowest,
+                                color = if (isActive) ScPrimaryContainer.copy(alpha = 0.5f) else ScSurfaceContainerLowest,
                                 border = if (isActive) BorderStroke(1.dp, ScPrimary.copy(alpha = 0.3f)) else null
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                                Row(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    // Track number / playing indicator
-                                    Box(
-                                        modifier = Modifier.size(32.dp).clip(RoundedCornerShape(8.dp))
-                                            .background(
-                                                if (isActive) ScPrimary.copy(alpha = 0.15f)
-                                                else ScSurfaceContainerLow
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    Box(modifier = Modifier.size(32.dp).clip(RoundedCornerShape(8.dp))
+                                        .background(if (isActive) ScPrimary.copy(alpha = 0.15f) else ScSurfaceContainerLow),
+                                        contentAlignment = Alignment.Center) {
                                         if (isActive && isPlaying) {
                                             Icon(Icons.Default.VolumeUp, null, tint = ScPrimary, modifier = Modifier.size(16.dp))
                                         } else {
-                                            Text(
-                                                "${idx + 1}",
-                                                style = MaterialTheme.typography.labelMedium,
-                                                color = if (isActive) ScPrimary else ScOnSurfaceVariant,
-                                                fontWeight = FontWeight.Bold
-                                            )
+                                            Text("${idx + 1}", style = MaterialTheme.typography.labelMedium,
+                                                color = if (isActive) ScPrimary else ScOnSurfaceVariant, fontWeight = FontWeight.Bold)
                                         }
                                     }
-                                    Text(
-                                        track.removeSuffix(".mp3"),
+                                    Text(track.removeSuffix(".mp3"),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = if (isActive) ScPrimary else ScOnSurface,
                                         fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.weight(1f)
-                                    )
+                                        maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f))
                                     if (isActive) {
-                                        Icon(
-                                            if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                            null, tint = ScPrimary, modifier = Modifier.size(18.dp)
-                                        )
+                                        Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                            null, tint = ScPrimary, modifier = Modifier.size(18.dp))
                                     }
                                 }
                             }
@@ -368,8 +308,7 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
                     onDrag = { change, dragAmount ->
                         change.consume()
                         dragDistance += kotlin.math.sqrt(
-                            dragAmount.x * dragAmount.x + dragAmount.y * dragAmount.y
-                        )
+                            dragAmount.x * dragAmount.x + dragAmount.y * dragAmount.y)
                         isDragging = dragDistance > 10f
                         offsetX = (offsetX + dragAmount.x).coerceIn(0f, screenWidthPx - bubbleSizePx)
                         offsetY = (offsetY + dragAmount.y).coerceIn(0f, screenHeightPx - bubbleSizePx - 80f)
@@ -387,7 +326,7 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
     ) {
         MusicGifAvatar(modifier = Modifier.fillMaxSize())
 
-        // Dot nhỏ khi đang phát
+        // Dot khi đang phát
         if (isPlaying) {
             Box(
                 modifier = Modifier
@@ -399,10 +338,4 @@ fun MusicPlayerBubble(isEnabled: Boolean = true) {
             )
         }
     }
-}
-
-private fun loadMusicTracks(context: Context): List<String> {
-    return try {
-        context.assets.list("music")?.filter { it.endsWith(".mp3") }?.sorted() ?: emptyList()
-    } catch (e: Exception) { emptyList() }
 }

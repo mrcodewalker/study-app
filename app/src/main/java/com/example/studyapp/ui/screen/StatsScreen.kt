@@ -95,6 +95,9 @@ fun StatsScreen(
         ) {
             Spacer(Modifier.height(4.dp))
 
+            // ── Study Timer ──
+            StudyTimerCard()
+
             // ── Stats summary grid ──
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -663,6 +666,7 @@ fun UsageChart(activities: List<com.example.studyapp.data.model.UserActivity>) {
                     horizontalAlignment = Alignment.CenterHorizontally, 
                     modifier = Modifier
                         .weight(1f)
+                        .fillMaxHeight()
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
@@ -670,45 +674,66 @@ fun UsageChart(activities: List<com.example.studyapp.data.model.UserActivity>) {
                             selectedDayIndex = if (selectedDayIndex == index) -1 else index
                         }
                 ) {
+                    // Bar area — weight(1f) để chiếm phần còn lại, label cố định bên dưới
                     Box(
-                        contentAlignment = Alignment.Center,
+                        contentAlignment = Alignment.BottomCenter,
                         modifier = Modifier
-                            .width(animatedWidth)
-                            .fillMaxHeight(animatedHeight)
-                            .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
-                            .background(barColor)
-                            .then(
-                                if (isSelected) {
-                                    Modifier.border(
-                                        BorderStroke(2.dp, Brush.sweepGradient(listOf(
-                                            ScPrimary.copy(alpha = sparkleAlpha), 
-                                            ScSecondary.copy(alpha = sparkleAlpha), 
-                                            ScTertiary.copy(alpha = sparkleAlpha), 
-                                            ScPrimary.copy(alpha = sparkleAlpha)
-                                        ))),
-                                        RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp)
-                                    )
-                                } else if (isToday && duration == 0L) {
-                                    Modifier.border(1.dp, ScPrimary.copy(alpha = 0.5f), RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
-                                } else Modifier
-                            )
+                            .weight(1f)
+                            .fillMaxWidth()
                     ) {
-                        val textAlpha by animateFloatAsState(
-                            targetValue = if (isSelected && duration > 0) 1f else 0f,
-                            animationSpec = tween(300),
-                            label = "textAlpha"
+                        // Track (full height background)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.6f)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(99.dp))
+                                .background(
+                                    if (isSelected || isToday) ScPrimaryContainer.copy(alpha = 0.4f)
+                                    else ScOutlineVariant.copy(alpha = 0.15f)
+                                )
                         )
-                        if (textAlpha > 0.01f) {
-                            Text(
-                                text = "${duration / 60000}m",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.White.copy(alpha = textAlpha),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 9.sp
+                        // Fill bar
+                        Box(
+                            modifier = Modifier
+                                .width(animatedWidth)
+                                .fillMaxHeight(animatedHeight)
+                                .clip(RoundedCornerShape(99.dp))
+                                .background(barColor)
+                                .then(
+                                    if (isSelected) {
+                                        Modifier.border(
+                                            BorderStroke(2.dp, Brush.sweepGradient(listOf(
+                                                ScPrimary.copy(alpha = sparkleAlpha),
+                                                ScSecondary.copy(alpha = sparkleAlpha),
+                                                ScTertiary.copy(alpha = sparkleAlpha),
+                                                ScPrimary.copy(alpha = sparkleAlpha)
+                                            ))),
+                                            RoundedCornerShape(99.dp)
+                                        )
+                                    } else if (isToday && duration == 0L) {
+                                        Modifier.border(1.dp, ScPrimary.copy(alpha = 0.5f), RoundedCornerShape(99.dp))
+                                    } else Modifier
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            val textAlpha by animateFloatAsState(
+                                targetValue = if (isSelected && duration > 0) 1f else 0f,
+                                animationSpec = tween(300),
+                                label = "textAlpha"
                             )
+                            if (textAlpha > 0.01f) {
+                                Text(
+                                    text = "${duration / 60000}m",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.White.copy(alpha = textAlpha),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 9.sp
+                                )
+                            }
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
+                    // Label — luôn hiện, height cố định
+                    Spacer(Modifier.height(6.dp))
                     Text(
                         text = if (isToday) "Hnay" else dayFormatter.format(day.time).replace("Th ", "T"),
                         style = MaterialTheme.typography.labelSmall,
