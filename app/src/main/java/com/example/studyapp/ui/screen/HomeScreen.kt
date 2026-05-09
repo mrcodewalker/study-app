@@ -572,9 +572,23 @@ fun HomeCircularProgress(progress: Float, modifier: Modifier = Modifier) {
             color = ScPrimary,
             strokeWidth = 10.dp
         )
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("$pct%", style = MaterialTheme.typography.headlineSmall, color = ScPrimary, fontWeight = FontWeight.Bold)
-            Text("Hoàn thành", style = MaterialTheme.typography.labelSmall, color = ScOnSurfaceVariant)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.widthIn(max = 72.dp)
+        ) {
+            Text(
+                "$pct%",
+                style = MaterialTheme.typography.titleLarge,
+                color = ScPrimary,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Hoàn thành",
+                style = MaterialTheme.typography.labelSmall,
+                color = ScOnSurfaceVariant,
+                fontSize = 9.sp,
+                maxLines = 1
+            )
         }
     }
 }

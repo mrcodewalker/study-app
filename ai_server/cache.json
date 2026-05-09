@@ -196,5 +196,187 @@
     ],
     "error_lines": [],
     "raw_output": "Kiểm thử phần mềm có mục đích chính là gì? ~ Kiểm thử phần mềm nhằm phát hiện và xác định lỗi trong hệ thống.\nKiểm thử phân cấp có bao nhiêu lớp? ~ Kiểm thử phân cấp có 3 lớp: kiểm thử đơn vị, kiểm thử tích hợp, kiểm thử hệ thống.\nPhương pháp kiểm thử động được sử dụng khi nào? ~ Phương pháp kiểm thử động được sử dụng khi phần mềm đã có code và có thể chạy.\nKiểm thử nào đảm bảo rằng các thành phần của hệ thống hoạt động đúng với nhau? ~ Kiểm thử tích hợp đảm bảo rằng các thành phần của hệ thống hoạt động đúng với nhau.\nKiểm thử nào tập trung vào việc kiểm tra giao diện người dùng? ~ Kiểm thử giao diện người dùng (UI) tập trung vào việc kiểm tra giao diện người dùng.\nPhương pháp kiểm thử nào dựa trên mẫu và dữ liệu đã biết? ~ Phương pháp kiểm thử hướng dẫn dựa trên mẫu và dữ liệu đã biết.\nKiểm thử nào được thực hiện để đảm bảo rằng hệ thống đáp ứng đúng yêu cầu đề ra? ~ Kiểm thử nghiệm thu đảm bảo rằng hệ thống đáp ứng đúng yêu cầu đề ra.\nPhương pháp quản lý rủi ro trong quá trình kiểm thử phần mềm là gì? ~ Phương pháp quản lý rủi ro trong quá trình kiểm thử phần mềm bao gồm việc xác định, đánh giá và giảm thiểu các rủi ro có thể xảy ra.\nKiểm thử nào đảm bảo rằng hệ thống hoạt động đúng theo yêu cầu đã được thiết kế? ~ Kiểm thử đơn vị đảm bảo rằng hệ thống hoạt động đúng theo yêu cầu đã được thiết kế.\nMô hình kiểm thử nào sử dụng để xác định các trường hợp kiểm thử cho một chức năng cụ thể? ~ Mô hình đen hộp sử dụng để xác định các trường hợp kiểm thử cho một chức năng cụ thể."
+  },
+  "d5db7f9b7887a7cb1df3250d4ae9f918": {
+    "cards": [
+      {
+        "front": "Kiểm thử hệ thống và kiểm thử thành phần khác nhau như thế nào?",
+        "back": "Kiểm thử hệ thống tập trung vào toàn bộ hệ thống, trong khi kiểm thử thành phần tập trung vào từng thành phần riêng lẻ."
+      },
+      {
+        "front": "Khi nào nên sử dụng kiểm thử tích hợp thay vì kiểm thử đơn vị?",
+        "back": "Khi các thành phần cần được kết hợp và kiểm tra hoạt động cùng nhau thì nên dùng kiểm thử tích hợp."
+      },
+      {
+        "front": "Kiểm thử chấp nhận (acceptance testing) bao gồm những gì?",
+        "back": "Kiểm thử chấp nhận bao gồm kiểm thử hệ thống, kiểm thử hiệu suất, kiểm thử tuân thủ và kiểm thử sử dụng."
+      },
+      {
+        "front": "Phương pháp kiểm thử nào thường được sử dụng trong giai đoạn phát triển phần mềm?",
+        "back": "Phương pháp kiểm thử tự động hóa nhưJUnit hoặc Selenium thường được sử dụng trong giai đoạn phát triển."
+      },
+      {
+        "front": "Kiểm thử độ bao phủ (code coverage) là gì?",
+        "back": "Kiểm thử độ bao phủ đo lường phần trăm mã nguồn đã được kiểm thử bởi các bài kiểm thử."
+      },
+      {
+        "front": "Khi nào nên thực hiện kiểm thử stress và kiểm thử tải?",
+        "back": "Khi cần đánh giá khả năng xử lý của hệ thống với lượng lớn dữ liệu hoặc giao dịch, sử dụng kiểm thử stress và kiểm thử tải."
+      },
+      {
+        "front": "Kiểm thử tuân thủ (compliance testing) bao gồm những gì?",
+        "back": "Kiểm thử tuân thủ đảm bảo phần mềm đáp ứng các yêu cầu pháp lý, quy định và tiêu chuẩn cụ thể."
+      },
+      {
+        "front": "Phương pháp kiểm thử nào được coi là phương pháp đen hộp?",
+        "back": "Phương pháp kiểm thử không cần biết mã nguồn như kiểm thử hệ thống, kiểm thử tích hợp, kiểm thử chấp nhận đều là phương pháp đen hộp."
+      },
+      {
+        "front": "Kiểm thử hiệu suất bao gồm những gì?",
+        "back": "Kiểm thử hiệu suất đo lường khả năng xử lý của phần mềm khi đối mặt với tải công việc cao và tình huống đặc biệt."
+      },
+      {
+        "front": "Khi nào nên sử dụng kiểm thử hồi quy (regression testing)?",
+        "back": "Khi có sự thay đổi trong mã nguồn hoặc cấu trúc hệ thống, cần thực hiện kiểm thử hồi quy để đảm bảo tính toàn vẹn của các chức năng đã tồn tại."
+      }
+    ],
+    "error_lines": [],
+    "raw_output": "Kiểm thử hệ thống và kiểm thử thành phần khác nhau như thế nào? ~ Kiểm thử hệ thống tập trung vào toàn bộ hệ thống, trong khi kiểm thử thành phần tập trung vào từng thành phần riêng lẻ.\nKhi nào nên sử dụng kiểm thử tích hợp thay vì kiểm thử đơn vị? ~ Khi các thành phần cần được kết hợp và kiểm tra hoạt động cùng nhau thì nên dùng kiểm thử tích hợp.\nKiểm thử chấp nhận (acceptance testing) bao gồm những gì? ~ Kiểm thử chấp nhận bao gồm kiểm thử hệ thống, kiểm thử hiệu suất, kiểm thử tuân thủ và kiểm thử sử dụng.\nPhương pháp kiểm thử nào thường được sử dụng trong giai đoạn phát triển phần mềm? ~ Phương pháp kiểm thử tự động hóa nhưJUnit hoặc Selenium thường được sử dụng trong giai đoạn phát triển.\nKiểm thử độ bao phủ (code coverage) là gì? ~ Kiểm thử độ bao phủ đo lường phần trăm mã nguồn đã được kiểm thử bởi các bài kiểm thử.\nKhi nào nên thực hiện kiểm thử stress và kiểm thử tải? ~ Khi cần đánh giá khả năng xử lý của hệ thống với lượng lớn dữ liệu hoặc giao dịch, sử dụng kiểm thử stress và kiểm thử tải.\nKiểm thử tuân thủ (compliance testing) bao gồm những gì? ~ Kiểm thử tuân thủ đảm bảo phần mềm đáp ứng các yêu cầu pháp lý, quy định và tiêu chuẩn cụ thể.\nPhương pháp kiểm thử nào được coi là phương pháp đen hộp? ~ Phương pháp kiểm thử không cần biết mã nguồn như kiểm thử hệ thống, kiểm thử tích hợp, kiểm thử chấp nhận đều là phương pháp đen hộp.\nKiểm thử hiệu suất bao gồm những gì? ~ Kiểm thử hiệu suất đo lường khả năng xử lý của phần mềm khi đối mặt với tải công việc cao và tình huống đặc biệt.\nKhi nào nên sử dụng kiểm thử hồi quy (regression testing)? ~ Khi có sự thay đổi trong mã nguồn hoặc cấu trúc hệ thống, cần thực hiện kiểm thử hồi quy để đảm bảo tính toàn vẹn của các chức năng đã tồn tại."
+  },
+  "fbaa51c9b5f7c42520cc8af91e9be8c2": {
+    "cards": [
+      {
+        "front": "record",
+        "back": "Định nghĩa một loại dữ liệu có cấu trúc đơn giản. Ví dụ: @Record public class User {}"
+      },
+      {
+        "front": "@Record",
+        "back": "Sử dụng annotation @Record để tạo record. Ví dụ: @Record class Product { String name; int price; }"
+      },
+      {
+        "front": "record.name()",
+        "back": "Truy cập thuộc tính name của record. Ví dụ: User user = new User(); System.out.println(user.name());"
+      },
+      {
+        "front": "record.of()",
+        "back": "Tạo một record từ các giá trị. Ví dụ: User user = User.of(\"Alice\", 30);"
+      },
+      {
+        "front": "equals()",
+        "back": "So sánh hai record dựa trên giá trị thành phần. Ví dụ: User u1 = new User(\"Bob\"); User u2 = new User(\"Bob\"); System.out.println(u1.equals(u2));"
+      },
+      {
+        "front": "hashCode()",
+        "back": "Tạo mã hash cho record. Ví dụ: int code = user.hashCode();"
+      },
+      {
+        "front": "toString()",
+        "back": "Trả về chuỗi đại diện cho record. Ví dụ: System.out.println(user.toString());"
+      },
+      {
+        "front": "record with parameters",
+        "back": "Tạo record với tham số trong constructor. Ví dụ: @Record class Book { String title; int year; public Book(String title, int year) { this.title = title; this.year = year; } }"
+      },
+      {
+        "front": "record with default values",
+        "back": "Record có giá trị mặc định. Ví dụ: @Record public class Address { String street; String city = \"Unknown\"; }"
+      }
+    ],
+    "error_lines": [
+      "[CJK detected, skipped] getters and setters ~ Record tự动生成 getters 和 setters。例如：User user = new User(); String name = user.getName();"
+    ],
+    "raw_output": "record ~ Định nghĩa một loại dữ liệu có cấu trúc đơn giản. Ví dụ: @Record public class User {}\n@Record ~ Sử dụng annotation @Record để tạo record. Ví dụ: @Record class Product { String name; int price; }\nrecord.name() ~ Truy cập thuộc tính name của record. Ví dụ: User user = new User(); System.out.println(user.name());\nrecord.of() ~ Tạo một record từ các giá trị. Ví dụ: User user = User.of(\"Alice\", 30);\nequals() ~ So sánh hai record dựa trên giá trị thành phần. Ví dụ: User u1 = new User(\"Bob\"); User u2 = new User(\"Bob\"); System.out.println(u1.equals(u2));\nhashCode() ~ Tạo mã hash cho record. Ví dụ: int code = user.hashCode();\ntoString() ~ Trả về chuỗi đại diện cho record. Ví dụ: System.out.println(user.toString());\ngetters and setters ~ Record tự动生成 getters 和 setters。例如：User user = new User(); String name = user.getName();\nrecord with parameters ~ Tạo record với tham số trong constructor. Ví dụ: @Record class Book { String title; int year; public Book(String title, int year) { this.title = title; this.year = year; } }\nrecord with default values ~ Record có giá trị mặc định. Ví dụ: @Record public class Address { String street; String city = \"Unknown\"; }"
+  },
+  "84c92c877d457da9373e3bc5abc5c97f": {
+    "cards": [
+      {
+        "front": "Kernel",
+        "back": "Bộ phận trung tâm của hệ điều hành Linux chịu trách nhiệm quản lý tài nguyên máy tính."
+      },
+      {
+        "front": "Process Management",
+        "back": "Quá trình quản lý tiến trình bao gồm tạo, hủy, chuyển đổi trạng thái và thực thi các tiến trình."
+      },
+      {
+        "front": "File System",
+        "back": "Hệ thống tệp tập hợp các công cụ và quy tắc cho việc tổ chức, lưu trữ, truy xuất dữ liệu trên đĩa cứng."
+      },
+      {
+        "front": "System Call",
+        "back": "Giao diện API giữa chương trình ứng dụng và kernel hệ điều hành để yêu cầu sử dụng tài nguyên hệ thống."
+      },
+      {
+        "front": "Interrupt Handling",
+        "back": "Quá trình xử lý tín hiệu gián đoạn từ thiết bị ngoại vi hoặc các nguồn khác trong hệ thống."
+      },
+      {
+        "front": "Scheduling Algorithm",
+        "back": "Phương pháp xác định thứ tự thực thi của các tiến trình trên CPU theo tiêu chí nhất định."
+      },
+      {
+        "front": "Memory Management",
+        "back": "Quy trình quản lý bộ nhớ bao gồm phân bổ, giải phóng và truy cập vào vùng nhớ của các tiến trình."
+      },
+      {
+        "front": "Device Driver",
+        "back": "Chương trình điều khiển thiết bị giúp kernel hệ điều hành giao tiếp với các thiết bị ngoại vi."
+      },
+      {
+        "front": "Virtualization Technology",
+        "back": "Công nghệ tạo ra môi trường ảo hóa cho phép chạy nhiều hệ điều hành hoặc ứng dụng trên cùng một máy chủ vật lý."
+      },
+      {
+        "front": "Security Mechanism",
+        "back": "Các biện pháp bảo mật được sử dụng để đảm bảo an toàn và bảo vệ dữ liệu trong hệ thống Linux."
+      }
+    ],
+    "error_lines": [],
+    "raw_output": "Kernel ~ Bộ phận trung tâm của hệ điều hành Linux chịu trách nhiệm quản lý tài nguyên máy tính.\nProcess Management ~ Quá trình quản lý tiến trình bao gồm tạo, hủy, chuyển đổi trạng thái và thực thi các tiến trình.\nFile System ~ Hệ thống tệp tập hợp các công cụ và quy tắc cho việc tổ chức, lưu trữ, truy xuất dữ liệu trên đĩa cứng.\nSystem Call ~ Giao diện API giữa chương trình ứng dụng và kernel hệ điều hành để yêu cầu sử dụng tài nguyên hệ thống.\nInterrupt Handling ~ Quá trình xử lý tín hiệu gián đoạn từ thiết bị ngoại vi hoặc các nguồn khác trong hệ thống.\nScheduling Algorithm ~ Phương pháp xác định thứ tự thực thi của các tiến trình trên CPU theo tiêu chí nhất định.\nMemory Management ~ Quy trình quản lý bộ nhớ bao gồm phân bổ, giải phóng và truy cập vào vùng nhớ của các tiến trình.\nDevice Driver ~ Chương trình điều khiển thiết bị giúp kernel hệ điều hành giao tiếp với các thiết bị ngoại vi.\nVirtualization Technology ~ Công nghệ tạo ra môi trường ảo hóa cho phép chạy nhiều hệ điều hành hoặc ứng dụng trên cùng một máy chủ vật lý.\nSecurity Mechanism ~ Các biện pháp bảo mật được sử dụng để đảm bảo an toàn và bảo vệ dữ liệu trong hệ thống Linux."
+  },
+  "9bbacacb5d34eee6c99b221b6221efe5": {
+    "cards": [
+      {
+        "front": "Lõi Linux có bao nhiêu thành phần chính?",
+        "back": "Lõi Linux có ba thành phần chính là lõi kernel, hệ thống thư viện và hệ thống tệp."
+      },
+      {
+        "front": "Trong Linux, quá trình (process) và tiến trình (thread) khác nhau như thế nào?",
+        "back": "Quá trình là đơn vị độc lập chạy trong hệ thống, còn tiến trình là một loại của quá trình có thể chia sẻ tài nguyên."
+      },
+      {
+        "front": "Nguyên lý nào đảm bảo tính an toàn của lõi Linux?",
+        "back": "Nguyên lý least privilege đảm bảo rằng mỗi thành phần chỉ có quyền truy cập tối thiểu vào các tài nguyên cần thiết."
+      },
+      {
+        "front": "Trong Linux, cách nào để kiểm soát quyền truy cập vào file và thư mục?",
+        "back": "Sử dụng chế độ quyền (permissions), nhóm (groups) và chủ sở hữu (owner)."
+      },
+      {
+        "front": "Lõi Linux hỗ trợ bao nhiêu kiểu socket?",
+        "back": "Lõi Linux hỗ trợ nhiều loại socket như TCP, UDP, Unix domain sockets."
+      },
+      {
+        "front": "Trong Linux, cách nào để quản lý bộ nhớ virtual?",
+        "back": "Sử dụng swap space và phân vùng bộ nhớ vật lý."
+      },
+      {
+        "front": "Nguyên tắc nào đảm bảo tính nhất quán của hệ thống file trong Linux?",
+        "back": "Nguyên tắc journaled transactional filesystems giúp duy trì tính nhất quán."
+      },
+      {
+        "front": "Lõi Linux sử dụng giao thức gì cho việc truyền tải dữ liệu giữa các tiến trình?",
+        "back": "Lõi Linux sử dụng giao thức IPC (Inter-Process Communication)."
+      },
+      {
+        "front": "Trong Linux, cách nào để thực hiện kiểm tra lỗi kernel?",
+        "back": "Sử dụng công cụ dmesg hoặc journalctl để xem log kernel."
+      },
+      {
+        "front": "Lõi Linux hỗ trợ bao nhiêu phương thức quản lý tài nguyên CPU?",
+        "back": "Lõi Linux hỗ trợ nhiều phương thức như nice, ionice và cgroups."
+      }
+    ],
+    "error_lines": [],
+    "raw_output": "Lõi Linux có bao nhiêu thành phần chính? ~ Lõi Linux có ba thành phần chính là lõi kernel, hệ thống thư viện và hệ thống tệp.\nTrong Linux, quá trình (process) và tiến trình (thread) khác nhau như thế nào? ~ Quá trình là đơn vị độc lập chạy trong hệ thống, còn tiến trình là một loại của quá trình có thể chia sẻ tài nguyên.\nNguyên lý nào đảm bảo tính an toàn của lõi Linux? ~ Nguyên lý least privilege đảm bảo rằng mỗi thành phần chỉ có quyền truy cập tối thiểu vào các tài nguyên cần thiết.\nTrong Linux, cách nào để kiểm soát quyền truy cập vào file và thư mục? ~ Sử dụng chế độ quyền (permissions), nhóm (groups) và chủ sở hữu (owner).\nLõi Linux hỗ trợ bao nhiêu kiểu socket? ~ Lõi Linux hỗ trợ nhiều loại socket như TCP, UDP, Unix domain sockets.\nTrong Linux, cách nào để quản lý bộ nhớ virtual? ~ Sử dụng swap space và phân vùng bộ nhớ vật lý.\nNguyên tắc nào đảm bảo tính nhất quán của hệ thống file trong Linux? ~ Nguyên tắc journaled transactional filesystems giúp duy trì tính nhất quán.\nLõi Linux sử dụng giao thức gì cho việc truyền tải dữ liệu giữa các tiến trình? ~ Lõi Linux sử dụng giao thức IPC (Inter-Process Communication).\nTrong Linux, cách nào để thực hiện kiểm tra lỗi kernel? ~ Sử dụng công cụ dmesg hoặc journalctl để xem log kernel.\nLõi Linux hỗ trợ bao nhiêu phương thức quản lý tài nguyên CPU? ~ Lõi Linux hỗ trợ nhiều phương thức như nice, ionice và cgroups."
   }
 }

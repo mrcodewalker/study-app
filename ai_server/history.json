@@ -1,5 +1,60 @@
 [
   {
+    "time": "2026-05-09 14:15:57",
+    "topic": "Tạo cho tôi câu hỏi khó và hay về lập trình nhân linux",
+    "count": 10,
+    "language": "Vietnamese",
+    "card_type": "qa",
+    "cards_count": 10,
+    "duration_ms": 0,
+    "from_cache": true,
+    "client_ip": "192.168.1.19"
+  },
+  {
+    "time": "2026-05-09 14:15:55",
+    "topic": "Tạo cho tôi câu hỏi khó và hay về lập trình nhân linux",
+    "count": 10,
+    "language": "Vietnamese",
+    "card_type": "qa",
+    "cards_count": 10,
+    "duration_ms": 6944,
+    "from_cache": false,
+    "client_ip": "192.168.1.19"
+  },
+  {
+    "time": "2026-05-09 14:14:58",
+    "topic": "Tạo cho tôi câu hỏi khó và hay cho môn lập trình nhân linux",
+    "count": 10,
+    "language": "Vietnamese",
+    "card_type": "term_def",
+    "cards_count": 10,
+    "duration_ms": 5713,
+    "from_cache": false,
+    "client_ip": "192.168.1.19"
+  },
+  {
+    "time": "2026-05-09 14:12:48",
+    "topic": "Giải thích record trong java spring boot",
+    "count": 10,
+    "language": "Vietnamese",
+    "card_type": "code",
+    "cards_count": 9,
+    "duration_ms": 7536,
+    "from_cache": false,
+    "client_ip": "192.168.1.19"
+  },
+  {
+    "time": "2026-05-09 13:49:06",
+    "topic": "Tạo cho tôi câu hỏi về môn kiểm thử phần mềm kinh điển hay hỏi khi thi",
+    "count": 10,
+    "language": "Vietnamese",
+    "card_type": "qa",
+    "cards_count": 10,
+    "duration_ms": 40077,
+    "from_cache": false,
+    "client_ip": "192.168.1.19"
+  },
+  {
     "time": "2026-05-08 16:12:40",
     "topic": "Tao cho toi 10 cau hoi dap kinh dien ve mon Kiem thu phan mem",
     "count": 10,

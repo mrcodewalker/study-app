@@ -208,7 +208,6 @@ fun AiChatBubble(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .imePadding()
         ) {
             Box(
                 modifier = Modifier
@@ -224,7 +223,7 @@ fun AiChatBubble(
             AiChatBottomSheet(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(0.88f)
+                    .heightIn(max = (config.screenHeightDp * 0.88f).dp)
                     .align(Alignment.BottomCenter)
                     .animateEnterExit(
                         enter = slideInVertically(tween(320, easing = EaseOutCubic)) { it },
@@ -392,6 +391,7 @@ private fun AiChatBottomSheet(
                     .offset { IntOffset(0, swipeOffset.value.toInt().coerceAtLeast(0)) }
                     .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                     .background(ScBackground)
+                    .fillMaxHeight()
             ) {
                 // ── Sheet header ─────────────────────────────────────────────────
                 Surface(
@@ -543,6 +543,7 @@ private fun AiChatBottomSheet(
                 }
 
                 // ── Input bar ─────────────────────────────────────────────────────
+
                 Surface(
                     color = ScSurfaceContainerLowest,
                     border = BorderStroke(1.dp, ScOutlineVariant.copy(0.5f))
@@ -550,6 +551,7 @@ private fun AiChatBottomSheet(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .imePadding()
                             .navigationBarsPadding()
                             .padding(horizontal = 12.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.Bottom,
