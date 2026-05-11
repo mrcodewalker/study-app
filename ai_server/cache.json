@@ -378,5 +378,49 @@
     ],
     "error_lines": [],
     "raw_output": "Lõi Linux có bao nhiêu thành phần chính? ~ Lõi Linux có ba thành phần chính là lõi kernel, hệ thống thư viện và hệ thống tệp.\nTrong Linux, quá trình (process) và tiến trình (thread) khác nhau như thế nào? ~ Quá trình là đơn vị độc lập chạy trong hệ thống, còn tiến trình là một loại của quá trình có thể chia sẻ tài nguyên.\nNguyên lý nào đảm bảo tính an toàn của lõi Linux? ~ Nguyên lý least privilege đảm bảo rằng mỗi thành phần chỉ có quyền truy cập tối thiểu vào các tài nguyên cần thiết.\nTrong Linux, cách nào để kiểm soát quyền truy cập vào file và thư mục? ~ Sử dụng chế độ quyền (permissions), nhóm (groups) và chủ sở hữu (owner).\nLõi Linux hỗ trợ bao nhiêu kiểu socket? ~ Lõi Linux hỗ trợ nhiều loại socket như TCP, UDP, Unix domain sockets.\nTrong Linux, cách nào để quản lý bộ nhớ virtual? ~ Sử dụng swap space và phân vùng bộ nhớ vật lý.\nNguyên tắc nào đảm bảo tính nhất quán của hệ thống file trong Linux? ~ Nguyên tắc journaled transactional filesystems giúp duy trì tính nhất quán.\nLõi Linux sử dụng giao thức gì cho việc truyền tải dữ liệu giữa các tiến trình? ~ Lõi Linux sử dụng giao thức IPC (Inter-Process Communication).\nTrong Linux, cách nào để thực hiện kiểm tra lỗi kernel? ~ Sử dụng công cụ dmesg hoặc journalctl để xem log kernel.\nLõi Linux hỗ trợ bao nhiêu phương thức quản lý tài nguyên CPU? ~ Lõi Linux hỗ trợ nhiều phương thức như nice, ionice và cgroups."
+  },
+  "8e124ae93581ebb0ad388374f8bafb25": {
+    "cards": [
+      {
+        "front": "Kiểm thử phần mềm bao gồm những giai đoạn nào?",
+        "back": "Kiểm thử phần mềm bao gồm giai đoạn lập kế hoạch, thiết kế, thực hiện và báo cáo."
+      },
+      {
+        "front": "Phân biệt giữa kiểm thử đơn vị và kiểm thử hệ thống?",
+        "back": "Kiểm thử đơn vị tập trung vào chức năng nhỏ của ứng dụng, trong khi kiểm thử hệ thống kiểm tra toàn bộ hệ thống."
+      },
+      {
+        "front": "Kiểm thử nào được thực hiện trước tiên trong chuỗi kiểm thử?",
+        "back": "Kiểm thử đơn vị thường được thực hiện trước tiên để đảm bảo các thành phần nhỏ hoạt động đúng."
+      },
+      {
+        "front": "Phương pháp nào được sử dụng phổ biến nhất trong kiểm thử chấp nhận?",
+        "back": "Phương pháp chủ quan thường được sử dụng trong kiểm thử chấp nhận."
+      },
+      {
+        "front": "Kiểm thử độ bao phủ mã (Code Coverage) là gì?",
+        "back": "Kiểm thử độ bao phủ mã đo lường phần trăm số dòng code đã được kiểm thử."
+      },
+      {
+        "front": "Phương pháp nào dùng để phát hiện lỗi sớm nhất trong quá trình phát triển?",
+        "back": "Phương pháp kiểm thử liên tục thường được sử dụng để phát hiện lỗi sớm nhất."
+      },
+      {
+        "front": "Kiểm thử tích hợp (Integration Testing) nhằm mục đích gì?",
+        "back": "Kiểm thử tích hợp nhằm đảm bảo các module phần mềm hoạt động đúng khi được kết hợp với nhau."
+      },
+      {
+        "front": "Phân biệt giữa kiểm thử hệ thống và kiểm thử chấp nhận?",
+        "back": "Kiểm thử hệ thống tập trung vào toàn bộ hệ thống, trong khi kiểm thử chấp nhận tập trung vào yêu cầu của người dùng cuối."
+      },
+      {
+        "front": "Kiểm thử nào đảm bảo rằng một ứng dụng hoạt động như mong đợi trên nhiều môi trường khác nhau?",
+        "back": "Kiểm thử tích hợp đa nền tảng đảm bảo ứng dụng hoạt động đúng trên nhiều môi trường."
+      }
+    ],
+    "error_lines": [
+      "[CJK detected, skipped] Mô hình瀑布型开发模型在软件测试中如何应用? ~ Mô hình瀑布型开发模型在软件测试中通过多次迭代的测试阶段来确保产品质量。"
+    ],
+    "raw_output": "Kiểm thử phần mềm bao gồm những giai đoạn nào? ~ Kiểm thử phần mềm bao gồm giai đoạn lập kế hoạch, thiết kế, thực hiện và báo cáo.\nMô hình瀑布型开发模型在软件测试中如何应用? ~ Mô hình瀑布型开发模型在软件测试中通过多次迭代的测试阶段来确保产品质量。\nPhân biệt giữa kiểm thử đơn vị và kiểm thử hệ thống? ~ Kiểm thử đơn vị tập trung vào chức năng nhỏ của ứng dụng, trong khi kiểm thử hệ thống kiểm tra toàn bộ hệ thống.\nKiểm thử nào được thực hiện trước tiên trong chuỗi kiểm thử? ~ Kiểm thử đơn vị thường được thực hiện trước tiên để đảm bảo các thành phần nhỏ hoạt động đúng.\nPhương pháp nào được sử dụng phổ biến nhất trong kiểm thử chấp nhận? ~ Phương pháp chủ quan thường được sử dụng trong kiểm thử chấp nhận.\nKiểm thử độ bao phủ mã (Code Coverage) là gì? ~ Kiểm thử độ bao phủ mã đo lường phần trăm số dòng code đã được kiểm thử.\nPhương pháp nào dùng để phát hiện lỗi sớm nhất trong quá trình phát triển? ~ Phương pháp kiểm thử liên tục thường được sử dụng để phát hiện lỗi sớm nhất.\nKiểm thử tích hợp (Integration Testing) nhằm mục đích gì? ~ Kiểm thử tích hợp nhằm đảm bảo các module phần mềm hoạt động đúng khi được kết hợp với nhau.\nPhân biệt giữa kiểm thử hệ thống và kiểm thử chấp nhận? ~ Kiểm thử hệ thống tập trung vào toàn bộ hệ thống, trong khi kiểm thử chấp nhận tập trung vào yêu cầu của người dùng cuối.\nKiểm thử nào đảm bảo rằng một ứng dụng hoạt động như mong đợi trên nhiều môi trường khác nhau? ~ Kiểm thử tích hợp đa nền tảng đảm bảo ứng dụng hoạt động đúng trên nhiều môi trường."
   }
 }

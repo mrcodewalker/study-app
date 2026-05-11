@@ -1,5 +1,16 @@
 [
   {
+    "time": "2026-05-11 10:08:57",
+    "topic": "Tạo cho tôi 10 câu kinh điển hay thi về môn kiểm thử phần mềm",
+    "count": 10,
+    "language": "Vietnamese",
+    "card_type": "qa",
+    "cards_count": 9,
+    "duration_ms": 89119,
+    "from_cache": false,
+    "client_ip": "172.20.10.6"
+  },
+  {
     "time": "2026-05-09 14:15:57",
     "topic": "Tạo cho tôi câu hỏi khó và hay về lập trình nhân linux",
     "count": 10,

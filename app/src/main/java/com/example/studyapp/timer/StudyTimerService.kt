@@ -3,6 +3,7 @@ package com.example.studyapp.timer
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.*
 import androidx.core.app.NotificationCompat
 import com.example.studyapp.MainActivity
@@ -64,7 +65,11 @@ class StudyTimerService : Service() {
                 _targetMs.value = targetDurationMs
                 _isCountdown.value = targetDurationMs > 0L
                 _finished.value = false
-                startForeground(NOTIF_ID, buildNotification("Đang học..."))
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    startForeground(NOTIF_ID, buildNotification("Đang học..."), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+                } else {
+                    startForeground(NOTIF_ID, buildNotification("Đang học..."))
+                }
                 startTicking()
             }
             ACTION_PAUSE -> pauseTicking()

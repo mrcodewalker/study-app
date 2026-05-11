@@ -3,6 +3,7 @@ package com.example.studyapp.music
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.media.MediaPlayer
 import android.os.*
 import androidx.core.app.NotificationCompat
@@ -98,7 +99,11 @@ class MusicService : Service() {
         }
         _currentTrack.value = track
         _isPlaying.value = true
-        startForeground(NOTIF_ID, buildNotification(track, true))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(NOTIF_ID, buildNotification(track, true), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+        } else {
+            startForeground(NOTIF_ID, buildNotification(track, true))
+        }
     }
 
     private fun pausePlayback() {
